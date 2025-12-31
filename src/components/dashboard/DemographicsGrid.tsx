@@ -1,19 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-
-const ageData = [
-  { age: '13-17', value: 8 },
-  { age: '18-24', value: 32 },
-  { age: '25-34', value: 28 },
-  { age: '35-44', value: 18 },
-  { age: '45-54', value: 9 },
-  { age: '55+', value: 5 },
-];
-
-const genderData = [
-  { name: 'Masculino', value: 54, color: 'hsl(var(--chart-1))' },
-  { name: 'Feminino', value: 42, color: 'hsl(var(--chart-2))' },
-  { name: 'Outro', value: 4, color: 'hsl(var(--chart-3))' },
-];
+import { ListMusic, User } from "lucide-react";
 
 const countryData = [
   { country: 'Brasil', streams: 456000 },
@@ -29,6 +14,22 @@ const cityData = [
   { city: 'Belo Horizonte', streams: 45000 },
   { city: 'Curitiba', streams: 34000 },
   { city: 'Porto Alegre', streams: 28000 },
+];
+
+const playlistsData = [
+  { name: 'Top Brasil', curator: 'Spotify', streams: 234000 },
+  { name: 'Hits do Momento', curator: 'Deezer', streams: 156000 },
+  { name: 'Viral 50', curator: 'Spotify', streams: 98000 },
+  { name: 'Pop Nacional', curator: 'Apple Music', streams: 67000 },
+  { name: 'Descobertas da Semana', curator: 'Spotify', streams: 45000 },
+];
+
+const artistsData = [
+  { name: 'Artista Principal', streams: 345000 },
+  { name: 'Feat. Colaborador 1', streams: 123000 },
+  { name: 'Feat. Colaborador 2', streams: 89000 },
+  { name: 'Feat. Colaborador 3', streams: 56000 },
+  { name: 'Feat. Colaborador 4', streams: 34000 },
 ];
 
 export function DemographicsGrid() {
@@ -91,76 +92,68 @@ export function DemographicsGrid() {
         </div>
       </div>
 
-      {/* Age and Gender */}
+      {/* Top Playlists and Top Artists */}
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="rounded-xl bg-card border border-border p-6">
-          <h3 className="font-semibold text-foreground mb-4">Distribuição por Gênero</h3>
-          <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={genderData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {genderData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value: number) => [`${value}%`, 'Percentual']}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="flex items-center gap-2 mb-4">
+            <ListMusic className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Top Playlists</h3>
           </div>
-          <div className="flex justify-center gap-6 mt-2">
-            {genderData.map((item) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-sm text-muted-foreground">{item.name}</span>
-                <span className="text-sm font-medium text-foreground">{item.value}%</span>
+          <div className="space-y-4">
+            {playlistsData.map((item, index) => (
+              <div key={item.name} className="flex items-center gap-4">
+                <span className="w-6 text-center text-sm font-medium text-muted-foreground">
+                  {index + 1}
+                </span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <div>
+                      <span className="font-medium text-foreground">{item.name}</span>
+                      <span className="text-xs text-muted-foreground ml-2">({item.curator})</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {item.streams.toLocaleString('pt-BR')} streams
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-chart-3"
+                      style={{ width: `${(item.streams / playlistsData[0].streams) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         <div className="rounded-xl bg-card border border-border p-6">
-          <h3 className="font-semibold text-foreground mb-4">Distribuição por Idade</h3>
-          <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={ageData}>
-                <XAxis 
-                  dataKey="age" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                  tickFormatter={(v) => `${v}%`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value: number) => [`${value}%`, 'Percentual']}
-                />
-                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="flex items-center gap-2 mb-4">
+            <User className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Top Artistas</h3>
+          </div>
+          <div className="space-y-4">
+            {artistsData.map((item, index) => (
+              <div key={item.name} className="flex items-center gap-4">
+                <span className="w-6 text-center text-sm font-medium text-muted-foreground">
+                  {index + 1}
+                </span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-foreground">{item.name}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {item.streams.toLocaleString('pt-BR')} streams
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-chart-4"
+                      style={{ width: `${(item.streams / artistsData[0].streams) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
