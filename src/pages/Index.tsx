@@ -24,6 +24,9 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Recent Releases */}
+        <RecentReleases />
+
         {/* Top Streams and Streams by Platform */}
         <div className="grid lg:grid-cols-2 gap-6">
           <TopStreams />
@@ -32,9 +35,6 @@ const Index = () => {
 
         {/* Demographics */}
         <DemographicsGrid />
-
-        {/* Recent Releases */}
-        <RecentReleases />
       </div>
     </MainLayout>
   );
