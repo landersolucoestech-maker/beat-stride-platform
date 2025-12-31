@@ -19,54 +19,47 @@ export function RecentReleases() {
         </Link>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+      <div className="divide-y divide-border">
         {releases.slice(0, 4).map((release) => (
           <div
             key={release.id}
-            className="rounded-lg border border-border bg-muted/30 overflow-hidden hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors"
           >
             <img
               src={release.cover}
               alt={release.title}
-              className="w-full aspect-square object-cover"
+              className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
             />
             
-            <div className="p-4 space-y-2">
-              <div>
-                <h4 className="font-medium text-foreground truncate">{release.title}</h4>
-                <p className="text-sm text-muted-foreground truncate">{release.artist}</p>
-              </div>
-              
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p>
-                  <span className="capitalize">{release.type}</span>
-                </p>
-                <p>
-                  Lançamento: {new Date(release.releaseDate).toLocaleDateString('pt-BR')}
-                </p>
-              </div>
-              
-              <div className="text-sm space-y-1 pt-2 border-t border-border">
-                {release.preSaveLink ? (
-                  <p>
-                    Pré-save:{" "}
-                    <a
-                      href={release.preSaveLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:text-primary/80 transition-colors underline"
-                    >
-                      clique aqui
-                    </a>
-                  </p>
-                ) : (
-                  <p className="text-muted-foreground">Pré-save: não disponível</p>
-                )}
-                <p className="flex items-center gap-2">
-                  Status: <StatusBadge status={release.status} />
-                </p>
-              </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-foreground truncate">{release.title}</h4>
+              <p className="text-sm text-muted-foreground truncate">{release.artist}</p>
             </div>
+            
+            <div className="hidden sm:block text-sm text-muted-foreground">
+              <span className="capitalize">{release.type}</span>
+            </div>
+            
+            <div className="hidden md:block text-sm text-muted-foreground">
+              {new Date(release.releaseDate).toLocaleDateString('pt-BR')}
+            </div>
+            
+            <div className="hidden lg:block text-sm">
+              {release.preSaveLink ? (
+                <a
+                  href={release.preSaveLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary/80 transition-colors underline"
+                >
+                  Pré-save
+                </a>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
+            </div>
+            
+            <StatusBadge status={release.status} />
           </div>
         ))}
       </div>
