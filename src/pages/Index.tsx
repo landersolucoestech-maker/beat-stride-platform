@@ -4,6 +4,7 @@ import { QuickLinks } from "@/components/dashboard/QuickLinks";
 import { StreamsChart } from "@/components/dashboard/StreamsChart";
 import { RecentReleases } from "@/components/dashboard/RecentReleases";
 import { TopStreams } from "@/components/dashboard/TopStreams";
+import { DemographicsGrid } from "@/components/dashboard/DemographicsGrid";
 
 const Index = () => {
   return (
@@ -28,6 +29,9 @@ const Index = () => {
           <TopStreams />
           <StreamsChart />
         </div>
+
+        {/* Demographics */}
+        <DemographicsGrid />
 
         {/* Recent Releases */}
         <RecentReleases />
