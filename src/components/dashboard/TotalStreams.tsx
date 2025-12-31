@@ -1,4 +1,14 @@
 import { Music, TrendingUp } from "lucide-react";
+import { BarChart, Bar, ResponsiveContainer } from "recharts";
+
+const monthlyData = [
+  { month: 'Jul', streams: 89000 },
+  { month: 'Ago', streams: 102000 },
+  { month: 'Set', streams: 98000 },
+  { month: 'Out', streams: 115000 },
+  { month: 'Nov', streams: 134521 },
+  { month: 'Dez', streams: 156432 },
+];
 
 export function TotalStreams() {
   return (
@@ -13,8 +23,22 @@ export function TotalStreams() {
           <p className="text-sm text-muted-foreground">streams totais</p>
         </div>
       </div>
+
+      {/* Mini Bar Chart */}
+      <div className="h-16 mt-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={monthlyData}>
+            <Bar 
+              dataKey="streams" 
+              fill="hsl(var(--primary))" 
+              radius={[3, 3, 0, 0]}
+              opacity={0.8}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
       
-      <div className="mt-6 pt-4 border-t border-border space-y-3">
+      <div className="mt-4 pt-4 border-t border-border space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Este mês</span>
           <div className="flex items-center gap-1">
