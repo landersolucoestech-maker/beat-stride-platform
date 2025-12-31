@@ -3,6 +3,7 @@ import { WalletCard } from "@/components/dashboard/WalletCard";
 import { QuickLinks } from "@/components/dashboard/QuickLinks";
 import { StreamsChart } from "@/components/dashboard/StreamsChart";
 import { RecentReleases } from "@/components/dashboard/RecentReleases";
+import { TopStreams } from "@/components/dashboard/TopStreams";
 
 const Index = () => {
   return (
@@ -22,11 +23,14 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Charts and releases */}
+        {/* Top Streams and Streams by Platform */}
         <div className="grid lg:grid-cols-2 gap-6">
+          <TopStreams />
           <StreamsChart />
-          <RecentReleases />
         </div>
+
+        {/* Recent Releases */}
+        <RecentReleases />
       </div>
     </MainLayout>
   );
