@@ -4,7 +4,10 @@ import { QuickLinks } from "@/components/dashboard/QuickLinks";
 import { StreamsChart } from "@/components/dashboard/StreamsChart";
 import { RecentReleases } from "@/components/dashboard/RecentReleases";
 import { TopStreams } from "@/components/dashboard/TopStreams";
-import { DemographicsGrid } from "@/components/dashboard/DemographicsGrid";
+import { TopArtists } from "@/components/dashboard/TopArtists";
+import { TopPlaylists } from "@/components/dashboard/TopPlaylists";
+import { TopCountries } from "@/components/dashboard/TopCountries";
+import { TopCities } from "@/components/dashboard/TopCities";
 
 const Index = () => {
   return (
@@ -27,14 +30,23 @@ const Index = () => {
         {/* Recent Releases */}
         <RecentReleases />
 
-        {/* Top Streams and Streams by Platform */}
+        {/* Top Streams and Top Artists */}
         <div className="grid lg:grid-cols-2 gap-6">
           <TopStreams />
-          <StreamsChart />
+          <TopArtists />
         </div>
 
-        {/* Demographics */}
-        <DemographicsGrid />
+        {/* Top Playlists and Top Countries */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <TopPlaylists />
+          <TopCountries />
+        </div>
+
+        {/* Top Cities and Streams by Platform */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <TopCities />
+          <StreamsChart />
+        </div>
       </div>
     </MainLayout>
   );
