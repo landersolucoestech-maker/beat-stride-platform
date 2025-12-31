@@ -8,6 +8,7 @@ import { TopArtists } from "@/components/dashboard/TopArtists";
 import { TopPlaylists } from "@/components/dashboard/TopPlaylists";
 import { TopCountries } from "@/components/dashboard/TopCountries";
 import { TopCities } from "@/components/dashboard/TopCities";
+import { TotalStreams } from "@/components/dashboard/TotalStreams";
 
 const Index = () => {
   return (
@@ -30,8 +31,9 @@ const Index = () => {
         {/* Recent Releases */}
         <RecentReleases />
 
-        {/* Top Streams and Top Artists - 2 columns */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* Total Streams, Top Streams and Top Artists - 3 columns */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          <TotalStreams />
           <TopStreams />
           <TopArtists />
         </div>
