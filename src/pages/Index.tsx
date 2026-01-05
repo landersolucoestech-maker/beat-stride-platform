@@ -27,10 +27,9 @@ const Index = () => {
         {/* Recent Releases */}
         <RecentReleases />
 
-        {/* Statistics Section */}
-        <TotalStreams />
-
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* Statistics Section - Total Streams with Top Streams + Top Artists */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          <TotalStreams />
           <TopStreams />
           <TopArtists />
         </div>
