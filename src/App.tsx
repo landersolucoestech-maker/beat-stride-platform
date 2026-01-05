@@ -7,11 +7,23 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ManageMusic from "./pages/distribution/ManageMusic";
 import NewRelease from "./pages/distribution/NewRelease";
+import ManageVideos from "./pages/distribution/ManageVideos";
+import NewVideo from "./pages/distribution/NewVideo";
 import FinancialAnalytics from "./pages/financial/Analytics";
 import Payouts from "./pages/financial/Payouts";
 import Tickets from "./pages/help/Tickets";
+import Support from "./pages/help/Support";
 import Profile from "./pages/settings/Profile";
+import Security from "./pages/settings/Security";
+import Language from "./pages/settings/Language";
 import Demographics from "./pages/statistics/Demographics";
+import TikTokStats from "./pages/statistics/TikTokStats";
+import StoreComparison from "./pages/statistics/StoreComparison";
+import MusicCharts from "./pages/statistics/MusicCharts";
+import Trackers from "./pages/statistics/Trackers";
+import StartMarketing from "./pages/marketing/StartMarketing";
+import ProTools from "./pages/marketing/ProTools";
+import EmailList from "./pages/marketing/EmailList";
 import PlaceholderPage from "./pages/PlaceholderPage";
 
 const queryClient = new QueryClient();
@@ -28,20 +40,20 @@ const App = () => (
           {/* Distribution */}
           <Route path="/distribution/music" element={<ManageMusic />} />
           <Route path="/distribution/music/new" element={<NewRelease />} />
-          <Route path="/distribution/videos" element={<PlaceholderPage title="Gerenciar Vídeos" />} />
-          <Route path="/distribution/videos/new" element={<PlaceholderPage title="Novo Vídeo" />} />
+          <Route path="/distribution/videos" element={<ManageVideos />} />
+          <Route path="/distribution/videos/new" element={<NewVideo />} />
           
           {/* Statistics */}
           <Route path="/statistics/demographics" element={<Demographics />} />
-          <Route path="/statistics/tiktok" element={<PlaceholderPage title="Estatísticas TikTok" />} />
-          <Route path="/statistics/stores" element={<PlaceholderPage title="Comparação de Lojas" />} />
-          <Route path="/statistics/charts" element={<PlaceholderPage title="Charts Musicais" />} />
-          <Route path="/statistics/trackers" element={<PlaceholderPage title="Rastreadores" />} />
+          <Route path="/statistics/tiktok" element={<TikTokStats />} />
+          <Route path="/statistics/stores" element={<StoreComparison />} />
+          <Route path="/statistics/charts" element={<MusicCharts />} />
+          <Route path="/statistics/trackers" element={<Trackers />} />
           
           {/* Marketing */}
-          <Route path="/marketing/start" element={<PlaceholderPage title="Iniciar Marketing" />} />
-          <Route path="/marketing/tools" element={<PlaceholderPage title="Ferramentas Profissionais" />} />
-          <Route path="/marketing/emails" element={<PlaceholderPage title="Lista de E-mails" />} />
+          <Route path="/marketing/start" element={<StartMarketing />} />
+          <Route path="/marketing/tools" element={<ProTools />} />
+          <Route path="/marketing/emails" element={<EmailList />} />
           
           {/* Financial */}
           <Route path="/financial/analytics" element={<FinancialAnalytics />} />
@@ -49,13 +61,13 @@ const App = () => (
           <Route path="/financial/shares" element={<PlaceholderPage title="Gestão de Shares" />} />
           
           {/* Help */}
-          <Route path="/help/support" element={<PlaceholderPage title="Central de Suporte" />} />
+          <Route path="/help/support" element={<Support />} />
           <Route path="/help/tickets" element={<Tickets />} />
           
           {/* Settings */}
           <Route path="/settings/profile" element={<Profile />} />
-          <Route path="/settings/security" element={<PlaceholderPage title="Segurança" />} />
-          <Route path="/settings/language" element={<PlaceholderPage title="Idioma" />} />
+          <Route path="/settings/security" element={<Security />} />
+          <Route path="/settings/language" element={<Language />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
