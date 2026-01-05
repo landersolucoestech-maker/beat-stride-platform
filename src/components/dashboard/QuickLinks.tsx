@@ -3,25 +3,25 @@ import { Music, Disc, Building2, BarChart3, ChevronRight, ArrowUpRight } from "l
 
 const links = [
   {
-    title: "Distribuir uma música",
+    title: "Iniciar marketing",
     icon: Music,
-    to: "/distribution/music/new",
+    to: "/marketing/start",
     color: "text-primary",
   },
   {
-    title: "Distribuir um álbum",
+    title: "Distribuir música",
     icon: Disc,
     to: "/distribution/music/new",
     color: "text-destructive",
   },
   {
-    title: "Acessar conta bancária",
+    title: "Distribuir vídeo",
     icon: Building2,
-    to: "/financial/payouts",
+    to: "/distribution/videos/new",
     color: "text-warning",
   },
   {
-    title: "Acessar dados e performance",
+    title: "Ver performance",
     icon: BarChart3,
     to: "/statistics/demographics",
     color: "text-destructive",
