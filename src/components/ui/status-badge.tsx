@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type StatusType = 'draft' | 'review' | 'scheduled' | 'live' | 'rejected' | 'pending' | 'processing' | 'completed' | 'failed' | 'open' | 'in_progress' | 'resolved' | 'closed';
+type StatusType = 'draft' | 'review' | 'scheduled' | 'live' | 'rejected' | 'pending' | 'processing' | 'completed' | 'failed' | 'open' | 'in_progress' | 'resolved' | 'closed' | 'published';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -21,6 +21,7 @@ const statusConfig: Record<StatusType, { label: string; className: string }> = {
   in_progress: { label: 'Em Andamento', className: 'bg-primary/20 text-primary' },
   resolved: { label: 'Resolvido', className: 'bg-success/20 text-success' },
   closed: { label: 'Fechado', className: 'bg-muted text-muted-foreground' },
+  published: { label: 'Publicado', className: 'bg-success/20 text-success' },
 };
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
