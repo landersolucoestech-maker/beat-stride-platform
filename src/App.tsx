@@ -11,6 +11,7 @@ import ManageVideos from "./pages/distribution/ManageVideos";
 import NewVideo from "./pages/distribution/NewVideo";
 import FinancialAnalytics from "./pages/financial/Analytics";
 import Payouts from "./pages/financial/Payouts";
+import Shares from "./pages/financial/Shares";
 import Tickets from "./pages/help/Tickets";
 import Support from "./pages/help/Support";
 import Profile from "./pages/settings/Profile";
@@ -58,7 +59,7 @@ const App = () => (
           {/* Financial */}
           <Route path="/financial/analytics" element={<FinancialAnalytics />} />
           <Route path="/financial/accounting" element={<Payouts />} />
-          <Route path="/financial/shares" element={<PlaceholderPage title="Gestão de Shares" />} />
+          <Route path="/financial/shares" element={<Shares />} />
           
           {/* Help */}
           <Route path="/help/support" element={<Support />} />
