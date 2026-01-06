@@ -178,45 +178,73 @@ export default function ManageVideos() {
           </Select>
         </div>
 
-        {/* Table */}
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Vídeo</TableHead>
-                <TableHead className="hidden md:table-cell">Plataforma</TableHead>
-                <TableHead className="hidden sm:table-cell">Duração</TableHead>
-                <TableHead>Views</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredVideos.map((video) => (
-                <TableRow key={video.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-20 h-12 object-cover rounded-lg"
-                      />
-                      <div>
-                        <p className="font-medium line-clamp-1">{video.title}</p>
-                        <p className="text-sm text-muted-foreground">{video.artist}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{video.platform}</TableCell>
-                  <TableCell className="hidden sm:table-cell">{video.duration}</TableCell>
-                  <TableCell>{formatViews(video.views)}</TableCell>
-                  <TableCell>
+        {/* Grid */}
+        {filteredVideos.length === 0 ? (
+          <div className="rounded-xl bg-card border border-border p-12">
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Search className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium text-foreground mb-1">
+                Nenhum vídeo encontrado
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Tente ajustar os filtros ou adicione um novo vídeo
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredVideos.map((video) => (
+              <div
+                key={video.id}
+                className="group rounded-xl bg-card border border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
+              >
+                <div className="relative aspect-video">
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                  <div className="absolute top-2 right-2">
                     <StatusBadge status={video.status} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                  </div>
+                  <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-white/90 bg-black/50 px-2 py-0.5 rounded">
+                        {video.duration}
+                      </span>
+                      <span className="text-xs text-white/90 bg-black/50 px-2 py-0.5 rounded">
+                        {video.platform}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-full bg-primary/90 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer hover:bg-primary">
+                      <Play className="h-4 w-4" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-medium text-foreground line-clamp-1 text-sm mb-1">
+                    {video.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {video.artist}
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>{formatViews(video.views)} views</span>
+                    </div>
+                    <span>
+                      {new Date(video.uploadDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </MainLayout>
   );
