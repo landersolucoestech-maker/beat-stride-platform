@@ -70,82 +70,10 @@ export default function ManageMusic() {
           </Select>
         </div>
 
-        {/* Table */}
-        <div className="rounded-xl bg-card border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">
-                    Lançamento
-                  </th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">
-                    Tipo
-                  </th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">
-                    Data de Lançamento
-                  </th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">
-                    Status
-                  </th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3 hidden sm:table-cell">
-                    Pre-Save
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredReleases.map((release) => (
-                  <tr
-                    key={release.id}
-                    className="hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={release.cover}
-                          alt={release.title}
-                          className="w-12 h-12 rounded-lg object-cover"
-                        />
-                        <div>
-                          <p className="font-medium text-foreground">{release.title}</p>
-                          <p className="text-sm text-muted-foreground">{release.artist}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 hidden md:table-cell">
-                      <span className="text-sm text-muted-foreground capitalize px-2 py-1 bg-muted rounded-full">
-                        {release.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 hidden lg:table-cell text-sm text-muted-foreground">
-                      {new Date(release.releaseDate).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge status={release.status} />
-                    </td>
-                    <td className="px-4 py-4 hidden sm:table-cell">
-                      {release.preSaveLink ? (
-                        <a
-                          href={release.preSaveLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm"
-                        >
-                          Acessar
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredReleases.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12">
+        {/* Grid */}
+        {filteredReleases.length === 0 ? (
+          <div className="rounded-xl bg-card border border-border p-12">
+            <div className="flex flex-col items-center justify-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                 <Search className="h-6 w-6 text-muted-foreground" />
               </div>
@@ -156,8 +84,55 @@ export default function ManageMusic() {
                 Tente ajustar os filtros ou faça um novo lançamento
               </p>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {filteredReleases.map((release) => (
+              <div
+                key={release.id}
+                className="group rounded-xl bg-card border border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
+              >
+                <div className="relative aspect-square">
+                  <img
+                    src={release.cover}
+                    alt={release.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute top-2 right-2">
+                    <StatusBadge status={release.status} />
+                  </div>
+                  {release.preSaveLink && (
+                    <a
+                      href={release.preSaveLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute bottom-2 right-2 p-2 rounded-full bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-primary/90"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
+                <div className="p-3">
+                  <h3 className="font-medium text-foreground truncate text-sm">
+                    {release.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {release.artist}
+                  </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-muted-foreground capitalize px-2 py-0.5 bg-muted rounded-full">
+                      {release.type}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(release.releaseDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </MainLayout>
   );
