@@ -147,13 +147,13 @@ export default function ManageVideos() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {filteredVideos.map((video) => (
               <div
                 key={video.id}
                 className="group rounded-xl bg-card border border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
               >
-                <div className="relative aspect-video">
+                <div className="relative aspect-square">
                   <img
                     src={video.thumbnail}
                     alt={video.title}
@@ -177,19 +177,19 @@ export default function ManageVideos() {
                     </div>
                   </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="font-medium text-foreground line-clamp-1 text-sm mb-1">
+                <div className="p-3">
+                  <h3 className="font-medium text-foreground truncate text-sm">
                     {video.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground mb-3">
+                  <p className="text-xs text-muted-foreground truncate">
                     {video.artist}
                   </p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3.5 w-3.5" />
-                      <span>{formatViews(video.views)} views</span>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Eye className="h-3 w-3" />
+                      <span>{formatViews(video.views)}</span>
                     </div>
-                    <span>
+                    <span className="text-xs text-muted-foreground">
                       {new Date(video.uploadDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                     </span>
                   </div>
