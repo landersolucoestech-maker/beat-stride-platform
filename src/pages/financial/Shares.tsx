@@ -519,11 +519,13 @@ export default function Shares() {
               </Select>
             </div>
 
-            <div className="col-span-2 md:col-span-1">
-              <Button variant="outline" onClick={clearFilters} className="w-full">
-                Limpar Filtros
-              </Button>
-            </div>
+            {(searchQuery || artistFilter !== "all" || statusFilter !== "all" || shareTypeFilter !== "all") && (
+              <div className="col-span-2 md:col-span-1">
+                <Button variant="outline" onClick={clearFilters} className="w-full">
+                  Limpar Filtros
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
