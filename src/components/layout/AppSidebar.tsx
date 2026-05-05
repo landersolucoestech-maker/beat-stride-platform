@@ -22,6 +22,10 @@ import {
   User,
   Shield,
   Languages,
+  Wallet as WalletIcon,
+  ShieldAlert,
+  Link as LinkIcon,
+  FileSpreadsheet,
   ChevronDown,
   ChevronRight,
   Menu,
@@ -117,6 +121,7 @@ export function AppSidebar() {
       children: [
         { to: "/distribution/music", icon: Music, label: "Gerenciar Músicas" },
         { to: "/distribution/videos", icon: Video, label: "Gerenciar Vídeos" },
+        { to: "/distribution/fraud", icon: ShieldAlert, label: "Anti-Fraude" },
       ],
     },
     {
@@ -137,6 +142,7 @@ export function AppSidebar() {
       label: "Marketing",
       children: [
         { to: "/marketing/start", icon: Megaphone, label: "Iniciar Marketing" },
+        { to: "/marketing/smartlinks", icon: LinkIcon, label: "Smart Links" },
         { to: "/marketing/tools", icon: Wrench, label: "Ferramentas Pro" },
         { to: "/marketing/emails", icon: Mail, label: "Lista de E-mails" },
       ],
@@ -147,6 +153,8 @@ export function AppSidebar() {
       label: "Financeiro",
       children: [
         { to: "/financial/analytics", icon: PieChart, label: "Análises Mensais" },
+        { to: "/financial/wallet", icon: WalletIcon, label: "Carteira" },
+        { to: "/financial/royalties", icon: FileSpreadsheet, label: "Importar Royalties" },
         { to: "/financial/accounting", icon: DollarSign, label: "Contabilidade" },
         { to: "/financial/shares", icon: Users, label: "Gestão de Shares" },
       ],

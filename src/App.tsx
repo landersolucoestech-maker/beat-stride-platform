@@ -12,6 +12,10 @@ import NewVideo from "./pages/distribution/NewVideo";
 import FinancialAnalytics from "./pages/financial/Analytics";
 import Payouts from "./pages/financial/Payouts";
 import Shares from "./pages/financial/Shares";
+import RoyaltyImport from "./pages/financial/RoyaltyImport";
+import Wallet from "./pages/financial/Wallet";
+import SmartLinks from "./pages/marketing/SmartLinks";
+import Fraud from "./pages/distribution/Fraud";
 import Tickets from "./pages/help/Tickets";
 import Support from "./pages/help/Support";
 import Profile from "./pages/settings/Profile";
@@ -60,6 +64,14 @@ const App = () => (
           <Route path="/financial/analytics" element={<FinancialAnalytics />} />
           <Route path="/financial/accounting" element={<Payouts />} />
           <Route path="/financial/shares" element={<Shares />} />
+          <Route path="/financial/royalties" element={<RoyaltyImport />} />
+          <Route path="/financial/wallet" element={<Wallet />} />
+
+          {/* Marketing extra */}
+          <Route path="/marketing/smartlinks" element={<SmartLinks />} />
+
+          {/* Distribution extra */}
+          <Route path="/distribution/fraud" element={<Fraud />} />
           
           {/* Help */}
           <Route path="/help/support" element={<Support />} />
