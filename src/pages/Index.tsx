@@ -14,8 +14,14 @@ const Index = () => {
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Page header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Painel geral</h1>
+        <div className="flex items-end justify-between flex-wrap gap-4">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-2">Bem-vindo de volta</p>
+            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground">
+              Painel <span className="text-gradient">geral</span>
+            </h1>
+          </div>
+          <p className="text-sm text-muted-foreground">Aqui está um resumo do que aconteceu hoje no seu catálogo.</p>
         </div>
 
         {/* Top section - Wallet and Quick Links */}
