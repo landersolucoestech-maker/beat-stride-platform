@@ -210,12 +210,15 @@ export function AppSidebar() {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+            <div className="relative w-11 h-11 rounded-2xl gradient-primary flex items-center justify-center shadow-elegant">
               <Music className="h-5 w-5 text-primary-foreground" />
+              <div className="absolute -inset-1 rounded-2xl gradient-primary blur-md opacity-40 -z-10" />
             </div>
             <div>
-              <h1 className="font-bold text-lg text-sidebar-foreground">MusicDist</h1>
-              <p className="text-xs text-sidebar-foreground/60">Distribution Platform</p>
+              <h1 className="font-display font-bold text-lg text-sidebar-foreground tracking-tight">
+                Music<span className="text-gradient">Dist</span>
+              </h1>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50">Distribution OS</p>
             </div>
           </div>
 
