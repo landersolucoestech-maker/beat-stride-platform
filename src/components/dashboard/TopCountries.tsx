@@ -31,10 +31,12 @@ export function TopCountries() {
   };
 
   return (
-    <div className="rounded-xl bg-card border border-border p-6">
+    <div className="surface p-6">
       <div className="flex items-center gap-2 mb-6">
-        <Globe className="h-5 w-5 text-primary" />
-        <h3 className="font-semibold text-foreground text-lg">Top territórios</h3>
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Globe className="h-4 w-4 text-primary" />
+        </div>
+        <h3 className="font-display font-semibold text-foreground text-lg">Top territórios</h3>
       </div>
       
       <div className="flex flex-col lg:flex-row gap-6">

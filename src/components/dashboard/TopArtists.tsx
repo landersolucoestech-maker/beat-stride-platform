@@ -10,10 +10,12 @@ const artistsData = [
 
 export function TopArtists() {
   return (
-    <div className="rounded-xl bg-card border border-border p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <User className="h-5 w-5 text-primary" />
-        <h3 className="font-semibold text-foreground">Top Artistas</h3>
+    <div className="surface p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <User className="h-4 w-4 text-primary" />
+        </div>
+        <h3 className="font-display font-semibold text-foreground">Top Artistas</h3>
       </div>
       <div className="space-y-4">
         {artistsData.map((item, index) => (
