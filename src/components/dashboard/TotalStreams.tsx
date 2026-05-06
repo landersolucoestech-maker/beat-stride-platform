@@ -1,5 +1,5 @@
-import { TrendingUp } from "lucide-react";
-import { BarChart, Bar, ResponsiveContainer, Cell } from "recharts";
+import { Music, TrendingUp } from "lucide-react";
+import { BarChart, Bar, ResponsiveContainer } from "recharts";
 
 const monthlyData = [
   { month: 'Jul', streams: 89000 },
@@ -12,38 +12,47 @@ const monthlyData = [
 
 export function TotalStreams() {
   return (
-    <div className="surface-glow p-6 flex flex-col justify-between h-full">
-      <div className="relative">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Total streams</p>
-        <p className="font-display text-4xl font-bold text-gradient tracking-tight">1.245.678</p>
-        <div className="flex items-center gap-1.5 mt-2">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded-full">
-            <TrendingUp className="h-3 w-3" /> +16.3%
-          </span>
-          <span className="text-xs text-muted-foreground">vs. mês anterior</span>
+    <div className="rounded-xl bg-card border border-border p-6 flex flex-col justify-between h-full">
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <Music className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-foreground">Total Streams</h3>
+        </div>
+        <div className="space-y-1">
+          <p className="text-3xl font-bold text-foreground">1.245.678</p>
+          <p className="text-sm text-muted-foreground">streams totais</p>
         </div>
       </div>
 
-      <div className="h-20 mt-4 relative">
+      {/* Mini Bar Chart */}
+      <div className="h-16 mt-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={monthlyData}>
-            <Bar dataKey="streams" radius={[4, 4, 0, 0]}>
-              {monthlyData.map((_, i) => (
-                <Cell key={i} fill={i === monthlyData.length - 1 ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.25)"} />
-              ))}
-            </Bar>
+            <Bar 
+              dataKey="streams" 
+              fill="hsl(var(--primary))" 
+              radius={[3, 3, 0, 0]}
+              opacity={0.8}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
-
-      <div className="mt-4 pt-4 border-t border-border/60 grid grid-cols-2 gap-3 text-center">
-        <div>
-          <p className="text-xs text-muted-foreground">Este mês</p>
-          <p className="font-display font-semibold text-foreground">156.432</p>
+      
+      <div className="mt-4 pt-4 border-t border-border space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Este mês</span>
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-medium text-foreground">156.432</span>
+            <TrendingUp className="h-3 w-3 text-emerald-500" />
+          </div>
         </div>
-        <div>
-          <p className="text-xs text-muted-foreground">Anterior</p>
-          <p className="font-display font-semibold text-foreground">134.521</p>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Mês anterior</span>
+          <span className="text-sm font-medium text-foreground">134.521</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Crescimento</span>
+          <span className="text-sm font-medium text-emerald-500">+16.3%</span>
         </div>
       </div>
     </div>

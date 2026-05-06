@@ -10,15 +10,13 @@ const topTracks = [
 
 export function TopStreams() {
   return (
-    <div className="surface overflow-hidden">
-      <div className="flex items-center justify-between p-6 border-b border-border/60">
+    <div className="rounded-xl bg-card border border-border overflow-hidden">
+      <div className="flex items-center justify-between p-6 border-b border-border">
         <div>
-          <h3 className="font-display font-semibold text-foreground">Top Streams</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Suas faixas mais ouvidas</p>
+          <h3 className="font-semibold text-foreground">Top Streams</h3>
+          <p className="text-sm text-muted-foreground">Suas músicas mais ouvidas</p>
         </div>
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <TrendingUp className="h-4 w-4 text-primary" />
-        </div>
+        <TrendingUp className="h-5 w-5 text-primary" />
       </div>
       
       <div className="divide-y divide-border">

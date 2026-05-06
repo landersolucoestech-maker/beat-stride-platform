@@ -3,11 +3,11 @@ import { dspData } from "@/data/mockData";
 
 export function StreamsChart() {
   return (
-    <div className="surface p-6">
+    <div className="rounded-xl bg-card border border-border p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="font-display font-semibold text-foreground">Streams por Plataforma</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Últimos 30 dias</p>
+          <h3 className="font-semibold text-foreground">Streams por Plataforma</h3>
+          <p className="text-sm text-muted-foreground">Últimos 30 dias</p>
         </div>
       </div>
       
