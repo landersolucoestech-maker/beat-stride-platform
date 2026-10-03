@@ -1,181 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Save, User } from "lucide-react";
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { toast } from "@/hooks/use-toast";
-import { User, Camera, Save } from "lucide-react";
-import { supportedDSPs, languages } from "@/data/mockData";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useProfileSettings, useUpdateProfileSettings } from "@/features/settings/use-settings";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
-  const [name, setName] = useState("Studio Demo");
-  const [email, setEmail] = useState("demo@musicdist.com");
-  const [phone, setPhone] = useState("+55 11 99999-9999");
-  const [language, setLanguage] = useState("pt");
-  const [currency, setCurrency] = useState("BRL");
-  const [distributionFee, setDistributionFee] = useState("15");
-  const [dsps, setDsps] = useState(supportedDSPs);
+  const profileQuery = useProfileSettings();
+  const updateProfile = useUpdateProfileSettings();
+  const { toast } = useToast();
+  const profile = profileQuery.data;
+  const [displayName, setDisplayName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [currency, setCurrency] = useState("");
 
-  const handleSave = () => {
-    toast({
-      title: "Configurações salvas!",
-      description: "Suas preferências foram atualizadas com sucesso.",
-    });
+  useEffect(() => {
+    if (!profile?.available) return;
+    setDisplayName(profile.displayName ?? "");
+    setPhone(profile.phone ?? "");
+    setCurrency(profile.preferredCurrency ?? "");
+  }, [profile]);
+
+  const save = async () => {
+    try {
+      await updateProfile.mutateAsync({ displayName: displayName.trim(), phone: phone.trim() || null, preferredCurrency: currency || null });
+      toast({ title: "Perfil atualizado", description: "As preferências foram salvas no backend." });
+    } catch {
+      toast({ title: "Não foi possível salvar", description: "Nenhuma alteração fictícia foi aplicada.", variant: "destructive" });
+    }
   };
 
-  const toggleDsp = (name: string) => {
-    setDsps(dsps.map(d => d.name === name ? { ...d, enabled: !d.enabled } : d));
-  };
-
-  return (
-    <MainLayout>
-      <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
-          <p className="text-muted-foreground">Gerencie seu perfil e preferências</p>
-        </div>
-
-        {/* Profile section */}
-        <div className="rounded-xl bg-card border border-border p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-6">Meu Perfil</h2>
-          
-          <div className="flex flex-col sm:flex-row items-start gap-6">
-            {/* Avatar */}
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center">
-                <User className="h-10 w-10 text-primary" />
-              </div>
-              <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors">
-                <Camera className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Form */}
-            <div className="flex-1 grid sm:grid-cols-2 gap-4 w-full">
-              <div>
-                <Label htmlFor="name">Nome</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Preferences section */}
-        <div className="rounded-xl bg-card border border-border p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-6">Preferências</h2>
-          
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div>
-              <Label>Idioma</Label>
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {languages.map((lang) => (
-                    <SelectItem key={lang.code} value={lang.code}>
-                      {lang.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label>Moeda</Label>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BRL">Real (BRL)</SelectItem>
-                  <SelectItem value="USD">Dólar (USD)</SelectItem>
-                  <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="sm:col-span-2">
-              <Label>Taxa de Distribuição (%)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                value={distributionFee}
-                onChange={(e) => setDistributionFee(e.target.value)}
-                className="mt-1 max-w-[200px]"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Percentual retido sobre os royalties
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* DSPs section */}
-        <div className="rounded-xl bg-card border border-border p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-6">Plataformas Suportadas</h2>
-          
-          <div className="grid sm:grid-cols-2 gap-4">
-            {dsps.map((dsp) => (
-              <div
-                key={dsp.name}
-                className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{dsp.icon}</span>
-                  <span className="font-medium text-foreground">{dsp.name}</span>
-                </div>
-                <Switch
-                  checked={dsp.enabled}
-                  onCheckedChange={() => toggleDsp(dsp.name)}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Save button */}
-        <div className="flex justify-end">
-          <Button onClick={handleSave} className="gradient-primary text-primary-foreground">
-            <Save className="h-4 w-4 mr-2" />
-            Salvar Alterações
-          </Button>
-        </div>
-      </div>
-    </MainLayout>
-  );
+  return <MainLayout><div className="mx-auto max-w-3xl space-y-8 animate-fade-in">
+    <div><h1 className="text-2xl font-bold text-foreground">Configurações</h1><p className="text-muted-foreground">Gerencie seu perfil e as preferências pessoais disponíveis.</p></div>
+    {!profileQuery.isLoading && profile?.available === false && <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">O preview não possui perfil autenticado conectado. Dados pessoais de demonstração foram removidos.</div>}
+    <div className="rounded-xl border border-border bg-card p-6"><h2 className="mb-6 text-lg font-semibold">Meu Perfil</h2><div className="flex flex-col items-start gap-6 sm:flex-row"><div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/20"><User className="h-10 w-10 text-primary" /></div><div className="grid w-full flex-1 gap-4 sm:grid-cols-2"><div><Label htmlFor="name">Nome</Label><Input id="name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} className="mt-1" disabled={!profile?.available} /></div><div><Label htmlFor="email">E-mail</Label><Input id="email" value={profile?.email ?? ""} className="mt-1" disabled /></div><div className="sm:col-span-2"><Label htmlFor="phone">Telefone</Label><Input id="phone" value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1" disabled={!profile?.available} /></div></div></div></div>
+    <div className="rounded-xl border border-border bg-card p-6"><h2 className="mb-6 text-lg font-semibold">Preferências</h2><div className="grid gap-6 sm:grid-cols-2"><div><Label>Idioma</Label><Select value="pt-BR" disabled><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pt-BR">Português (Brasil)</SelectItem></SelectContent></Select><p className="mt-1 text-xs text-muted-foreground">pt-BR é o único locale de frontend habilitado nesta fase.</p></div><div><Label>Moeda de apresentação</Label><Select value={currency} onValueChange={setCurrency} disabled={!profile?.available}><SelectTrigger className="mt-1"><SelectValue placeholder="Definida pela conta" /></SelectTrigger><SelectContent><SelectItem value="BRL">BRL</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent></Select><p className="mt-1 text-xs text-muted-foreground">A moeda contábil de cada transação continua sendo preservada no dado original.</p></div></div></div>
+    <div className="rounded-xl border border-border bg-card p-6"><h2 className="mb-4 text-lg font-semibold">Organização ativa</h2><p className="font-medium text-foreground">{profile?.organizationName ?? "—"}</p><p className="mt-1 text-sm text-muted-foreground">{profile?.organizationType === "INDEPENDENT_ARTIST" ? "Artista Independente" : profile?.organizationType === "COMPANY" ? "Empresa / Organização" : "Sessão não conectada"}</p></div>
+    <div className="flex justify-end"><Button onClick={() => void save()} disabled={!profile?.available || updateProfile.isPending} className="gradient-primary text-primary-foreground"><Save className="mr-2 h-4 w-4" />{updateProfile.isPending ? "Salvando..." : "Salvar Alterações"}</Button></div>
+  </div></MainLayout>;
 }
