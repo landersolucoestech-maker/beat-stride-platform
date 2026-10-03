@@ -1,4 +1,4 @@
-export type ArtistIdentityStatus = "DRAFT" | "PENDING_VERIFICATION" | "VERIFIED" | "DISPUTED" | "INACTIVE";
+export type ArtistIdentityStatus = "ACTIVE" | "INACTIVE";
 export type RepresentationSummaryStatus = "NONE" | "PENDING" | "ACTIVE" | "DISPUTED" | "TERMINATED";
 
 export interface ArtistIdentityListItem {
