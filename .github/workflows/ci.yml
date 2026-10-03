@@ -46,3 +46,22 @@ jobs:
         run: npm run typecheck
       - name: Build API
         run: npm run build
+
+  worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/worker
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install worker dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck worker
+        run: npm run typecheck
+      - name: Build worker
+        run: npm run build
