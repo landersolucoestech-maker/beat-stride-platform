@@ -65,11 +65,19 @@ export class ContentIdEnrollment {
   deactivate(now: Date): void { this.transitionTo("DEACTIVATED", now); }
 
   submit(providerCode: string, providerReference: string, now: Date): void {
-    this.transitionTo("SUBMITTED", now);
     const code = providerCode.trim();
     const reference = providerReference.trim();
     if (!code || !reference) throw new Error("CONTENT_ID_PROVIDER_REFERENCE_REQUIRED");
-    this.props = { ...this.props, providerCode: code, providerReference: reference, updatedAt: now };
+    if (!allowedTransitions[this.props.status].includes("SUBMITTED")) {
+      throw new Error("CONTENT_ID_STATE_TRANSITION_INVALID");
+    }
+    this.props = {
+      ...this.props,
+      status: "SUBMITTED",
+      providerCode: code,
+      providerReference: reference,
+      updatedAt: now,
+    };
   }
 
   activate(now: Date): void {
