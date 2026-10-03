@@ -1,11 +1,26 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, UserRound, Users } from "lucide-react";
+import { CheckCircle2, Plus, Search, UserRound, Users } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useArtistIdentities } from "@/features/artists/use-artist-identities";
 
 export default function Artists() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const artistsQuery = useArtistIdentities();
+  const artists = artistsQuery.data?.items ?? [];
+  const available = artistsQuery.data?.available !== false;
+  const filteredArtists = useMemo(() => {
+    const query = searchTerm.trim().toLocaleLowerCase("pt-BR");
+    if (!query) return artists;
+    return artists.filter((artist) => artist.displayName.toLocaleLowerCase("pt-BR").includes(query));
+  }, [artists, searchTerm]);
+
+  const activeRepresentations = artists.filter((artist) => artist.representationStatus === "ACTIVE").length;
+  const verifiedAuthorities = artists.filter((artist) => artist.authorityVerified).length;
+
   return (
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
@@ -14,7 +29,7 @@ export default function Artists() {
             <h1 className="text-2xl font-bold text-foreground">Artistas</h1>
             <p className="text-muted-foreground">Gerencie identidades de artistas vinculadas à sua organização.</p>
           </div>
-          <Button className="gradient-primary text-primary-foreground" disabled>
+          <Button className="gradient-primary text-primary-foreground" disabled={!available}>
             <Plus className="mr-2 h-4 w-4" />
             Novo artista
           </Button>
@@ -28,7 +43,7 @@ export default function Artists() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Identidades</p>
-                <p className="text-xl font-semibold text-foreground">—</p>
+                <p className="text-xl font-semibold text-foreground">{available ? artists.length : "—"}</p>
               </div>
             </div>
           </div>
@@ -39,33 +54,100 @@ export default function Artists() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Representações ativas</p>
-                <p className="text-xl font-semibold text-foreground">—</p>
+                <p className="text-xl font-semibold text-foreground">{available ? activeRepresentations : "—"}</p>
               </div>
             </div>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">Autoridade verificada</p>
-            <p className="mt-2 text-sm font-medium text-foreground">Sem dados conectados</p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Autoridade verificada</p>
+                <p className="text-xl font-semibold text-foreground">{available ? verifiedAuthorities : "—"}</p>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="relative max-w-xl">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-10" placeholder="Buscar artista..." disabled />
+          <Input
+            className="pl-10"
+            placeholder="Buscar artista..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            disabled={!available}
+          />
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-12 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-            <UserRound className="h-6 w-6 text-muted-foreground" />
+        {artistsQuery.isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="rounded-xl border border-border bg-card p-5">
+                <div className="h-12 w-12 animate-pulse rounded-full bg-muted" />
+                <div className="mt-4 h-4 w-40 animate-pulse rounded bg-muted" />
+                <div className="mt-2 h-3 w-28 animate-pulse rounded bg-muted" />
+              </div>
+            ))}
           </div>
-          <h2 className="mt-4 text-lg font-semibold text-foreground">Nenhuma identidade de artista disponível</h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-            O cadastro de Artist Identity será exibido aqui quando a API real de catálogo e autoridade estiver conectada ao portal.
-          </p>
-          <Link to="/distribution/music" className="mt-5 inline-block text-sm font-medium text-primary hover:underline">
-            Voltar aos lançamentos
-          </Link>
-        </div>
+        ) : artistsQuery.isError ? (
+          <div className="rounded-xl border border-destructive/20 bg-card p-10 text-center">
+            <h2 className="text-lg font-semibold text-foreground">Não foi possível carregar os artistas</h2>
+            <p className="mt-2 text-sm text-muted-foreground">A fonte real de Artist Identity respondeu com erro.</p>
+            <Button variant="outline" className="mt-4" onClick={() => void artistsQuery.refetch()}>Tentar novamente</Button>
+          </div>
+        ) : !available ? (
+          <div className="rounded-xl border border-border bg-card p-12 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <UserRound className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h2 className="mt-4 text-lg font-semibold text-foreground">Artist Identity ainda não está conectado neste preview</h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+              A tela usa o contrato da API real e não cria artistas fictícios para preencher a interface.
+            </p>
+            <Link to="/distribution/music" className="mt-5 inline-block text-sm font-medium text-primary hover:underline">
+              Voltar aos lançamentos
+            </Link>
+          </div>
+        ) : filteredArtists.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-12 text-center">
+            <UserRound className="mx-auto h-8 w-8 text-muted-foreground" />
+            <h2 className="mt-4 text-lg font-semibold text-foreground">Nenhum artista encontrado</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Ajuste a busca ou cadastre uma nova Artist Identity quando o fluxo estiver habilitado.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredArtists.map((artist) => (
+              <article key={artist.id} className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40">
+                <div className="flex items-start gap-4">
+                  {artist.imageUrl ? (
+                    <img src={artist.imageUrl} alt={artist.displayName} className="h-12 w-12 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                      <UserRound className="h-5 w-5 text-primary" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate font-semibold text-foreground">{artist.displayName}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{artist.status}</p>
+                  </div>
+                </div>
+                <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-xs text-muted-foreground">Representação</p>
+                    <p className="mt-1 font-medium text-foreground">{artist.representationStatus}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-xs text-muted-foreground">Autoridade</p>
+                    <p className="mt-1 font-medium text-foreground">{artist.authorityVerified ? "Verificada" : "Não verificada"}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
     </MainLayout>
   );
