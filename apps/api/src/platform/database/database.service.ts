@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy, ServiceUnavailableException } from "@nestjs/common";
-import { Pool, type QueryResult, type QueryResultRow } from "pg";
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
 
 import { loadRuntimeConfig } from "../config/runtime-config.js";
 
@@ -31,6 +31,28 @@ export class DatabaseService implements OnModuleDestroy {
       });
     }
     return this.pool.query<TRow>(text, [...values]);
+  }
+
+  async transaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
+    if (!this.pool) {
+      throw new ServiceUnavailableException({
+        code: "DATABASE_NOT_CONFIGURED",
+        message: "Database is not configured for this environment",
+      });
+    }
+
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      const result = await work(client);
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async ping(): Promise<boolean> {

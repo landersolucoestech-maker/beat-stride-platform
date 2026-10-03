@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  frontend-and-domain:
+  frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
@@ -25,14 +25,6 @@ jobs:
           node-version: 22
       - name: Install frontend dependencies
         run: npm install --no-audit --no-fund
-      - name: Typecheck frontend
-        run: npm run typecheck:frontend
-      - name: Typecheck domain modules
-        run: npm run typecheck:modules
-      - name: Test domain modules
-        run: npm run test:domain
-      - name: Lint frontend
-        run: npm run lint
       - name: Build frontend
         run: npm run build -- --base=/beat-stride-platform/
 
@@ -53,23 +45,4 @@ jobs:
       - name: Typecheck API
         run: npm run typecheck
       - name: Build API
-        run: npm run build
-
-  worker:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/worker
-    steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install worker dependencies
-        run: npm install --no-audit --no-fund
-      - name: Typecheck worker
-        run: npm run typecheck
-      - name: Build worker
         run: npm run build

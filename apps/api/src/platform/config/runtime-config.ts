@@ -5,6 +5,8 @@ const runtimeConfigSchema = z.object({
   PORT: z.coerce.number().int().positive().max(65535).default(3000),
   DATABASE_URL: z.string().min(1).optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+  SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(24),
+  CORS_ALLOWED_ORIGINS: z.string().optional(),
 });
 
 export type RuntimeConfig = z.infer<typeof runtimeConfigSchema>;
@@ -21,4 +23,12 @@ export function loadRuntimeConfig(environment: NodeJS.ProcessEnv = process.env):
   }
 
   return parsed.data;
+}
+
+export function parseAllowedOrigins(value: string | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
 }
