@@ -1,23 +1,22 @@
 export type SupportTicketPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
-export type SupportTicketStatus = "OPEN" | "WAITING_ON_SUPPORT" | "WAITING_ON_CUSTOMER" | "RESOLVED" | "CLOSED";
+export type SupportTicketStatus = "OPEN" | "WAITING_CUSTOMER" | "WAITING_INTERNAL" | "RESOLVED" | "CLOSED";
 
 export interface SupportTicketProps {
   id: string;
   organizationId: string;
-  createdByUserId: string;
+  openedByUserId: string;
   subject: string;
+  category: string;
   priority: SupportTicketPriority;
   status: SupportTicketStatus;
   createdAt: Date;
   updatedAt: Date;
-  resolvedAt: Date | null;
-  closedAt: Date | null;
 }
 
 const allowedTransitions: Record<SupportTicketStatus, readonly SupportTicketStatus[]> = {
-  OPEN: ["WAITING_ON_SUPPORT", "WAITING_ON_CUSTOMER", "RESOLVED", "CLOSED"],
-  WAITING_ON_SUPPORT: ["WAITING_ON_CUSTOMER", "RESOLVED", "CLOSED"],
-  WAITING_ON_CUSTOMER: ["WAITING_ON_SUPPORT", "RESOLVED", "CLOSED"],
+  OPEN: ["WAITING_CUSTOMER", "WAITING_INTERNAL", "RESOLVED", "CLOSED"],
+  WAITING_CUSTOMER: ["WAITING_INTERNAL", "RESOLVED", "CLOSED"],
+  WAITING_INTERNAL: ["WAITING_CUSTOMER", "RESOLVED", "CLOSED"],
   RESOLVED: ["OPEN", "CLOSED"],
   CLOSED: [],
 };
@@ -25,17 +24,20 @@ const allowedTransitions: Record<SupportTicketStatus, readonly SupportTicketStat
 export class SupportTicket {
   private constructor(private props: SupportTicketProps) {}
 
-  static open(input: Omit<SupportTicketProps, "status" | "createdAt" | "updatedAt" | "resolvedAt" | "closedAt"> & { now: Date }): SupportTicket {
+  static open(input: Omit<SupportTicketProps, "status" | "createdAt" | "updatedAt"> & { now: Date }): SupportTicket {
     const subject = input.subject.trim();
+    const category = input.category.trim();
     if (!subject) throw new Error("SUPPORT_TICKET_SUBJECT_REQUIRED");
+    if (!category) throw new Error("SUPPORT_TICKET_CATEGORY_REQUIRED");
+    if (!input.openedByUserId.trim()) throw new Error("SUPPORT_TICKET_USER_REQUIRED");
     return new SupportTicket({
       ...input,
       subject,
+      category,
+      openedByUserId: input.openedByUserId.trim(),
       status: "OPEN",
       createdAt: input.now,
       updatedAt: input.now,
-      resolvedAt: null,
-      closedAt: null,
     });
   }
 
@@ -43,23 +45,11 @@ export class SupportTicket {
     return new SupportTicket({ ...props });
   }
 
-  waitOnSupport(now: Date): void { this.transitionTo("WAITING_ON_SUPPORT", now); }
-  waitOnCustomer(now: Date): void { this.transitionTo("WAITING_ON_CUSTOMER", now); }
-
-  resolve(now: Date): void {
-    this.transitionTo("RESOLVED", now);
-    this.props = { ...this.props, resolvedAt: now, updatedAt: now };
-  }
-
-  reopen(now: Date): void {
-    this.transitionTo("OPEN", now);
-    this.props = { ...this.props, resolvedAt: null, closedAt: null, updatedAt: now };
-  }
-
-  close(now: Date): void {
-    this.transitionTo("CLOSED", now);
-    this.props = { ...this.props, closedAt: now, updatedAt: now };
-  }
+  waitOnInternal(now: Date): void { this.transitionTo("WAITING_INTERNAL", now); }
+  waitOnCustomer(now: Date): void { this.transitionTo("WAITING_CUSTOMER", now); }
+  resolve(now: Date): void { this.transitionTo("RESOLVED", now); }
+  reopen(now: Date): void { this.transitionTo("OPEN", now); }
+  close(now: Date): void { this.transitionTo("CLOSED", now); }
 
   snapshot(): Readonly<SupportTicketProps> {
     return { ...this.props };
