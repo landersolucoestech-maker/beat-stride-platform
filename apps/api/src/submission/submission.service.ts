@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
-import type { PoolClient, QueryResultRow } from "pg";
+import type { PoolClient, QueryResult, QueryResultRow } from "pg";
 
 import { DatabaseService } from "../platform/database/database.service.js";
 
@@ -35,12 +35,18 @@ export interface ReleaseReadiness {
   }>;
 }
 
+type WorkflowQuery = (text: string, values: readonly unknown[]) => Promise<QueryResult<ReleaseWorkflowRow>>;
+
 @Injectable()
 export class SubmissionService {
   constructor(private readonly database: DatabaseService) {}
 
   async getReadiness(organizationId: string, releaseId: string): Promise<ReleaseReadiness> {
-    const release = await this.loadWorkflowState(this.database, organizationId, releaseId);
+    const release = await this.loadWorkflowState(
+      (text, values) => this.database.query<ReleaseWorkflowRow>(text, values),
+      organizationId,
+      releaseId,
+    );
     return this.buildReadiness(release);
   }
 
@@ -52,7 +58,12 @@ export class SubmissionService {
     correlationId: string;
   }) {
     return this.database.transaction(async (client) => {
-      const release = await this.loadWorkflowState(client, input.organizationId, input.releaseId, true);
+      const release = await this.loadWorkflowState(
+        (text, values) => client.query<ReleaseWorkflowRow>(text, [...values]),
+        input.organizationId,
+        input.releaseId,
+        true,
+      );
       const readiness = this.buildReadiness(release);
 
       if (readiness.version !== input.expectedVersion) {
@@ -123,13 +134,13 @@ export class SubmissionService {
   }
 
   private async loadWorkflowState(
-    queryable: Pick<DatabaseService, "query"> | PoolClient,
+    query: WorkflowQuery,
     organizationId: string,
     releaseId: string,
     lock = false,
   ): Promise<ReleaseWorkflowRow> {
     const lockClause = lock ? "FOR UPDATE OF r" : "";
-    const result = await queryable.query<ReleaseWorkflowRow>(
+    const result = await query(
       `SELECT
          r.id,
          r.organization_id,
