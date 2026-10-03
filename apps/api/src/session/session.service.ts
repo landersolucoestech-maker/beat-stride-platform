@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import type { QueryResultRow } from "pg";
 
 import { loadRuntimeConfig } from "../platform/config/runtime-config.js";
@@ -19,18 +19,24 @@ interface MembershipRow extends QueryResultRow {
   display_name: string;
 }
 
+export interface SessionMembership {
+  organizationId: string;
+  role: MembershipRow["role"];
+  organizationType: MembershipRow["organization_type"];
+  companySubtype: MembershipRow["company_subtype"];
+  displayName: string;
+}
+
 export interface SessionContext {
   user: {
     id: string;
     email: string;
   };
-  memberships: Array<{
-    organizationId: string;
-    role: MembershipRow["role"];
-    organizationType: MembershipRow["organization_type"];
-    companySubtype: MembershipRow["company_subtype"];
-    displayName: string;
-  }>;
+  memberships: SessionMembership[];
+}
+
+export interface OrganizationRequestContext extends SessionContext {
+  activeOrganization: SessionMembership;
 }
 
 @Injectable()
@@ -71,16 +77,10 @@ export class SessionService {
 
     const user = userResult.rows[0];
     if (!user) {
-      throw new UnauthorizedException({
-        code: "AUTHENTICATION_REQUIRED",
-        message: "Authentication is required",
-      });
+      throw new UnauthorizedException({ code: "AUTHENTICATION_REQUIRED", message: "Authentication is required" });
     }
 
-    await this.database.query(
-      `UPDATE auth_sessions SET last_seen_at = NOW() WHERE token_hash = $1`,
-      [tokenHash],
-    );
+    await this.database.query(`UPDATE auth_sessions SET last_seen_at = NOW() WHERE token_hash = $1`, [tokenHash]);
 
     const memberships = await this.database.query<MembershipRow>(
       `SELECT m.organization_id, m.role, o.organization_type, o.company_subtype, o.display_name
@@ -105,30 +105,44 @@ export class SessionService {
     };
   }
 
+  async requireOrganizationContext(
+    authorizationHeader: string | undefined,
+    organizationIdHeader: string | undefined,
+  ): Promise<OrganizationRequestContext> {
+    if (!organizationIdHeader?.trim()) {
+      throw new BadRequestException({
+        code: "ORGANIZATION_CONTEXT_REQUIRED",
+        message: "X-Organization-Id header is required",
+      });
+    }
+
+    const context = await this.requireContext(authorizationHeader);
+    const activeOrganization = context.memberships.find((membership) => membership.organizationId === organizationIdHeader.trim());
+    if (!activeOrganization) {
+      throw new ForbiddenException({
+        code: "ORGANIZATION_ACCESS_DENIED",
+        message: "The authenticated user does not have access to this organization",
+      });
+    }
+
+    return { ...context, activeOrganization };
+  }
+
   async revoke(authorizationHeader: string | undefined): Promise<void> {
     const token = this.readBearerToken(authorizationHeader);
     await this.database.query(
-      `UPDATE auth_sessions
-       SET revoked_at = COALESCE(revoked_at, NOW())
-       WHERE token_hash = $1`,
+      `UPDATE auth_sessions SET revoked_at = COALESCE(revoked_at, NOW()) WHERE token_hash = $1`,
       [this.hashToken(token)],
     );
   }
 
   private readBearerToken(authorizationHeader: string | undefined): string {
     if (!authorizationHeader?.startsWith("Bearer ")) {
-      throw new UnauthorizedException({
-        code: "AUTHENTICATION_REQUIRED",
-        message: "Authentication is required",
-      });
+      throw new UnauthorizedException({ code: "AUTHENTICATION_REQUIRED", message: "Authentication is required" });
     }
-
     const token = authorizationHeader.slice("Bearer ".length).trim();
     if (!token) {
-      throw new UnauthorizedException({
-        code: "AUTHENTICATION_REQUIRED",
-        message: "Authentication is required",
-      });
+      throw new UnauthorizedException({ code: "AUTHENTICATION_REQUIRED", message: "Authentication is required" });
     }
     return token;
   }
