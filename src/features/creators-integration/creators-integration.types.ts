@@ -1,21 +1,25 @@
-export type CreatorsConnectionStatus = "not_connected" | "pending" | "active" | "revoked" | "error";
+export type CreatorsConnectionStatus = "NOT_CONNECTED" | "CONNECTED" | "REAUTH_REQUIRED" | "REVOKED";
 
 export interface CreatorsConnectionView {
+  available: boolean;
   status: CreatorsConnectionStatus;
-  externalOrganizationId?: string;
-  connectedAt?: string;
+  connectedOrganizationName: string | null;
+  mappedOrganizationId: string | null;
+  connectUrl: string | null;
+  manageUrl: string | null;
+  connectedAt: string | null;
 }
 
-export interface CreatorsCampaignProjectionView {
+export interface CreatorsCampaignProjection {
   externalCampaignId: string;
   releaseId: string;
-  status: string;
-  paymentStatus?: string;
-  packageReference?: string;
-  lastSyncedAt?: string;
+  releaseTitle: string;
+  statusLabel: string;
+  openUrl: string | null;
+  updatedAt: string;
 }
 
-export interface CreatorsIntegrationSnapshot {
+export interface CreatorsIntegrationOverview {
   connection: CreatorsConnectionView;
-  campaigns: CreatorsCampaignProjectionView[];
+  campaigns: CreatorsCampaignProjection[];
 }
