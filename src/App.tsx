@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Artists from "./pages/distribution/Artists";
+import ContentIdUgc from "./pages/distribution/ContentIdUgc";
 import RightsProtection from "./pages/distribution/RightsProtection";
 import ManageMusic from "./pages/distribution/ManageMusic";
 import NewRelease from "./pages/distribution/NewRelease";
@@ -46,6 +47,7 @@ const App = () => (
 
           <Route path="/distribution/artists" element={<Artists />} />
           <Route path="/distribution/rights-protection" element={<RightsProtection />} />
+          <Route path="/distribution/content-id" element={<ContentIdUgc />} />
           <Route path="/distribution/music" element={<ManageMusic />} />
           <Route path="/distribution/music/new" element={<NewRelease />} />
           <Route path="/distribution/videos" element={<ManageVideos />} />
