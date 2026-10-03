@@ -143,6 +143,7 @@ export function AppSidebar() {
       children: [
         { to: "/marketing/start", icon: Megaphone, label: "Iniciar Marketing" },
         { to: "/marketing/smartlinks", icon: LinkIcon, label: "Smart Links" },
+        { to: "/marketing/creators", icon: Users, label: "Lander Creators" },
         { to: "/marketing/tools", icon: Wrench, label: "Ferramentas Pro" },
         { to: "/marketing/emails", icon: Mail, label: "Lista de E-mails" },
       ],
@@ -182,7 +183,6 @@ export function AppSidebar() {
 
   return (
     <>
-      {/* Mobile toggle */}
       <Button
         variant="ghost"
         size="icon"
@@ -192,7 +192,6 @@ export function AppSidebar() {
         {isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
       </Button>
 
-      {/* Overlay */}
       {!isCollapsed && (
         <div
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
@@ -200,7 +199,6 @@ export function AppSidebar() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           "fixed top-0 left-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 lg:translate-x-0",
@@ -208,7 +206,6 @@ export function AppSidebar() {
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
               <Music className="h-5 w-5 text-primary-foreground" />
@@ -219,14 +216,12 @@ export function AppSidebar() {
             </div>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
             {navigation.map((item) => (
               <NavItem key={item.to} {...item} />
             ))}
           </nav>
 
-          {/* User info */}
           <div className="p-4 border-t border-sidebar-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
