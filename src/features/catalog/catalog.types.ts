@@ -29,3 +29,25 @@ export interface CatalogReleaseListResult {
   items: CatalogReleaseListItem[];
   available: boolean;
 }
+
+export interface ReleaseReadinessBlocker {
+  code: string;
+  message: string;
+}
+
+export interface ReleaseReadinessResult {
+  releaseId: string;
+  status: CatalogReleaseStatus;
+  version: number;
+  ready: boolean;
+  blockers: ReleaseReadinessBlocker[];
+  available: boolean;
+}
+
+export interface ReleaseSubmissionResult {
+  releaseId: string;
+  submissionId: string;
+  qcReviewId: string;
+  status: "SUBMITTED";
+  version: number;
+}

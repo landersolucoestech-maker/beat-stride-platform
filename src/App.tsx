@@ -16,6 +16,7 @@ import ManageMusic from "./pages/distribution/ManageMusic";
 import ManageVideos from "./pages/distribution/ManageVideos";
 import NewRelease from "./pages/distribution/NewRelease";
 import NewVideo from "./pages/distribution/NewVideo";
+import ReleaseDetails from "./pages/distribution/ReleaseDetails";
 import RightsProtection from "./pages/distribution/RightsProtection";
 import FinancialAnalytics from "./pages/financial/Analytics";
 import Payouts from "./pages/financial/Payouts";
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/distribution/content-id" element={<ContentIdUgc />} />
             <Route path="/distribution/music" element={<ManageMusic />} />
             <Route path="/distribution/music/new" element={<NewRelease />} />
+            <Route path="/distribution/music/:releaseId" element={<ReleaseDetails />} />
             <Route path="/distribution/videos" element={<ManageVideos />} />
             <Route path="/distribution/videos/new" element={<NewVideo />} />
             <Route path="/distribution/fraud" element={<Fraud />} />
