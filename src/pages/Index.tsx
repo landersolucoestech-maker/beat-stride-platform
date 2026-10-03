@@ -8,6 +8,7 @@ import { TopArtists } from "@/components/dashboard/TopArtists";
 import { TopPlaylists } from "@/components/dashboard/TopPlaylists";
 import { TopCountries } from "@/components/dashboard/TopCountries";
 import { StreamsChart } from "@/components/dashboard/StreamsChart";
+import { ProductionStateNotice } from "@/components/dashboard/ProductionStateNotice";
 
 const Index = () => {
   return (
@@ -17,6 +18,8 @@ const Index = () => {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Painel geral</h1>
         </div>
+
+        <ProductionStateNotice />
 
         {/* Top section - Wallet and Quick Links */}
         <div className="grid lg:grid-cols-2 gap-6">
