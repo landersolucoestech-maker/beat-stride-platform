@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Artists from "./pages/distribution/Artists";
+import RightsProtection from "./pages/distribution/RightsProtection";
 import ManageMusic from "./pages/distribution/ManageMusic";
 import NewRelease from "./pages/distribution/NewRelease";
 import ManageVideos from "./pages/distribution/ManageVideos";
@@ -42,6 +44,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
 
+          <Route path="/distribution/artists" element={<Artists />} />
+          <Route path="/distribution/rights-protection" element={<RightsProtection />} />
           <Route path="/distribution/music" element={<ManageMusic />} />
           <Route path="/distribution/music/new" element={<NewRelease />} />
           <Route path="/distribution/videos" element={<ManageVideos />} />
