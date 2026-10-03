@@ -5,9 +5,18 @@ import { AuthModule } from "./auth/auth.module.js";
 import { CatalogModule } from "./catalog/catalog.module.js";
 import { DatabaseModule } from "./platform/database/database.module.js";
 import { HealthModule } from "./platform/health/health.module.js";
+import { RightsProtectionModule } from "./rights-protection/rights-protection.module.js";
 import { SessionModule } from "./session/session.module.js";
 
 @Module({
-  imports: [DatabaseModule, HealthModule, SessionModule, AuthModule, ArtistIdentityModule, CatalogModule],
+  imports: [
+    DatabaseModule,
+    HealthModule,
+    SessionModule,
+    AuthModule,
+    ArtistIdentityModule,
+    CatalogModule,
+    RightsProtectionModule,
+  ],
 })
 export class AppModule {}
