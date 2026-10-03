@@ -24,7 +24,7 @@ function parseCreateArtist(body: unknown): z.infer<typeof createArtistSchema> {
 
 @ApiTags("artist-identity")
 @ApiBearerAuth()
-@Controller("artists")
+@Controller("artist-identities")
 export class ArtistIdentityController {
   constructor(
     private readonly artists: ArtistIdentityService,

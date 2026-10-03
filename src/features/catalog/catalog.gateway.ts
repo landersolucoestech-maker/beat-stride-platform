@@ -1,3 +1,5 @@
+import { apiRequest, isApiConfigured } from "@/lib/api-client";
+
 import type { CatalogReleaseListItem, CatalogReleaseListResult } from "./catalog.types";
 
 interface ReleaseApiResponse {
@@ -17,29 +19,13 @@ export interface CatalogGateway {
 }
 
 class HttpCatalogGateway implements CatalogGateway {
-  constructor(private readonly baseUrl: string | null) {}
-
   async listReleases(): Promise<CatalogReleaseListResult> {
-    if (!this.baseUrl) {
-      return { items: [], available: false };
-    }
+    if (!isApiConfigured()) return { items: [], available: false };
 
-    const response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/api/v1/catalog/releases`, {
-      headers: { Accept: "application/json" },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error(`CATALOG_RELEASES_REQUEST_FAILED:${response.status}`);
-    }
-
+    const response = await apiRequest("/api/v1/catalog/releases");
     const payload = (await response.json()) as ReleaseApiResponse;
     return { items: payload.items, available: true };
   }
 }
 
-const configuredBaseUrl = typeof import.meta.env.VITE_API_BASE_URL === "string" && import.meta.env.VITE_API_BASE_URL.length > 0
-  ? import.meta.env.VITE_API_BASE_URL
-  : null;
-
-export const catalogGateway: CatalogGateway = new HttpCatalogGateway(configuredBaseUrl);
+export const catalogGateway: CatalogGateway = new HttpCatalogGateway();

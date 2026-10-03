@@ -1,8 +1,6 @@
-import type {
-  CreateReleaseDraftInput,
-  CreateReleaseDraftResult,
-  ReleaseEditorReferenceData,
-} from "./release-editor.types";
+import { apiRequest, isApiConfigured } from "@/lib/api-client";
+
+import type { CreateReleaseDraftInput, CreateReleaseDraftResult, ReleaseEditorReferenceData } from "./release-editor.types";
 
 export interface ReleaseEditorGateway {
   getReferenceData(): Promise<ReleaseEditorReferenceData>;
@@ -10,58 +8,55 @@ export interface ReleaseEditorGateway {
 }
 
 class HttpReleaseEditorGateway implements ReleaseEditorGateway {
-  constructor(private readonly baseUrl: string | null) {}
-
   async getReferenceData(): Promise<ReleaseEditorReferenceData> {
-    if (!this.baseUrl) return { artistIdentities: [], available: false };
+    if (!isApiConfigured()) return { artistIdentities: [], available: false };
 
-    const response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/api/v1/artist-identities`, {
-      headers: { Accept: "application/json" },
-      credentials: "include",
-    });
-
-    if (!response.ok) throw new Error(`ARTIST_IDENTITIES_REQUEST_FAILED:${response.status}`);
-
+    const response = await apiRequest("/api/v1/artist-identities");
     const payload = (await response.json()) as { items: Array<{ id: string; displayName: string }> };
     return { artistIdentities: payload.items, available: true };
   }
 
   async createDraft(input: CreateReleaseDraftInput): Promise<CreateReleaseDraftResult> {
-    if (!this.baseUrl) throw new Error("RELEASE_API_NOT_CONNECTED");
+    if (!isApiConfigured()) throw new Error("RELEASE_API_NOT_CONNECTED");
 
-    const formData = new FormData();
-    formData.set(
-      "release",
-      JSON.stringify({
+    const pendingTrackAssets = input.tracks.flatMap((track, trackIndex) =>
+      track.audioFile
+        ? [{
+            trackIndex,
+            fileName: track.audioFile.name,
+            contentType: track.audioFile.type || "application/octet-stream",
+            byteSize: track.audioFile.size,
+          }]
+        : [],
+    );
+
+    const response = await apiRequest("/api/v1/catalog/releases", {
+      method: "POST",
+      body: JSON.stringify({
         title: input.title,
-        artistIdentityId: input.artistIdentityId,
         type: input.type,
+        primaryArtistIdentityId: input.artistIdentityId,
         releaseDate: input.releaseDate,
         primaryGenre: input.primaryGenre,
         explicit: input.explicit,
-        tracks: input.tracks.map(({ id, title, explicit }) => ({ id, title, explicit })),
-        splits: input.splits,
+        tracks: input.tracks.map((track) => ({ title: track.title, explicit: track.explicit })),
+        provisionalSplits: input.splits.map((split) => ({ name: split.name, role: split.role, percentage: split.percentage })),
+        pendingAssets: {
+          artwork: input.coverFile
+            ? {
+                fileName: input.coverFile.name,
+                contentType: input.coverFile.type || "application/octet-stream",
+                byteSize: input.coverFile.size,
+              }
+            : null,
+          tracks: pendingTrackAssets,
+        },
       }),
-    );
-
-    if (input.coverFile) formData.set("cover", input.coverFile);
-    for (const track of input.tracks) {
-      if (track.audioFile) formData.append(`track:${track.id}`, track.audioFile);
-    }
-
-    const response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/api/v1/catalog/releases`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
     });
 
-    if (!response.ok) throw new Error(`RELEASE_DRAFT_CREATE_FAILED:${response.status}`);
-    return (await response.json()) as CreateReleaseDraftResult;
+    const payload = (await response.json()) as { id: string; status: "DRAFT" };
+    return { releaseId: payload.id, status: payload.status };
   }
 }
 
-const configuredBaseUrl = typeof import.meta.env.VITE_API_BASE_URL === "string" && import.meta.env.VITE_API_BASE_URL.length > 0
-  ? import.meta.env.VITE_API_BASE_URL
-  : null;
-
-export const releaseEditorGateway: ReleaseEditorGateway = new HttpReleaseEditorGateway(configuredBaseUrl);
+export const releaseEditorGateway: ReleaseEditorGateway = new HttpReleaseEditorGateway();

@@ -5,16 +5,44 @@ import { z } from "zod";
 import { SessionService } from "../session/session.service.js";
 import { CatalogService } from "./catalog.service.js";
 
-const createReleaseSchema = z.object({
-  title: z.string().trim().min(1).max(240),
-  type: z.enum(["SINGLE", "EP", "ALBUM"]),
-  primaryArtistIdentityId: z.string().uuid(),
-  releaseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  language: z.string().trim().min(2).max(32),
-  primaryGenre: z.string().trim().min(1).max(120),
-  copyrightLine: z.string().trim().min(1).max(240),
-  phonographicCopyrightLine: z.string().trim().min(1).max(240),
+const pendingFileSchema = z.object({
+  fileName: z.string().trim().min(1).max(512),
+  contentType: z.string().trim().min(1).max(160),
+  byteSize: z.number().int().positive().max(20 * 1024 * 1024 * 1024),
 });
+
+const createReleaseSchema = z
+  .object({
+    title: z.string().trim().min(1).max(240),
+    type: z.enum(["SINGLE", "EP", "ALBUM"]),
+    primaryArtistIdentityId: z.string().uuid(),
+    releaseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    primaryGenre: z.string().trim().min(1).max(120),
+    explicit: z.boolean(),
+    tracks: z.array(z.object({ title: z.string().trim().min(1).max(240), explicit: z.boolean() })).min(1).max(200),
+    provisionalSplits: z.array(
+      z.object({
+        name: z.string().trim().min(1).max(240),
+        role: z.enum(["PRIMARY_ARTIST", "FEATURED_ARTIST", "PRODUCER", "COMPOSER", "OTHER"]),
+        percentage: z.number().min(0).max(100),
+      }),
+    ).min(1).max(200),
+    pendingAssets: z.object({
+      artwork: pendingFileSchema.nullable(),
+      tracks: z.array(pendingFileSchema.extend({ trackIndex: z.number().int().min(0) })).max(200),
+    }),
+  })
+  .superRefine((value, context) => {
+    const splitMicros = value.provisionalSplits.reduce((sum, split) => sum + Math.round(split.percentage * 1_000_000), 0);
+    if (splitMicros !== 100_000_000) {
+      context.addIssue({ code: "custom", path: ["provisionalSplits"], message: "Splits must total exactly 100 percent" });
+    }
+    for (const [index, asset] of value.pendingAssets.tracks.entries()) {
+      if (asset.trackIndex >= value.tracks.length) {
+        context.addIssue({ code: "custom", path: ["pendingAssets", "tracks", index, "trackIndex"], message: "Track asset index is outside the track list" });
+      }
+    }
+  });
 
 function parseCreateRelease(body: unknown): z.infer<typeof createReleaseSchema> {
   const parsed = createReleaseSchema.safeParse(body);
@@ -60,7 +88,7 @@ export class CatalogController {
   }
 
   @Post()
-  @ApiOperation({ summary: "Create a draft release for the active organization" })
+  @ApiOperation({ summary: "Create a draft release, recordings, tracks and pending asset records" })
   @ApiResponse({ status: 201, description: "Draft release created" })
   async create(
     @Headers("authorization") authorization: string | undefined,
