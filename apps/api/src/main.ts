@@ -4,24 +4,29 @@ import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 import { AppModule } from "./app.module.js";
+import { loadRuntimeConfig } from "./platform/config/runtime-config.js";
 import { CorrelationIdMiddleware } from "./platform/http/correlation-id.middleware.js";
+import { HttpExceptionFilter } from "./platform/http/http-exception.filter.js";
 
 async function bootstrap(): Promise<void> {
+  const config = loadRuntimeConfig();
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   app.use(new CorrelationIdMiddleware().use);
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.setGlobalPrefix("api/v1");
+  app.enableShutdownHooks();
 
   const openApiConfig = new DocumentBuilder()
     .setTitle("Lander Distribution API")
-    .setDescription("Proprietary music distribution platform API")
-    .setVersion("0.1.0")
+    .setDescription("Proprietary music distribution and digital operations API")
+    .setVersion("1.0.0")
     .build();
 
   const document = SwaggerModule.createDocument(app, openApiConfig);
-  SwaggerModule.setup("openapi", app, document);
+  SwaggerModule.setup("openapi", app, document, { useGlobalPrefix: false });
 
-  const port = Number(process.env.PORT ?? 3000);
-  await app.listen(port);
+  await app.listen(config.PORT, "0.0.0.0");
 }
 
 void bootstrap();
