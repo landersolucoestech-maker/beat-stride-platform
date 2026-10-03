@@ -20,13 +20,34 @@ export class Authorization {
   private constructor(private props: AuthorizationProps) {}
 
   static request(input: Omit<AuthorizationProps, "status" | "validFrom" | "createdAt" | "updatedAt"> & { now: Date }): Authorization {
-    if (input.scope.length === 0) throw new Error("AUTHORIZATION_SCOPE_REQUIRED");
-    return new Authorization({ ...input, status: "PENDING", validFrom: null, createdAt: input.now, updatedAt: input.now });
+    const scope = [...new Set(input.scope.map((value) => value.trim()).filter(Boolean))];
+    if (scope.length === 0) throw new Error("AUTHORIZATION_SCOPE_REQUIRED");
+    if ((input.type === "ONE_TIME" || input.type === "RELEASE") && input.resourceId === null) {
+      throw new Error("AUTHORIZATION_RESOURCE_REQUIRED");
+    }
+    return new Authorization({
+      ...input,
+      scope,
+      status: "PENDING",
+      validFrom: null,
+      createdAt: input.now,
+      updatedAt: input.now,
+    });
+  }
+
+  static restore(props: AuthorizationProps): Authorization {
+    return new Authorization({ ...props, scope: [...props.scope] });
   }
 
   activate(validFrom: Date, validUntil: Date | null, now: Date): void {
     if (this.props.status !== "PENDING") throw new Error("AUTHORIZATION_STATE_TRANSITION_INVALID");
+    if (validUntil !== null && validUntil <= validFrom) throw new Error("AUTHORIZATION_VALIDITY_INVALID");
     this.props = { ...this.props, status: "ACTIVE", validFrom, validUntil, updatedAt: now };
+  }
+
+  reject(now: Date): void {
+    if (this.props.status !== "PENDING") throw new Error("AUTHORIZATION_STATE_TRANSITION_INVALID");
+    this.props = { ...this.props, status: "REJECTED", updatedAt: now };
   }
 
   revoke(now: Date): void {
@@ -34,7 +55,28 @@ export class Authorization {
     this.props = { ...this.props, status: "REVOKED", updatedAt: now };
   }
 
-  snapshot(): Readonly<AuthorizationProps> { return { ...this.props, scope: [...this.props.scope] }; }
+  expire(now: Date): void {
+    if (this.props.status !== "ACTIVE") throw new Error("AUTHORIZATION_STATE_TRANSITION_INVALID");
+    if (this.props.validUntil === null || this.props.validUntil > now) throw new Error("AUTHORIZATION_NOT_EXPIRED");
+    this.props = { ...this.props, status: "EXPIRED", updatedAt: now };
+  }
+
+  isValidAt(instant: Date): boolean {
+    return (
+      this.props.status === "ACTIVE" &&
+      this.props.validFrom !== null &&
+      this.props.validFrom <= instant &&
+      (this.props.validUntil === null || this.props.validUntil > instant)
+    );
+  }
+
+  permits(scope: string, instant: Date): boolean {
+    return this.isValidAt(instant) && this.props.scope.includes(scope);
+  }
+
+  snapshot(): Readonly<AuthorizationProps> {
+    return { ...this.props, scope: [...this.props.scope] };
+  }
 }
 
 export function assertDirectAuthorizationManagementAllowed(input: {
