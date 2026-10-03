@@ -31,7 +31,7 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Build frontend preview
-        run: npm run build -- --base=/
+        run: npm run build -- --base=/beat-stride-platform/
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
