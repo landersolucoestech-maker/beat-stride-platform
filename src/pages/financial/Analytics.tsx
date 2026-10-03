@@ -1,202 +1,101 @@
+import { useEffect, useMemo, useState } from "react";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
 import { MainLayout } from "@/components/layout/MainLayout";
-import { royalties, dspData } from "@/data/mockData";
-import { useState } from "react";
-import { Filter, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useFinancialAnalytics } from "@/features/finance/use-finance";
+import { formatDecimalPtBr, formatMoneyPtBr } from "@/lib/format-money";
 
 export default function FinancialAnalytics() {
-  const [dspFilter, setDspFilter] = useState<string>("all");
-  const [periodFilter, setPeriodFilter] = useState<string>("2024-02");
+  const [period, setPeriod] = useState<string | undefined>(undefined);
+  const analyticsQuery = useFinancialAnalytics(period);
+  const data = analyticsQuery.data;
 
-  const filteredRoyalties = royalties.filter((r) => {
-    const matchesDsp = dspFilter === "all" || r.dsp === dspFilter;
-    const matchesPeriod = r.period === periodFilter;
-    return matchesDsp && matchesPeriod;
-  });
+  useEffect(() => {
+    if (!period && data?.period) setPeriod(data.period);
+  }, [data?.period, period]);
 
-  const totalStreams = filteredRoyalties.reduce((sum, r) => sum + r.streams, 0);
-  const totalGross = filteredRoyalties.reduce((sum, r) => sum + r.grossRevenue, 0);
-  const totalNet = filteredRoyalties.reduce((sum, r) => sum + r.netRevenue, 0);
-
-  const uniqueDsps = [...new Set(royalties.map((r) => r.dsp))];
+  const chartData = useMemo(
+    () => (data?.providers ?? []).map((provider) => ({
+      name: provider.label,
+      usage: Number(provider.usageCount),
+      net: Number(provider.netAmount),
+    })),
+    [data?.providers],
+  );
 
   return (
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Análises Mensais</h1>
-            <p className="text-muted-foreground">Acompanhe seus royalties e receitas</p>
+            <p className="text-muted-foreground">Visão financeira derivada dos statements processados e conciliados.</p>
           </div>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar Relatório
-          </Button>
-        </div>
-
-        {/* Summary cards */}
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div className="rounded-xl bg-card border border-border p-6">
-            <p className="text-sm text-muted-foreground">Total de Streams</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              {totalStreams.toLocaleString('pt-BR')}
-            </p>
-          </div>
-          <div className="rounded-xl bg-card border border-border p-6">
-            <p className="text-sm text-muted-foreground">Receita Bruta</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              R$ {totalGross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </p>
-          </div>
-          <div className="rounded-xl bg-card border border-border p-6">
-            <p className="text-sm text-muted-foreground">Receita Líquida</p>
-            <p className="text-2xl font-bold text-success mt-1">
-              R$ {totalNet.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </p>
-          </div>
-        </div>
-
-        {/* Charts */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="rounded-xl bg-card border border-border p-6">
-            <h3 className="font-semibold text-foreground mb-4">Receita por Plataforma</h3>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dspData}>
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    tickFormatter={(value) => `R$${value}`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                    formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Receita']}
-                  />
-                  <Bar dataKey="revenue" radius={[6, 6, 0, 0]}>
-                    {dspData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-card border border-border p-6">
-            <h3 className="font-semibold text-foreground mb-4">Distribuição de Streams</h3>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={dspData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="streams"
-                  >
-                    {dspData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                    formatter={(value: number) => [value.toLocaleString('pt-BR'), 'Streams']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex flex-wrap justify-center gap-4 mt-4">
-              {dspData.map((item) => (
-                <div key={item.name} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-sm text-muted-foreground">{item.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Select value={dspFilter} onValueChange={setDspFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Plataforma" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              {uniqueDsps.map((dsp) => (
-                <SelectItem key={dsp} value={dsp}>{dsp}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={periodFilter} onValueChange={setPeriodFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2024-02">Fevereiro 2024</SelectItem>
-              <SelectItem value="2024-01">Janeiro 2024</SelectItem>
-              <SelectItem value="2023-12">Dezembro 2023</SelectItem>
-            </SelectContent>
+          <Select value={period} onValueChange={setPeriod} disabled={!data?.available || (data.periods.length ?? 0) === 0}>
+            <SelectTrigger className="w-full sm:w-[190px]"><SelectValue placeholder="Período" /></SelectTrigger>
+            <SelectContent>{data?.periods.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
           </Select>
         </div>
 
-        {/* Table */}
-        <div className="rounded-xl bg-card border border-border overflow-hidden">
+        {!analyticsQuery.isLoading && data?.available === false && (
+          <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+            O preview não possui dados financeiros reais conectados. Nenhum stream ou valor de receita é fabricado para preencher os gráficos.
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-border bg-card p-6"><p className="text-sm text-muted-foreground">Usos reportados</p><p className="mt-1 text-2xl font-bold text-foreground">{data?.totalUsage ? formatDecimalPtBr(data.totalUsage, 0) : "—"}</p></div>
+          <div className="rounded-xl border border-border bg-card p-6"><p className="text-sm text-muted-foreground">Receita Bruta</p><p className="mt-1 text-2xl font-bold text-foreground">{data?.grossAmount && data.currency ? formatMoneyPtBr(data.grossAmount, data.currency) : "—"}</p></div>
+          <div className="rounded-xl border border-border bg-card p-6"><p className="text-sm text-muted-foreground">Receita Líquida</p><p className="mt-1 text-2xl font-bold text-success">{data?.netAmount && data.currency ? formatMoneyPtBr(data.netAmount, data.currency) : "—"}</p></div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h3 className="mb-4 font-semibold text-foreground">Uso por provider</h3>
+            {chartData.length === 0 ? (
+              <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">Sem dados para o período.</div>
+            ) : (
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                    <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                    <Bar dataKey="usage" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h3 className="mb-4 font-semibold text-foreground">Receita líquida por provider</h3>
+            {chartData.length === 0 ? (
+              <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">Sem dados para o período.</div>
+            ) : (
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                    <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                    <Bar dataKey="net" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Faixa</th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Plataforma</th>
-                  <th className="text-right text-sm font-medium text-muted-foreground px-4 py-3">Streams</th>
-                  <th className="text-right text-sm font-medium text-muted-foreground px-4 py-3">Receita Bruta</th>
-                  <th className="text-right text-sm font-medium text-muted-foreground px-4 py-3">Receita Líquida</th>
-                </tr>
-              </thead>
+              <thead><tr className="border-b border-border bg-muted/50"><th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Provider</th><th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Usos</th><th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Bruto</th><th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Líquido</th></tr></thead>
               <tbody className="divide-y divide-border">
-                {filteredRoyalties.map((royalty) => (
-                  <tr key={royalty.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-4 text-foreground">{royalty.trackTitle}</td>
-                    <td className="px-4 py-4 text-muted-foreground">{royalty.dsp}</td>
-                    <td className="px-4 py-4 text-right text-foreground">
-                      {royalty.streams.toLocaleString('pt-BR')}
-                    </td>
-                    <td className="px-4 py-4 text-right text-muted-foreground">
-                      R$ {royalty.grossRevenue.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-4 text-right font-medium text-success">
-                      R$ {royalty.netRevenue.toFixed(2)}
-                    </td>
-                  </tr>
+                {(data?.providers.length ?? 0) === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">Nenhum dado financeiro disponível.</td></tr>}
+                {data?.providers.map((provider) => (
+                  <tr key={provider.code} className="transition-colors hover:bg-muted/30"><td className="px-4 py-4 font-medium text-foreground">{provider.label}</td><td className="px-4 py-4 text-right">{formatDecimalPtBr(provider.usageCount, 0)}</td><td className="px-4 py-4 text-right">{data.currency ? formatMoneyPtBr(provider.grossAmount, data.currency) : provider.grossAmount}</td><td className="px-4 py-4 text-right font-medium text-success">{data.currency ? formatMoneyPtBr(provider.netAmount, data.currency) : provider.netAmount}</td></tr>
                 ))}
               </tbody>
             </table>

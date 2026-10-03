@@ -1,209 +1,113 @@
 import { useState } from "react";
+import { FileSpreadsheet, Upload } from "lucide-react";
+
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { useRoyalties } from "@/hooks/useCore";
-import { container } from "@/core/container";
-import { Upload, FileSpreadsheet, CheckCircle2 } from "lucide-react";
+import { useImportStatement, useRoyalties, useStatementImportOptions } from "@/features/finance/use-finance";
+import { formatMoneyPtBr } from "@/lib/format-money";
 import { toast } from "sonner";
 
-type ParsedRow = {
-  trackId: string;
-  trackTitle: string;
-  artistId: string;
-  country: string;
-  streams: number;
-  gross: number;
-};
-
-/**
- * Tela de Importação de Royalties.
- * Faz upload mock de CSV de DSP, normaliza, mostra preview e dispara o
- * use case ImportRoyaltyReportUseCase.
- */
 export default function RoyaltyImport() {
-  const { data: royalties, reload } = useRoyalties();
-  const [dsp, setDsp] = useState("Spotify");
-  const [period, setPeriod] = useState("2024-03");
-  const [feeRate, setFeeRate] = useState(0.15);
-  const [rows, setRows] = useState<ParsedRow[]>([]);
-  const [importing, setImporting] = useState(false);
+  const optionsQuery = useStatementImportOptions();
+  const royaltiesQuery = useRoyalties({});
+  const importMutation = useImportStatement();
+  const [providerCode, setProviderCode] = useState("");
+  const [file, setFile] = useState<File | null>(null);
 
-  const handleFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = String(e.target?.result ?? "");
-      const lines = text.split(/\r?\n/).filter(Boolean);
-      const [, ...body] = lines;
-      const parsed: ParsedRow[] = body.map((l) => {
-        const [trackId, trackTitle, artistId, country, streams, gross] = l.split(",");
-        return {
-          trackId: trackId?.trim(),
-          trackTitle: trackTitle?.trim(),
-          artistId: artistId?.trim(),
-          country: country?.trim(),
-          streams: Number(streams),
-          gross: Number(gross),
-        };
-      }).filter(r => r.trackId);
-      setRows(parsed);
-      toast.success(`${parsed.length} linhas reconhecidas no relatório`);
-    };
-    reader.readAsText(file);
+  const options = optionsQuery.data;
+  const dataAvailable = options?.available === true;
+  const selectedProvider = options?.providers.find((provider) => provider.code === providerCode) ?? null;
+
+  const importStatement = async () => {
+    if (!providerCode || !file) {
+      toast.error("Selecione o provider e o arquivo do statement.");
+      return;
+    }
+
+    try {
+      const result = await importMutation.mutateAsync({ providerCode, file });
+      toast.success(`Statement recebido com status ${result.status}. A normalização será processada no backend.`);
+      setFile(null);
+    } catch {
+      toast.error("O statement não foi importado. Nenhum royalty foi criado localmente.");
+    }
   };
-
-  const loadMockSample = () => {
-    setRows([
-      { trackId: "track-1", trackTitle: "Neon Dreams", artistId: "artist-1", country: "BR", streams: 52000, gross: 208.0 },
-      { trackId: "track-2", trackTitle: "Shadow Dance", artistId: "artist-2", country: "PT", streams: 31000, gross: 124.0 },
-      { trackId: "track-6", trackTitle: "Fast Lane", artistId: "artist-3", country: "US", streams: 174000, gross: 696.0 },
-    ]);
-    toast.success("Amostra mock carregada");
-  };
-
-  const handleImport = async () => {
-    if (!rows.length) return;
-    setImporting(true);
-    const result = await container.useCases.importRoyalties.execute({
-      dsp, period, rows, feeRate, currency: "BRL",
-    });
-    setImporting(false);
-    setRows([]);
-    reload();
-    toast.success(`Importadas ${result.imported} linhas — Líquido R$ ${result.totalNet.toFixed(2)}`);
-  };
-
-  const totalGross = rows.reduce((s, r) => s + r.gross, 0);
-  const totalNet = totalGross * (1 - feeRate);
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Importação de Royalties</h1>
-          <p className="text-muted-foreground">Faça upload do relatório do DSP e normalize splits automaticamente.</p>
+          <h1 className="text-2xl font-bold text-foreground">Importar Royalties</h1>
+          <p className="text-muted-foreground">Ingestão de statements oficiais, normalização, matching e reconciliação.</p>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Novo relatório</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label>DSP</Label>
-                <Select value={dsp} onValueChange={setDsp}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["Spotify", "Apple Music", "YouTube Music", "Deezer", "TikTok", "Amazon Music", "Tidal"].map(d =>
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Período</Label>
-                <Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="YYYY-MM" />
-              </div>
-              <div className="space-y-2">
-                <Label>Taxa da plataforma</Label>
-                <Input
-                  type="number" step="0.01" min="0" max="1"
-                  value={feeRate}
-                  onChange={(e) => setFeeRate(Number(e.target.value))}
-                />
-              </div>
-              <div className="space-y-2 flex flex-col justify-end">
-                <Label htmlFor="csv" className="cursor-pointer">
-                  <div className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-md hover:bg-accent">
-                    <Upload className="h-4 w-4" />
-                    <span className="text-sm">Selecionar CSV</span>
-                  </div>
-                </Label>
-                <input
-                  id="csv" type="file" accept=".csv,.txt" className="hidden"
-                  onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={loadMockSample}>
-                <FileSpreadsheet className="h-4 w-4 mr-2" /> Carregar amostra mock
-              </Button>
-              <Button onClick={handleImport} disabled={!rows.length || importing}>
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                {importing ? "Importando..." : `Importar ${rows.length} linha(s)`}
-              </Button>
-            </div>
-
-            {rows.length > 0 && (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Faixa</TableHead>
-                      <TableHead>Artista ID</TableHead>
-                      <TableHead>País</TableHead>
-                      <TableHead className="text-right">Streams</TableHead>
-                      <TableHead className="text-right">Bruto (R$)</TableHead>
-                      <TableHead className="text-right">Líquido (R$)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.map((r, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium">{r.trackTitle}</TableCell>
-                        <TableCell className="text-muted-foreground">{r.artistId}</TableCell>
-                        <TableCell>{r.country}</TableCell>
-                        <TableCell className="text-right">{r.streams.toLocaleString("pt-BR")}</TableCell>
-                        <TableCell className="text-right">{r.gross.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">{(r.gross * (1 - feeRate)).toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="font-semibold bg-muted/40">
-                      <TableCell colSpan={4}>Totais ({(feeRate * 100).toFixed(0)}% taxa)</TableCell>
-                      <TableCell className="text-right">{totalGross.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{totalNet.toFixed(2)}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+          <CardHeader><CardTitle>Novo statement</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            {!optionsQuery.isLoading && !dataAvailable && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                Os formatos aceitos e providers disponíveis serão carregados do backend real. O preview não inventa DSPs, taxas ou layouts de arquivo.
               </div>
             )}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Provider</Label>
+                <Select value={providerCode} onValueChange={setProviderCode} disabled={!dataAvailable}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o provider" /></SelectTrigger>
+                  <SelectContent>
+                    {options?.providers.map((provider) => <SelectItem key={provider.code} value={provider.code}>{provider.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {selectedProvider && <p className="text-xs text-muted-foreground">Formatos aceitos: {selectedProvider.acceptedFileTypes.join(", ") || "definidos pelo provider"}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Arquivo do statement</Label>
+                <label className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-dashed border-input bg-background px-4 py-2 transition-colors hover:bg-muted/50">
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                  <span className="truncate text-sm text-muted-foreground">{file?.name ?? "Selecionar arquivo"}</span>
+                  <input type="file" className="hidden" onChange={(event) => setFile(event.target.files?.[0] ?? null)} disabled={!dataAvailable} />
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/30 p-4">
+              <div className="flex items-center gap-3">
+                <FileSpreadsheet className="h-5 w-5 text-primary" />
+                <div><p className="text-sm font-medium text-foreground">Processamento server-side</p><p className="text-xs text-muted-foreground">Arquivo bruto preservado; parsing, matching, comissões, splits e reconciliação não dependem do navegador.</p></div>
+              </div>
+              <Button onClick={() => void importStatement()} disabled={!file || !providerCode || importMutation.isPending}>
+                {importMutation.isPending ? "Enviando..." : "Importar Statement"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Histórico de royalties</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Royalties normalizados</CardTitle></CardHeader>
           <CardContent>
             <div className="rounded-md border">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Período</TableHead>
-                    <TableHead>Faixa</TableHead>
-                    <TableHead>DSP</TableHead>
-                    <TableHead>País</TableHead>
-                    <TableHead className="text-right">Streams</TableHead>
-                    <TableHead className="text-right">Líquido</TableHead>
-                  </TableRow>
-                </TableHeader>
+                <TableHeader><TableRow><TableHead>Período</TableHead><TableHead>Faixa</TableHead><TableHead>Provider</TableHead><TableHead>Território</TableHead><TableHead className="text-right">Usos</TableHead><TableHead className="text-right">Bruto</TableHead><TableHead className="text-right">Líquido</TableHead><TableHead>Matching</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {royalties?.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell><Badge variant="outline">{r.period}</Badge></TableCell>
-                      <TableCell className="font-medium">{r.trackTitle}</TableCell>
-                      <TableCell>{r.dsp}</TableCell>
-                      <TableCell>{r.country}</TableCell>
-                      <TableCell className="text-right">{r.streams.toLocaleString("pt-BR")}</TableCell>
-                      <TableCell className="text-right">R$ {r.netAmount.toFixed(2)}</TableCell>
+                  {royaltiesQuery.isLoading && <TableRow><TableCell colSpan={8} className="py-8 text-center text-muted-foreground">Carregando...</TableCell></TableRow>}
+                  {!royaltiesQuery.isLoading && (royaltiesQuery.data?.items.length ?? 0) === 0 && <TableRow><TableCell colSpan={8} className="py-8 text-center text-muted-foreground">Nenhuma linha de royalty disponível.</TableCell></TableRow>}
+                  {royaltiesQuery.data?.items.map((royalty) => (
+                    <TableRow key={royalty.id}>
+                      <TableCell><Badge variant="outline">{royalty.period}</Badge></TableCell>
+                      <TableCell className="font-medium">{royalty.trackTitle}</TableCell>
+                      <TableCell>{royalty.providerLabel}</TableCell>
+                      <TableCell>{royalty.territoryCode ?? "—"}</TableCell>
+                      <TableCell className="text-right">{royalty.usageCount ?? "—"}</TableCell>
+                      <TableCell className="text-right">{formatMoneyPtBr(royalty.grossAmount.amount, royalty.grossAmount.currency)}</TableCell>
+                      <TableCell className="text-right">{royalty.netAmount ? formatMoneyPtBr(royalty.netAmount.amount, royalty.netAmount.currency) : "—"}</TableCell>
+                      <TableCell><Badge variant={royalty.matched ? "default" : "outline"}>{royalty.matched ? "Conciliado" : "Pendente"}</Badge></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

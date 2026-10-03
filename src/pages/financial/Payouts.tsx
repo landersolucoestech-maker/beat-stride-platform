@@ -1,189 +1,74 @@
-import { useState } from "react";
+import { AlertTriangle, CheckCircle2, FileSearch, Scale } from "lucide-react";
+
 import { MainLayout } from "@/components/layout/MainLayout";
-import { payouts, walletData } from "@/data/mockData";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Wallet } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useAccountingOverview } from "@/features/accounting/use-accounting-overview";
+import { formatMoneyPtBr } from "@/lib/format-money";
 
 export default function Payouts() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("");
-
-  const handleRequestPayout = () => {
-    toast({
-      title: "Solicitação enviada!",
-      description: `Seu saque de R$ ${amount} via ${method} foi solicitado.`,
-    });
-    setIsDialogOpen(false);
-    setAmount("");
-    setMethod("");
-  };
+  const overviewQuery = useAccountingOverview();
+  const overview = overviewQuery.data;
+  const available = overview?.available === true;
 
   return (
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Pagamentos</h1>
-            <p className="text-muted-foreground">Gerencie seus saques e histórico de pagamentos</p>
-          </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary text-primary-foreground">
-                <ArrowUpRight className="h-4 w-4 mr-2" />
-                Solicitar Saque
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Solicitar Saque</DialogTitle>
-                <DialogDescription>
-                  Preencha os dados para solicitar um novo saque.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4 py-4">
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">Saldo disponível</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    R$ {walletData.available.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                
-                <div>
-                  <Label htmlFor="amount">Valor do saque</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label>Método de pagamento</Label>
-                  <Select value={method} onValueChange={setMethod}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecione o método" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pix">PIX</SelectItem>
-                      <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
-                      <SelectItem value="paypal">PayPal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={handleRequestPayout}
-                  disabled={!amount || !method}
-                  className="gradient-primary text-primary-foreground"
-                >
-                  Confirmar Saque
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Contabilidade</h1>
+          <p className="text-muted-foreground">Reconciliação, ledger e integridade dos lançamentos financeiros.</p>
         </div>
 
-        {/* Balance card */}
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div className="rounded-xl gradient-primary p-6 text-primary-foreground">
-            <div className="flex items-center gap-3 mb-2">
-              <Wallet className="h-5 w-5" />
-              <span className="text-sm opacity-80">Saldo Disponível</span>
+        {!overviewQuery.isLoading && !available && (
+          <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+            O preview visual não está conectado ao backend contábil. Nenhum saldo, exceção ou lançamento fictício é criado.
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Ledger</CardTitle><Scale className="h-4 w-4 text-muted-foreground" /></CardHeader>
+            <CardContent><p className="text-2xl font-bold">{overview?.ledgerBalanced === null || overview?.ledgerBalanced === undefined ? "—" : overview.ledgerBalanced ? "Balanceado" : "Divergência"}</p><p className="mt-1 text-xs text-muted-foreground">Débitos e créditos devem permanecer balanceados.</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Exceções de reconciliação</CardTitle><AlertTriangle className="h-4 w-4 text-muted-foreground" /></CardHeader>
+            <CardContent><p className="text-2xl font-bold">{overview?.openReconciliationExceptions ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">Itens que exigem revisão antes do fechamento.</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Receita não conciliada</CardTitle><FileSearch className="h-4 w-4 text-muted-foreground" /></CardHeader>
+            <CardContent><p className="text-2xl font-bold">{overview?.unmatchedRoyaltyLines ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">Linhas preservadas até o matching ser resolvido.</p></CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Último período fechado</CardTitle><CheckCircle2 className="h-4 w-4 text-muted-foreground" /></CardHeader>
+            <CardContent><p className="text-2xl font-bold">{overview?.lastClosedPeriod ?? "—"}</p><p className="mt-1 text-xs text-muted-foreground">Períodos fechados não são reescritos.</p></CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader><CardTitle>Lançamentos recentes no ledger</CardTitle></CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader><TableRow><TableHead>Data</TableHead><TableHead>Referência</TableHead><TableHead>Descrição</TableHead><TableHead>Débito</TableHead><TableHead>Crédito</TableHead><TableHead className="text-right">Valor</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {overviewQuery.isLoading && <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">Carregando...</TableCell></TableRow>}
+                  {!overviewQuery.isLoading && (overview?.recentPostings.length ?? 0) === 0 && <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">Nenhum lançamento contábil disponível.</TableCell></TableRow>}
+                  {overview?.recentPostings.map((posting) => (
+                    <TableRow key={posting.id}>
+                      <TableCell>{new Date(posting.occurredAt).toLocaleDateString("pt-BR")}</TableCell>
+                      <TableCell><Badge variant="outline">{posting.reference}</Badge></TableCell>
+                      <TableCell className="font-medium">{posting.description}</TableCell>
+                      <TableCell>{posting.debitAccount}</TableCell>
+                      <TableCell>{posting.creditAccount}</TableCell>
+                      <TableCell className="text-right">{formatMoneyPtBr(posting.amount, posting.currency)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-            <p className="text-3xl font-bold">
-              R$ {walletData.available.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </p>
-          </div>
-          
-          <div className="rounded-xl bg-card border border-border p-6">
-            <p className="text-sm text-muted-foreground">Pendente</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              R$ {walletData.pending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </p>
-          </div>
-          
-          <div className="rounded-xl bg-card border border-border p-6">
-            <p className="text-sm text-muted-foreground">Último Saque</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              R$ {walletData.lastPayout.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {new Date(walletData.lastPayoutDate).toLocaleDateString('pt-BR')}
-            </p>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="rounded-xl bg-card border border-border overflow-hidden">
-          <div className="p-6 border-b border-border">
-            <h3 className="font-semibold text-foreground">Histórico de Pagamentos</h3>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Artista</th>
-                  <th className="text-right text-sm font-medium text-muted-foreground px-4 py-3">Valor</th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Método</th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Status</th>
-                  <th className="text-left text-sm font-medium text-muted-foreground px-4 py-3">Data</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {payouts.map((payout) => (
-                  <tr key={payout.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-4 text-foreground font-medium">{payout.artistName}</td>
-                    <td className="px-4 py-4 text-right text-foreground">
-                      R$ {payout.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground capitalize">
-                      {payout.method === 'bank_transfer' ? 'Transferência' : payout.method.toUpperCase()}
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge status={payout.status} />
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">
-                      {new Date(payout.date).toLocaleDateString('pt-BR')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );
