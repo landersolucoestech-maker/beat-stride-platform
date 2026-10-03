@@ -1,4 +1,10 @@
-export type ProtectionStatus = "INACTIVE" | "PENDING_ACTIVATION" | "ACTIVE" | "CONTROLLER_TRANSITION" | "SUSPENDED" | "DEACTIVATION_PENDING";
+export type ProtectionStatus =
+  | "INACTIVE"
+  | "PENDING_ACTIVATION"
+  | "ACTIVE"
+  | "CONTROLLER_TRANSITION"
+  | "SUSPENDED"
+  | "DEACTIVATION_PENDING";
 
 export interface ArtistProtectionProps {
   id: string;
@@ -14,15 +20,89 @@ export class ArtistProtection {
   private constructor(private props: ArtistProtectionProps) {}
 
   static createInactive(id: string, artistIdentityId: string, controllerOrganizationId: string, now: Date): ArtistProtection {
-    return new ArtistProtection({ id, artistIdentityId, controllerOrganizationId, status: "INACTIVE", version: 1, createdAt: now, updatedAt: now });
+    return new ArtistProtection({
+      id,
+      artistIdentityId,
+      controllerOrganizationId,
+      status: "INACTIVE",
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  static restore(props: ArtistProtectionProps): ArtistProtection {
+    return new ArtistProtection({ ...props });
+  }
+
+  requestActivation(now: Date): void {
+    this.assertStatus("INACTIVE");
+    this.apply("PENDING_ACTIVATION", now);
+  }
+
+  activate(now: Date): void {
+    this.assertStatus("PENDING_ACTIVATION");
+    this.apply("ACTIVE", now);
+  }
+
+  suspend(now: Date): void {
+    this.assertStatus("ACTIVE");
+    this.apply("SUSPENDED", now);
+  }
+
+  resume(now: Date): void {
+    this.assertStatus("SUSPENDED");
+    this.apply("ACTIVE", now);
+  }
+
+  requestDeactivation(now: Date): void {
+    if (!["ACTIVE", "SUSPENDED"].includes(this.props.status)) {
+      throw new Error("PROTECTION_STATE_TRANSITION_INVALID");
+    }
+    this.apply("DEACTIVATION_PENDING", now);
+  }
+
+  deactivate(now: Date): void {
+    this.assertStatus("DEACTIVATION_PENDING");
+    this.apply("INACTIVE", now);
   }
 
   beginControllerTransition(nextControllerOrganizationId: string, now: Date): void {
-    if (this.props.status !== "ACTIVE") throw new Error("PROTECTION_STATE_TRANSITION_INVALID");
-    this.props = { ...this.props, controllerOrganizationId: nextControllerOrganizationId, status: "CONTROLLER_TRANSITION", version: this.props.version + 1, updatedAt: now };
+    this.assertStatus("ACTIVE");
+    const nextController = nextControllerOrganizationId.trim();
+    if (!nextController || nextController === this.props.controllerOrganizationId) {
+      throw new Error("PROTECTION_CONTROLLER_TRANSITION_INVALID");
+    }
+    this.props = {
+      ...this.props,
+      controllerOrganizationId: nextController,
+      status: "CONTROLLER_TRANSITION",
+      version: this.props.version + 1,
+      updatedAt: now,
+    };
   }
 
-  snapshot(): Readonly<ArtistProtectionProps> { return { ...this.props }; }
+  completeControllerTransition(now: Date): void {
+    this.assertStatus("CONTROLLER_TRANSITION");
+    this.apply("ACTIVE", now);
+  }
+
+  snapshot(): Readonly<ArtistProtectionProps> {
+    return { ...this.props };
+  }
+
+  private assertStatus(expected: ProtectionStatus): void {
+    if (this.props.status !== expected) throw new Error("PROTECTION_STATE_TRANSITION_INVALID");
+  }
+
+  private apply(status: ProtectionStatus, now: Date): void {
+    this.props = {
+      ...this.props,
+      status,
+      version: this.props.version + 1,
+      updatedAt: now,
+    };
+  }
 }
 
 export function assertProtectionManagementAllowed(input: {
