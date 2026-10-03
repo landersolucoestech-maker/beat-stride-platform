@@ -29,7 +29,7 @@ import Trackers from "./pages/statistics/Trackers";
 import StartMarketing from "./pages/marketing/StartMarketing";
 import ProTools from "./pages/marketing/ProTools";
 import EmailList from "./pages/marketing/EmailList";
-import PlaceholderPage from "./pages/PlaceholderPage";
+import CreatorsIntegration from "./pages/marketing/CreatorsIntegration";
 
 const queryClient = new QueryClient();
 
@@ -41,47 +41,38 @@ const App = () => (
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<Index />} />
-          
-          {/* Distribution */}
+
           <Route path="/distribution/music" element={<ManageMusic />} />
           <Route path="/distribution/music/new" element={<NewRelease />} />
           <Route path="/distribution/videos" element={<ManageVideos />} />
           <Route path="/distribution/videos/new" element={<NewVideo />} />
-          
-          {/* Statistics */}
+          <Route path="/distribution/fraud" element={<Fraud />} />
+
           <Route path="/statistics/demographics" element={<Demographics />} />
           <Route path="/statistics/tiktok" element={<TikTokStats />} />
           <Route path="/statistics/stores" element={<StoreComparison />} />
           <Route path="/statistics/charts" element={<MusicCharts />} />
           <Route path="/statistics/trackers" element={<Trackers />} />
-          
-          {/* Marketing */}
+
           <Route path="/marketing/start" element={<StartMarketing />} />
+          <Route path="/marketing/smartlinks" element={<SmartLinks />} />
+          <Route path="/marketing/creators" element={<CreatorsIntegration />} />
           <Route path="/marketing/tools" element={<ProTools />} />
           <Route path="/marketing/emails" element={<EmailList />} />
-          
-          {/* Financial */}
+
           <Route path="/financial/analytics" element={<FinancialAnalytics />} />
           <Route path="/financial/accounting" element={<Payouts />} />
           <Route path="/financial/shares" element={<Shares />} />
           <Route path="/financial/royalties" element={<RoyaltyImport />} />
           <Route path="/financial/wallet" element={<Wallet />} />
 
-          {/* Marketing extra */}
-          <Route path="/marketing/smartlinks" element={<SmartLinks />} />
-
-          {/* Distribution extra */}
-          <Route path="/distribution/fraud" element={<Fraud />} />
-          
-          {/* Help */}
           <Route path="/help/support" element={<Support />} />
           <Route path="/help/tickets" element={<Tickets />} />
-          
-          {/* Settings */}
+
           <Route path="/settings/profile" element={<Profile />} />
           <Route path="/settings/security" element={<Security />} />
           <Route path="/settings/language" element={<Language />} />
-          
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
