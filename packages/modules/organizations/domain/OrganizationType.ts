@@ -10,15 +10,15 @@ export type CompanySubtype =
 
 export interface OrganizationClassification {
   type: OrganizationType;
-  companySubtype?: CompanySubtype;
+  companySubtype: CompanySubtype | null;
 }
 
 export function assertOrganizationClassification(classification: OrganizationClassification): void {
-  if (classification.type === "INDEPENDENT_ARTIST" && classification.companySubtype) {
+  if (classification.type === "INDEPENDENT_ARTIST" && classification.companySubtype !== null) {
     throw new Error("INDEPENDENT_ARTIST_CANNOT_HAVE_COMPANY_SUBTYPE");
   }
 
-  if (classification.type === "COMPANY" && !classification.companySubtype) {
+  if (classification.type === "COMPANY" && classification.companySubtype === null) {
     throw new Error("COMPANY_SUBTYPE_REQUIRED");
   }
 }

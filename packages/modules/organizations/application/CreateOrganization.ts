@@ -27,9 +27,9 @@ export class CreateOrganization {
     const organization = Organization.create({
       id: command.organizationId,
       type: command.type,
-      companySubtype: command.companySubtype,
+      companySubtype: command.companySubtype ?? null,
       displayName: command.displayName,
-      legalName: command.legalName,
+      legalName: command.legalName ?? null,
       now: command.now,
     });
 

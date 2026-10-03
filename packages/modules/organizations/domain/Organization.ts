@@ -9,9 +9,9 @@ export type OrganizationStatus = "ACTIVE" | "SUSPENDED" | "CLOSED";
 export interface OrganizationProps {
   id: string;
   type: OrganizationType;
-  companySubtype?: CompanySubtype;
+  companySubtype: CompanySubtype | null;
   displayName: string;
-  legalName?: string;
+  legalName: string | null;
   status: OrganizationStatus;
   version: number;
   createdAt: Date;
@@ -32,7 +32,7 @@ export class Organization {
       type: input.type,
       companySubtype: input.companySubtype,
       displayName,
-      legalName: input.legalName?.trim() || undefined,
+      legalName: input.legalName?.trim() || null,
       status: "ACTIVE",
       version: 1,
       createdAt: input.now,
