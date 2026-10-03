@@ -13,6 +13,7 @@
   },
   "include": [
     "packages/auth/**/*.ts",
+    "packages/events/**/*.ts",
     "packages/modules/**/*.ts"
   ]
 }
