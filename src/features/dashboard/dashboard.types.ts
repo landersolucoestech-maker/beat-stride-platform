@@ -1,5 +1,3 @@
-export type DashboardDataState = "initial" | "loading" | "success" | "empty" | "error" | "refetching";
-
 export interface DashboardRelease {
   id: string;
   title: string;
@@ -9,6 +7,40 @@ export interface DashboardRelease {
   coverUrl?: string;
 }
 
+export interface DashboardTrackPerformance {
+  id: string;
+  title: string;
+  artistName: string;
+  streams: number;
+  trendPercent?: number;
+}
+
+export interface DashboardArtistPerformance {
+  id: string;
+  name: string;
+  streams: number;
+}
+
+export interface DashboardPlaylistPerformance {
+  id: string;
+  name: string;
+  curator: string;
+  streams: number;
+}
+
+export interface DashboardTerritoryPerformance {
+  code: string;
+  country: string;
+  streams: number;
+  mapId?: string;
+}
+
+export interface DashboardPlatformPerformance {
+  id: string;
+  name: string;
+  streams: number;
+}
+
 export interface DashboardSummary {
   wallet: {
     availableAmount: string | null;
@@ -16,8 +48,13 @@ export interface DashboardSummary {
   };
   recentReleases: DashboardRelease[];
   streams: {
-    total: string | null;
-    currentMonth: string | null;
-    previousMonth: string | null;
+    total: number | null;
+    currentMonth: number | null;
+    previousMonth: number | null;
   };
+  topTracks: DashboardTrackPerformance[];
+  topArtists: DashboardArtistPerformance[];
+  topPlaylists: DashboardPlaylistPerformance[];
+  topTerritories: DashboardTerritoryPerformance[];
+  platforms: DashboardPlatformPerformance[];
 }

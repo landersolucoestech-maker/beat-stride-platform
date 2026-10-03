@@ -1,16 +1,20 @@
-import { Music, TrendingUp } from "lucide-react";
-import { BarChart, Bar, ResponsiveContainer } from "recharts";
+import { Music } from "lucide-react";
 
-const monthlyData = [
-  { month: 'Jul', streams: 89000 },
-  { month: 'Ago', streams: 102000 },
-  { month: 'Set', streams: 98000 },
-  { month: 'Out', streams: 115000 },
-  { month: 'Nov', streams: 134521 },
-  { month: 'Dez', streams: 156432 },
-];
+interface TotalStreamsProps {
+  total: number | null;
+  currentMonth: number | null;
+  previousMonth: number | null;
+}
 
-export function TotalStreams() {
+function number(value: number | null): string {
+  return value === null ? "—" : value.toLocaleString("pt-BR");
+}
+
+export function TotalStreams({ total, currentMonth, previousMonth }: TotalStreamsProps) {
+  const growth = currentMonth !== null && previousMonth !== null && previousMonth > 0
+    ? ((currentMonth - previousMonth) / previousMonth) * 100
+    : null;
+
   return (
     <div className="rounded-xl bg-card border border-border p-6 flex flex-col justify-between h-full">
       <div>
@@ -18,42 +22,18 @@ export function TotalStreams() {
           <Music className="h-5 w-5 text-primary" />
           <h3 className="font-semibold text-foreground">Total Streams</h3>
         </div>
-        <div className="space-y-1">
-          <p className="text-3xl font-bold text-foreground">1.245.678</p>
-          <p className="text-sm text-muted-foreground">streams totais</p>
-        </div>
+        <p className="text-3xl font-bold text-foreground">{number(total)}</p>
+        <p className="text-sm text-muted-foreground">streams totais</p>
       </div>
-
-      {/* Mini Bar Chart */}
-      <div className="h-16 mt-4">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={monthlyData}>
-            <Bar 
-              dataKey="streams" 
-              fill="hsl(var(--primary))" 
-              radius={[3, 3, 0, 0]}
-              opacity={0.8}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="mt-6 h-16 rounded-lg bg-muted/50 flex items-end gap-1 px-3 py-2" aria-hidden="true">
+        {[35, 50, 42, 62, 54, 70, 64, 78, 68, 82, 75, 88].map((height, index) => (
+          <span key={index} className="flex-1 rounded-sm bg-primary/15" style={{ height: `${height}%` }} />
+        ))}
       </div>
-      
       <div className="mt-4 pt-4 border-t border-border space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Este mês</span>
-          <div className="flex items-center gap-1">
-            <span className="text-sm font-medium text-foreground">156.432</span>
-            <TrendingUp className="h-3 w-3 text-emerald-500" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Mês anterior</span>
-          <span className="text-sm font-medium text-foreground">134.521</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Crescimento</span>
-          <span className="text-sm font-medium text-emerald-500">+16.3%</span>
-        </div>
+        <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground">Este mês</span><span className="text-sm font-medium text-foreground">{number(currentMonth)}</span></div>
+        <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground">Mês anterior</span><span className="text-sm font-medium text-foreground">{number(previousMonth)}</span></div>
+        <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground">Crescimento</span><span className="text-sm font-medium text-muted-foreground">{growth === null ? "—" : `${growth >= 0 ? "+" : ""}${growth.toFixed(1)}%`}</span></div>
       </div>
     </div>
   );

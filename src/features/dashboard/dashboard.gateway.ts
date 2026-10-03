@@ -7,16 +7,14 @@ export interface DashboardGateway {
 export class DashboardUnavailableGateway implements DashboardGateway {
   async getSummary(): Promise<DashboardSummary> {
     return {
-      wallet: {
-        availableAmount: null,
-        currency: "BRL",
-      },
+      wallet: { availableAmount: null, currency: "BRL" },
       recentReleases: [],
-      streams: {
-        total: null,
-        currentMonth: null,
-        previousMonth: null,
-      },
+      streams: { total: null, currentMonth: null, previousMonth: null },
+      topTracks: [],
+      topArtists: [],
+      topPlaylists: [],
+      topTerritories: [],
+      platforms: [],
     };
   }
 }

@@ -1,91 +1,22 @@
 import { Globe } from "lucide-react";
-import {
-  ComposableMap,
-  Geographies,
-  Geography,
-} from "react-simple-maps";
 
-const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
+import type { DashboardTerritoryPerformance } from "@/features/dashboard/dashboard.types";
 
-const countryData = [
-  { code: 'BR', country: 'Brasil', streams: 456000, iso: '076' },
-  { code: 'PT', country: 'Portugal', streams: 89000, iso: '620' },
-  { code: 'CH', country: 'China', streams: 67000, iso: '156' },
-  { code: 'US', country: 'EUA', streams: 45000, iso: '840' },
-  { code: 'FR', country: 'França', streams: 34000, iso: '250' },
-];
+interface TopCountriesProps { territories: DashboardTerritoryPerformance[]; }
 
-const highlightedCountries = countryData.map(c => c.iso);
-
-export function TopCountries() {
-  const maxStreams = countryData[0].streams;
-
-  const getCountryColor = (geo: any) => {
-    const countryId = geo.id;
-    const isHighlighted = highlightedCountries.includes(countryId);
-    const isTopCountry = countryId === '076'; // Brazil
-    
-    if (isTopCountry) return 'hsl(var(--primary))';
-    if (isHighlighted) return 'hsl(var(--muted-foreground) / 0.6)';
-    return 'hsl(var(--muted-foreground) / 0.2)';
-  };
-
+export function TopCountries({ territories }: TopCountriesProps) {
+  const maxStreams = territories[0]?.streams ?? 1;
   return (
     <div className="rounded-xl bg-card border border-border p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Globe className="h-5 w-5 text-primary" />
-        <h3 className="font-semibold text-foreground text-lg">Top territórios</h3>
-      </div>
-      
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Country bars */}
-        <div className="space-y-3 lg:w-1/4 shrink-0">
-          {countryData.map((item) => (
-            <div
-              key={item.code}
-              className="relative h-10 rounded-lg bg-muted overflow-hidden flex items-center"
-            >
-              <div
-                className="absolute inset-y-0 left-0 bg-primary/20 rounded-lg transition-all"
-                style={{ width: `${(item.streams / maxStreams) * 100}%` }}
-              />
-              <span className="relative z-10 px-4 font-medium text-foreground">
-                {item.code}
-              </span>
-            </div>
+      <div className="flex items-center gap-2 mb-6"><Globe className="h-5 w-5 text-primary" /><h3 className="font-semibold text-foreground text-lg">Top territórios</h3></div>
+      {territories.length === 0 ? <DashboardEmptyState title="Sem territórios disponíveis" description="Os territórios com melhor performance aparecerão após a sincronização de analytics." /> : (
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {territories.slice(0, 6).map((item) => (
+            <div key={item.code} className="relative h-12 overflow-hidden rounded-lg bg-muted"><div className="absolute inset-y-0 left-0 bg-primary/15" style={{ width: `${(item.streams / maxStreams) * 100}%` }} /><div className="relative z-10 flex h-full items-center justify-between px-4"><span className="font-medium text-foreground">{item.country}</span><span className="text-sm text-muted-foreground">{item.streams.toLocaleString("pt-BR")}</span></div></div>
           ))}
         </div>
-
-        {/* World Map */}
-        <div className="flex-1 flex items-center justify-center min-h-[280px]">
-          <ComposableMap
-            projectionConfig={{
-              scale: 140,
-              center: [0, 20],
-            }}
-            style={{ width: "100%", height: "100%" }}
-          >
-            <Geographies geography={geoUrl}>
-              {({ geographies }) =>
-                geographies.map((geo) => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill={getCountryColor(geo)}
-                    stroke="hsl(var(--border))"
-                    strokeWidth={0.5}
-                    style={{
-                      default: { outline: "none" },
-                      hover: { outline: "none", fill: "hsl(var(--primary) / 0.7)" },
-                      pressed: { outline: "none" },
-                    }}
-                  />
-                ))
-              }
-            </Geographies>
-          </ComposableMap>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
