@@ -1,3 +1,5 @@
+import { apiRequest, isApiConfigured } from "@/lib/api-client";
+
 import type { AccountingOverview } from "./accounting.types";
 
 export interface AccountingGateway {
@@ -5,10 +7,8 @@ export interface AccountingGateway {
 }
 
 class HttpAccountingGateway implements AccountingGateway {
-  constructor(private readonly baseUrl: string | null) {}
-
   async getOverview(): Promise<AccountingOverview> {
-    if (!this.baseUrl) {
+    if (!isApiConfigured()) {
       return {
         available: false,
         ledgerBalanced: null,
@@ -19,17 +19,9 @@ class HttpAccountingGateway implements AccountingGateway {
       };
     }
 
-    const response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/api/v1/accounting/overview`, {
-      credentials: "include",
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) throw new Error(`ACCOUNTING_OVERVIEW_REQUEST_FAILED:${response.status}`);
+    const response = await apiRequest("/api/v1/accounting/overview");
     return (await response.json()) as AccountingOverview;
   }
 }
 
-const configuredBaseUrl = typeof import.meta.env.VITE_API_BASE_URL === "string" && import.meta.env.VITE_API_BASE_URL.length > 0
-  ? import.meta.env.VITE_API_BASE_URL
-  : null;
-
-export const accountingGateway: AccountingGateway = new HttpAccountingGateway(configuredBaseUrl);
+export const accountingGateway: AccountingGateway = new HttpAccountingGateway();

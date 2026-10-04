@@ -25,7 +25,6 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [organizationType, setOrganizationType] = useState<OrganizationType>("INDEPENDENT_ARTIST");
   const [organizationDisplayName, setOrganizationDisplayName] = useState("");
-  const [organizationLegalName, setOrganizationLegalName] = useState("");
   const [companySubtype, setCompanySubtype] = useState<CompanySubtype>("LABEL");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,7 +37,6 @@ export default function Register() {
         password,
         organizationType,
         organizationDisplayName,
-        organizationLegalName: organizationLegalName.trim() || null,
         companySubtype: organizationType === "COMPANY" ? companySubtype : null,
       });
       navigate("/", { replace: true });
@@ -109,15 +107,9 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="organization-name">Nome de exibição</Label>
-                <Input id="organization-name" value={organizationDisplayName} onChange={(event) => setOrganizationDisplayName(event.target.value)} className="mt-1.5" required />
-              </div>
-              <div>
-                <Label htmlFor="legal-name">Razão social / nome legal</Label>
-                <Input id="legal-name" value={organizationLegalName} onChange={(event) => setOrganizationLegalName(event.target.value)} className="mt-1.5" />
-              </div>
+            <div>
+              <Label htmlFor="organization-name">Nome de exibição da organização</Label>
+              <Input id="organization-name" value={organizationDisplayName} onChange={(event) => setOrganizationDisplayName(event.target.value)} className="mt-1.5" required />
             </div>
 
             {organizationType === "COMPANY" && (

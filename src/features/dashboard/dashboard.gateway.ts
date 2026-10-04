@@ -1,3 +1,5 @@
+import { apiRequest, isApiConfigured } from "@/lib/api-client";
+
 import type { DashboardSummary } from "./dashboard.types";
 
 export interface DashboardGateway {
@@ -16,23 +18,11 @@ const unavailableSummary: DashboardSummary = {
 };
 
 class HttpDashboardGateway implements DashboardGateway {
-  constructor(private readonly baseUrl: string | null) {}
-
   async getSummary(): Promise<DashboardSummary> {
-    if (!this.baseUrl) return unavailableSummary;
-
-    const response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/api/v1/dashboard/summary`, {
-      headers: { Accept: "application/json" },
-      credentials: "include",
-    });
-
-    if (!response.ok) throw new Error(`DASHBOARD_SUMMARY_REQUEST_FAILED:${response.status}`);
+    if (!isApiConfigured()) return unavailableSummary;
+    const response = await apiRequest("/api/v1/dashboard/summary");
     return (await response.json()) as DashboardSummary;
   }
 }
 
-const configuredBaseUrl = typeof import.meta.env.VITE_API_BASE_URL === "string" && import.meta.env.VITE_API_BASE_URL.length > 0
-  ? import.meta.env.VITE_API_BASE_URL
-  : null;
-
-export const dashboardGateway: DashboardGateway = new HttpDashboardGateway(configuredBaseUrl);
+export const dashboardGateway: DashboardGateway = new HttpDashboardGateway();

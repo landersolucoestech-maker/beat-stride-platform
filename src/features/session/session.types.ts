@@ -1,8 +1,11 @@
+export type SessionMembershipRole = "OWNER" | "ADMIN" | "MEMBER" | "FINANCE" | "OPERATIONS";
+
 export interface SessionOrganizationSummary {
   id: string;
   displayName: string;
   organizationType: "INDEPENDENT_ARTIST" | "COMPANY";
   companySubtype: "LABEL" | "PRODUCER" | "PUBLISHER" | "MANAGEMENT" | "AGENCY" | "OTHER" | null;
+  role: SessionMembershipRole;
 }
 
 export interface SessionUserSummary {

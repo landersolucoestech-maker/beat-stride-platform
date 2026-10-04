@@ -1,15 +1,15 @@
 import { ApiRequestError, apiRequest, clearApiSession, isApiConfigured, readApiSession, writeApiSession } from "@/lib/api-client";
 
-import type { SessionContext, SessionOrganizationSummary } from "./session.types";
+import type { SessionContext, SessionMembershipRole, SessionOrganizationSummary } from "./session.types";
 
 export type OrganizationType = "INDEPENDENT_ARTIST" | "COMPANY";
 export type CompanySubtype = "LABEL" | "PRODUCER" | "PUBLISHER" | "MANAGEMENT" | "AGENCY" | "OTHER";
 
 interface BackendSessionContext {
-  user: { id: string; email: string };
+  user: { id: string; email: string; displayName: string | null };
   memberships: Array<{
     organizationId: string;
-    role: "OWNER" | "ADMIN" | "MEMBER";
+    role: SessionMembershipRole;
     organizationType: OrganizationType;
     companySubtype: CompanySubtype | null;
     displayName: string;
@@ -19,7 +19,7 @@ interface BackendSessionContext {
 interface AuthResponse {
   token: string;
   expiresAt: string;
-  user: { id: string; email: string };
+  user: { id: string; email: string; displayName?: string | null };
 }
 
 interface RegistrationResponse extends AuthResponse {
@@ -36,7 +36,6 @@ export interface RegisterAccountInput {
   password: string;
   organizationType: OrganizationType;
   organizationDisplayName: string;
-  organizationLegalName: string | null;
   companySubtype: CompanySubtype | null;
 }
 
@@ -57,6 +56,7 @@ function mapOrganization(membership: BackendSessionContext["memberships"][number
     displayName: membership.displayName,
     organizationType: membership.organizationType,
     companySubtype: membership.companySubtype,
+    role: membership.role,
   };
 }
 
@@ -78,7 +78,7 @@ class SessionGateway {
       const response = await apiRequest("/api/v1/session", {}, { organizationScoped: false });
       const backend = (await response.json()) as BackendSessionContext;
       const memberships = backend.memberships.map(mapOrganization);
-      let activeOrganization = memberships.find((membership) => membership.id === stored.organizationId) ?? memberships[0] ?? null;
+      const activeOrganization = memberships.find((membership) => membership.id === stored.organizationId) ?? memberships[0] ?? null;
 
       if (activeOrganization && activeOrganization.id !== stored.organizationId) {
         writeApiSession({ ...stored, organizationId: activeOrganization.id });
@@ -87,7 +87,7 @@ class SessionGateway {
       return {
         authenticated: true,
         available: true,
-        user: { id: backend.user.id, displayName: null, email: backend.user.email },
+        user: { id: backend.user.id, displayName: backend.user.displayName, email: backend.user.email },
         activeOrganization,
         memberships,
         unreadNotifications: 0,
@@ -110,9 +110,21 @@ class SessionGateway {
   }
 
   async register(input: RegisterAccountInput): Promise<SessionContext> {
+    if (input.organizationType === "COMPANY" && !input.companySubtype) {
+      throw new Error("COMPANY_SUBTYPE_REQUIRED");
+    }
+
+    const organization = input.organizationType === "INDEPENDENT_ARTIST"
+      ? { type: "INDEPENDENT_ARTIST" as const, displayName: input.organizationDisplayName }
+      : {
+          type: "COMPANY" as const,
+          displayName: input.organizationDisplayName,
+          companySubtype: input.companySubtype as CompanySubtype,
+        };
+
     const response = await apiRequest(
       "/api/v1/auth/register",
-      { method: "POST", body: JSON.stringify(input) },
+      { method: "POST", body: JSON.stringify({ email: input.email, password: input.password, organization }) },
       { organizationScoped: false },
     );
     const auth = (await response.json()) as RegistrationResponse;
@@ -122,7 +134,11 @@ class SessionGateway {
 
   async selectOrganization(organizationId: string): Promise<void> {
     const current = readApiSession();
-    if (!current) return;
+    if (!current) throw new Error("SESSION_REQUIRED");
+    const context = await this.getContext();
+    if (!context.authenticated || !context.memberships.some((membership) => membership.id === organizationId)) {
+      throw new Error("ORGANIZATION_MEMBERSHIP_REQUIRED");
+    }
     writeApiSession({ ...current, organizationId });
   }
 

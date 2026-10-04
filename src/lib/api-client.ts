@@ -15,30 +15,38 @@ export function isApiConfigured(): boolean {
   return configuredApiBaseUrl !== null;
 }
 
+function clearLegacyPersistentSession(): void {
+  if (typeof window !== "undefined") window.localStorage.removeItem(sessionStorageKey);
+}
+
 export function readApiSession(): StoredApiSession | null {
   if (typeof window === "undefined") return null;
-  const raw = window.localStorage.getItem(sessionStorageKey);
+  clearLegacyPersistentSession();
+  const raw = window.sessionStorage.getItem(sessionStorageKey);
   if (!raw) return null;
 
   try {
     const parsed = JSON.parse(raw) as StoredApiSession;
     if (!parsed.token || !parsed.expiresAt || new Date(parsed.expiresAt).getTime() <= Date.now()) {
-      window.localStorage.removeItem(sessionStorageKey);
+      window.sessionStorage.removeItem(sessionStorageKey);
       return null;
     }
     return parsed;
   } catch {
-    window.localStorage.removeItem(sessionStorageKey);
+    window.sessionStorage.removeItem(sessionStorageKey);
     return null;
   }
 }
 
 export function writeApiSession(session: StoredApiSession): void {
-  window.localStorage.setItem(sessionStorageKey, JSON.stringify(session));
+  clearLegacyPersistentSession();
+  window.sessionStorage.setItem(sessionStorageKey, JSON.stringify(session));
 }
 
 export function clearApiSession(): void {
-  if (typeof window !== "undefined") window.localStorage.removeItem(sessionStorageKey);
+  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(sessionStorageKey);
+  window.localStorage.removeItem(sessionStorageKey);
 }
 
 export class ApiRequestError extends Error {

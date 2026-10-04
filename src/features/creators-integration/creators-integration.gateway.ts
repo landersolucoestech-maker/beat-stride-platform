@@ -1,3 +1,5 @@
+import { apiRequest, isApiConfigured } from "@/lib/api-client";
+
 import type { CreatorsIntegrationOverview } from "./creators-integration.types";
 
 export interface CreatorsIntegrationGateway {
@@ -6,10 +8,8 @@ export interface CreatorsIntegrationGateway {
 }
 
 class HttpCreatorsIntegrationGateway implements CreatorsIntegrationGateway {
-  constructor(private readonly baseUrl: string | null) {}
-
   async getOverview(): Promise<CreatorsIntegrationOverview> {
-    if (!this.baseUrl) {
+    if (!isApiConfigured()) {
       return {
         connection: {
           available: false,
@@ -24,32 +24,14 @@ class HttpCreatorsIntegrationGateway implements CreatorsIntegrationGateway {
       };
     }
 
-    const response = await fetch(this.url("/api/v1/integrations/creators"), {
-      credentials: "include",
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) throw new Error(`CREATORS_INTEGRATION_REQUEST_FAILED:${response.status}`);
+    const response = await apiRequest("/api/v1/integrations/creators");
     return (await response.json()) as CreatorsIntegrationOverview;
   }
 
   async disconnect(): Promise<void> {
-    if (!this.baseUrl) throw new Error("CREATORS_INTEGRATION_API_NOT_CONNECTED");
-    const response = await fetch(this.url("/api/v1/integrations/creators"), {
-      method: "DELETE",
-      credentials: "include",
-      headers: { Accept: "application/json" },
-    });
-    if (!response.ok) throw new Error(`CREATORS_INTEGRATION_DISCONNECT_FAILED:${response.status}`);
-  }
-
-  private url(path: string): string {
-    if (!this.baseUrl) throw new Error("CREATORS_INTEGRATION_API_NOT_CONNECTED");
-    return `${this.baseUrl.replace(/\/$/, "")}${path}`;
+    if (!isApiConfigured()) throw new Error("CREATORS_INTEGRATION_API_NOT_CONNECTED");
+    await apiRequest("/api/v1/integrations/creators", { method: "DELETE" });
   }
 }
 
-const configuredBaseUrl = typeof import.meta.env.VITE_API_BASE_URL === "string" && import.meta.env.VITE_API_BASE_URL.length > 0
-  ? import.meta.env.VITE_API_BASE_URL
-  : null;
-
-export const creatorsIntegrationGateway: CreatorsIntegrationGateway = new HttpCreatorsIntegrationGateway(configuredBaseUrl);
+export const creatorsIntegrationGateway: CreatorsIntegrationGateway = new HttpCreatorsIntegrationGateway();
