@@ -20,7 +20,7 @@ export class ContentIdController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "content_id.read");
     return this.contentId.getOverview(context.activeOrganization.organizationId);
   }
 }

@@ -19,7 +19,7 @@ export class MarketingController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.read");
     return this.marketing.getOverview(context.activeOrganization.organizationId);
   }
 
@@ -29,7 +29,7 @@ export class MarketingController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.read");
     return this.marketing.getSmartLinks(context.activeOrganization.organizationId);
   }
 
@@ -39,7 +39,7 @@ export class MarketingController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    await this.sessions.requireOrganizationContext(authorization, organizationId);
+    await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.read");
     return this.marketing.getFanList();
   }
 
@@ -49,7 +49,7 @@ export class MarketingController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    await this.sessions.requireOrganizationContext(authorization, organizationId);
+    await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.read");
     return this.marketing.getTools();
   }
 }

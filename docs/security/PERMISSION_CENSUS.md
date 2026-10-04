@@ -30,6 +30,9 @@ The permission census defines actions before role assignment. Permission grants 
 - asset.replace
 - metadata.update
 - rights.declare
+- rights.read
+- content_id.read
+- risk.summary.read
 
 ### Protection and authorization
 - protection.request
@@ -47,6 +50,7 @@ The permission census defines actions before role assignment. Permission grants 
 - payout.request
 
 ### Marketing and integrations
+- marketing.read
 - marketing.manage
 - creators.connect
 - creators.disconnect
@@ -54,6 +58,7 @@ The permission census defines actions before role assignment. Permission grants 
 - creators.campaign.read
 
 ### Support
+- support.ticket.read
 - support.ticket.create
 
 ## System-scoped permissions
@@ -88,6 +93,8 @@ These permissions are assignable only through system roles and are not inherited
 - operations.override.execute
 - backoffice.work.read
 - backoffice.work.manage
+- recovery.exercise.read
+- recovery.exercise.manage
 
 ### Automation
 - automation.run

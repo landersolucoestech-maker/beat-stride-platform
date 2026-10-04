@@ -26,7 +26,7 @@ export class SupportController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "support.ticket.read");
     return this.support.listTickets(context.activeOrganization.organizationId);
   }
 
@@ -47,7 +47,7 @@ export class SupportController {
       });
     }
 
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "support.ticket.create");
     return this.support.createTicket({
       organizationId: context.activeOrganization.organizationId,
       userId: context.user.id,
@@ -61,7 +61,7 @@ export class SupportController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    await this.sessions.requireOrganizationContext(authorization, organizationId);
+    await this.sessions.requireOrganizationPermission(authorization, organizationId, "support.ticket.read");
     return { available: false, articles: [] };
   }
 }

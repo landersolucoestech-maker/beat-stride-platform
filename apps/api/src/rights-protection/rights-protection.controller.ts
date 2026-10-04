@@ -20,7 +20,7 @@ export class RightsProtectionController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "artist_identity.read");
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "rights.read");
     return this.rightsProtection.listForOrganization(context.activeOrganization.organizationId);
   }
 }

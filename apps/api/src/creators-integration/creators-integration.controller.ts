@@ -19,7 +19,7 @@ export class CreatorsIntegrationController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "creators.campaign.read");
     return this.creators.getOverview(context.activeOrganization.organizationId);
   }
 
@@ -30,7 +30,7 @@ export class CreatorsIntegrationController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ): Promise<never> {
-    await this.sessions.requireOrganizationContext(authorization, organizationId);
+    await this.sessions.requireOrganizationPermission(authorization, organizationId, "creators.disconnect");
     throw new ServiceUnavailableException({
       code: "CREATORS_PROVIDER_NOT_CONFIGURED",
       message: "Creators disconnect requires the upstream authorization provider contract",

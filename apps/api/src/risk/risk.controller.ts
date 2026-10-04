@@ -14,12 +14,12 @@ export class RiskController {
   ) {}
 
   @Get("overview")
-  @ApiOperation({ summary: "Get anti-fraud risk overview for the active organization" })
+  @ApiOperation({ summary: "Get customer-safe anti-fraud risk overview for the active organization" })
   async overview(
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "risk.summary.read");
     return this.risk.getOverview(context.activeOrganization.organizationId);
   }
 }
