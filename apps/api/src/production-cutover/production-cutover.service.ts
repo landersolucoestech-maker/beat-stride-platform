@@ -194,6 +194,21 @@ export class ProductionCutoverService {
     if (!decision) {
       throw new ConflictException({ code: "PRODUCTION_APPROVAL_REQUIRED", message: "An approved production launch decision is required" });
     }
+
+    const latest = await client.query<{ id: string } & QueryResultRow>(
+      `SELECT id
+       FROM launch_decisions
+       WHERE gate = 'PRODUCTION'
+       ORDER BY decided_at DESC, id DESC
+       LIMIT 1`,
+      [],
+    );
+    if (latest.rows[0]?.id !== decision.id) {
+      throw new ConflictException({
+        code: "PRODUCTION_APPROVAL_SUPERSEDED",
+        message: "Production cutover requires the latest production decision to remain approved",
+      });
+    }
     return decision;
   }
 
