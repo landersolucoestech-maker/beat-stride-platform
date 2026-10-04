@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -78,8 +80,10 @@ jobs:
           cp -R dist/. artifact/portal/
           cp -R apps/api/dist artifact/api/dist
           cp apps/api/package.json artifact/api/package.json
+          test ! -f apps/api/package-lock.json || cp apps/api/package-lock.json artifact/api/package-lock.json
           cp -R apps/worker/dist artifact/worker/dist
           cp apps/worker/package.json artifact/worker/package.json
+          test ! -f apps/worker/package-lock.json || cp apps/worker/package-lock.json artifact/worker/package-lock.json
           cp -R packages/database/migrations artifact/database/migrations
           cat > artifact/manifest.json <<EOF
           {
