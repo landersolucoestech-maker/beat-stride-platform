@@ -10,6 +10,7 @@ import { LaunchReadinessModule } from "./launch-readiness/launch-readiness.modul
 import { MarketingModule } from "./marketing/marketing.module.js";
 import { OperationsModule } from "./operations/operations.module.js";
 import { PilotConfigurationModule } from "./pilot-configuration/pilot-configuration.module.js";
+import { PilotEnrollmentModule } from "./pilot-enrollment/pilot-enrollment.module.js";
 import { DatabaseModule } from "./platform/database/database.module.js";
 import { HealthModule } from "./platform/health/health.module.js";
 import { RecoveryModule } from "./recovery/recovery.module.js";
@@ -39,6 +40,7 @@ import { SupportModule } from "./support/support.module.js";
     RecoveryModule,
     LaunchReadinessModule,
     PilotConfigurationModule,
+    PilotEnrollmentModule,
   ],
 })
 export class AppModule {}
