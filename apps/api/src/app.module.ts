@@ -13,6 +13,7 @@ import { PilotConfigurationModule } from "./pilot-configuration/pilot-configurat
 import { PilotEnrollmentModule } from "./pilot-enrollment/pilot-enrollment.module.js";
 import { DatabaseModule } from "./platform/database/database.module.js";
 import { HealthModule } from "./platform/health/health.module.js";
+import { ProductionCutoverModule } from "./production-cutover/production-cutover.module.js";
 import { RecoveryModule } from "./recovery/recovery.module.js";
 import { RightsProtectionModule } from "./rights-protection/rights-protection.module.js";
 import { RiskModule } from "./risk/risk.module.js";
@@ -41,6 +42,7 @@ import { SupportModule } from "./support/support.module.js";
     LaunchReadinessModule,
     PilotConfigurationModule,
     PilotEnrollmentModule,
+    ProductionCutoverModule,
   ],
 })
 export class AppModule {}
