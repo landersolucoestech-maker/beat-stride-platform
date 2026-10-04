@@ -1,10 +1,12 @@
 # Permission Census
 
-Status: Initial inventory
+Status: Enforced baseline
 
-The census records actions before role design. It does not grant permissions by itself.
+The permission census defines actions before role assignment. Permission grants never replace domain authority, financial eligibility, compliance state, or resource ownership checks.
 
-## Organization and identity
+## Organization-scoped permissions
+
+### Organization and identity
 - organization.read
 - organization.update
 - membership.invite
@@ -15,9 +17,8 @@ The census records actions before role design. It does not grant permissions by 
 - artist_identity.update
 - artist_identity.associate
 - artist_authority.claim
-- artist_authority.review
 
-## Catalog and release
+### Catalog and release
 - catalog.read
 - release.create
 - release.update_draft
@@ -30,52 +31,83 @@ The census records actions before role design. It does not grant permissions by 
 - metadata.update
 - rights.declare
 
-## Distribution and protection
-- qc.review
-- authority.review
+### Protection and authorization
 - protection.request
-- protection.transition_controller
 - authorization.issue
 - authorization.revoke
-- distribution.deliver
-- distribution.retry
-- distribution.update
-- distribution.takedown
 - transfer.initiate
-- transfer.review
 
-## Finance
+### Finance
 - analytics.read
-- statement.import
 - royalty.read
 - split.create_version
-- reconciliation.review
 - ledger.read
-- ledger.post_adjustment
 - wallet.read
 - beneficiary.manage
-- compliance.review
 - payout.request
-- payout.approve
-- payout.execute
 
-## Marketing and integrations
+### Marketing and integrations
 - marketing.manage
 - creators.connect
 - creators.disconnect
 - creators.checkout.create
 - creators.campaign.read
-- partner_api.manage
 
-## Risk, support and operations
+### Support
+- support.ticket.create
+
+## System-scoped permissions
+
+These permissions are assignable only through system roles and are not inherited from customer organization membership.
+
+### Distribution operations and review
+- artist_authority.review
+- qc.review
+- authority.review
+- protection.transition_controller
+- distribution.deliver
+- distribution.retry
+- distribution.update
+- distribution.takedown
+- transfer.review
+
+### Finance and compliance operations
+- statement.import
+- reconciliation.review
+- ledger.post_adjustment
+- compliance.review
+- payout.approve
+- payout.execute
+
+### Platform integrations, risk, support and operations
+- partner_api.manage
 - risk.read
 - risk.review
-- support.ticket.create
 - support.ticket.manage
 - operations.work_item.manage
 - operations.override.execute
+- backoffice.work.read
+- backoffice.work.manage
+
+### Automation
 - automation.run
 - automation.approve
+- automation.run.read
+- automation.run.manage
+- automation.run.approve
+
+## Default organization roles
+
+- Organization Owner: all organization-scoped permissions.
+- Organization Admin: organization-scoped permissions except organization ownership changes, membership revocation, beneficiary management, and payout requests.
+- Organization Member: read access plus routine catalog drafting, asset intake, metadata, marketing, Creators campaign projection, and support ticket creation.
+
+System roles are independent from organization roles. A user may be an organization owner without having any internal platform permission.
 
 ## Scope dimensions
+
 Every permission evaluation may additionally require organization membership, resource ownership or relationship, current authority evidence, territory, destination, financial eligibility, risk/compliance state, and feature/configuration state. Permission does not replace domain authority.
+
+## Enforcement baseline
+
+Organization-scoped API actions resolve the active organization, validate membership, then validate an organization role grant. Internal APIs validate system-role grants. Critical domain services continue to enforce authority, state-machine, optimistic-concurrency, risk, and financial invariants after access control succeeds.

@@ -38,7 +38,7 @@ export class ArtistIdentityController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "artist_identity.read");
     return { items: await this.artists.listForOrganization(context.activeOrganization.organizationId) };
   }
 
@@ -50,7 +50,7 @@ export class ArtistIdentityController {
     @Headers("x-organization-id") organizationId: string | undefined,
     @Body() body: unknown,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "artist_identity.create");
     const input = parseCreateArtist(body);
     return this.artists.createForOrganization({
       organizationId: context.activeOrganization.organizationId,

@@ -28,7 +28,7 @@ export class SubmissionController {
     @Headers("x-organization-id") organizationId: string | undefined,
     @Param("releaseId") releaseId: string,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "catalog.read");
     return this.submissions.getReadiness(context.activeOrganization.organizationId, releaseId);
   }
 
@@ -51,7 +51,7 @@ export class SubmissionController {
       });
     }
 
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "release.submit");
     return this.submissions.submit({
       organizationId: context.activeOrganization.organizationId,
       releaseId,

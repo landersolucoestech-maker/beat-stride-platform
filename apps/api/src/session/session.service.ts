@@ -19,7 +19,7 @@ interface MembershipRow extends QueryResultRow {
   display_name: string;
 }
 
-interface SystemPermissionRow extends QueryResultRow {
+interface PermissionRow extends QueryResultRow {
   permission_key: string;
 }
 
@@ -132,13 +132,53 @@ export class SessionService {
     return { ...context, activeOrganization };
   }
 
+  async requireOrganizationPermission(
+    authorizationHeader: string | undefined,
+    organizationIdHeader: string | undefined,
+    permissionKey: string,
+  ): Promise<OrganizationRequestContext> {
+    const context = await this.requireOrganizationContext(authorizationHeader, organizationIdHeader);
+    const permissionResult = await this.database.query<PermissionRow>(
+      `SELECT rp.permission_key
+       FROM organization_memberships membership
+       JOIN membership_roles membership_role ON membership_role.membership_id = membership.id
+       JOIN roles role_record
+         ON role_record.id = membership_role.role_id
+        AND role_record.role_type = 'ORGANIZATION'
+        AND role_record.organization_id = membership.organization_id
+       JOIN role_permissions rp ON rp.role_id = role_record.id
+       JOIN permissions permission_record
+         ON permission_record.permission_key = rp.permission_key
+        AND permission_record.permission_scope = 'ORGANIZATION'
+       WHERE membership.user_id = $1
+         AND membership.organization_id = $2
+         AND membership.status = 'ACTIVE'
+         AND rp.permission_key = $3
+       LIMIT 1`,
+      [context.user.id, context.activeOrganization.organizationId, permissionKey],
+    );
+
+    if (!permissionResult.rows[0]) {
+      throw new ForbiddenException({
+        code: "ORGANIZATION_PERMISSION_DENIED",
+        message: "The authenticated user does not have the required organization permission",
+        permission: permissionKey,
+      });
+    }
+
+    return context;
+  }
+
   async requireSystemPermission(authorizationHeader: string | undefined, permissionKey: string): Promise<SessionContext> {
     const context = await this.requireContext(authorizationHeader);
-    const permissionResult = await this.database.query<SystemPermissionRow>(
+    const permissionResult = await this.database.query<PermissionRow>(
       `SELECT rp.permission_key
        FROM user_system_roles usr
        JOIN roles r ON r.id = usr.role_id AND r.role_type = 'SYSTEM' AND r.organization_id IS NULL
        JOIN role_permissions rp ON rp.role_id = r.id
+       JOIN permissions permission_record
+         ON permission_record.permission_key = rp.permission_key
+        AND permission_record.permission_scope = 'SYSTEM'
        WHERE usr.user_id = $1 AND rp.permission_key = $2
        LIMIT 1`,
       [context.user.id, permissionKey],

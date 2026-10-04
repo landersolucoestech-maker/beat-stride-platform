@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
-import type { QueryResultRow } from "pg";
+import type { PoolClient, QueryResultRow } from "pg";
 
 import { DatabaseService } from "../platform/database/database.service.js";
 import { SessionService } from "../session/session.service.js";
@@ -91,6 +91,8 @@ export class AuthService {
            VALUES ($1, $2, $3, 'OWNER', 'ACTIVE', $4, $4)`,
           [membershipId, organizationId, userId, now],
         );
+
+        await this.provisionOrganizationRoles(client, organizationId, membershipId, now);
       });
     } catch (error) {
       const databaseError = error as { code?: string };
@@ -144,5 +146,66 @@ export class AuthService {
       ...session,
       user: { id: credential.user_id, email: credential.email },
     };
+  }
+
+  private async provisionOrganizationRoles(client: PoolClient, organizationId: string, ownerMembershipId: string, now: Date): Promise<void> {
+    const ownerRoleId = randomUUID();
+    const adminRoleId = randomUUID();
+    const memberRoleId = randomUUID();
+
+    await client.query(
+      `INSERT INTO roles (id, organization_id, name, role_type, created_at, updated_at)
+       VALUES
+         ($1, $4, 'Organization Owner', 'ORGANIZATION', $5, $5),
+         ($2, $4, 'Organization Admin', 'ORGANIZATION', $5, $5),
+         ($3, $4, 'Organization Member', 'ORGANIZATION', $5, $5)`,
+      [ownerRoleId, adminRoleId, memberRoleId, organizationId, now],
+    );
+
+    await client.query(
+      `INSERT INTO role_permissions (role_id, permission_key)
+       SELECT $1, permission_key FROM permissions WHERE permission_scope = 'ORGANIZATION'`,
+      [ownerRoleId],
+    );
+
+    await client.query(
+      `INSERT INTO role_permissions (role_id, permission_key)
+       SELECT $1, permission_key
+       FROM permissions
+       WHERE permission_scope = 'ORGANIZATION'
+         AND permission_key NOT IN ('organization.update','membership.revoke','beneficiary.manage','payout.request')`,
+      [adminRoleId],
+    );
+
+    await client.query(
+      `INSERT INTO role_permissions (role_id, permission_key)
+       SELECT $1, permission_key
+       FROM permissions
+       WHERE permission_key = ANY($2::text[])`,
+      [
+        memberRoleId,
+        [
+          'organization.read',
+          'artist_identity.read',
+          'catalog.read',
+          'release.create',
+          'release.update_draft',
+          'asset.upload',
+          'metadata.update',
+          'analytics.read',
+          'royalty.read',
+          'ledger.read',
+          'wallet.read',
+          'marketing.manage',
+          'creators.campaign.read',
+          'support.ticket.create',
+        ],
+      ],
+    );
+
+    await client.query(
+      `INSERT INTO membership_roles (membership_id, role_id, assigned_at) VALUES ($1, $2, $3)`,
+      [ownerMembershipId, ownerRoleId, now],
+    );
   }
 }

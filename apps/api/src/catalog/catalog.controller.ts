@@ -72,7 +72,7 @@ export class CatalogController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "catalog.read");
     return { items: await this.catalog.listReleases(context.activeOrganization.organizationId) };
   }
 
@@ -83,7 +83,7 @@ export class CatalogController {
     @Headers("x-organization-id") organizationId: string | undefined,
     @Param("releaseId") releaseId: string,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "catalog.read");
     return this.catalog.getRelease(context.activeOrganization.organizationId, releaseId);
   }
 
@@ -95,7 +95,7 @@ export class CatalogController {
     @Headers("x-organization-id") organizationId: string | undefined,
     @Body() body: unknown,
   ) {
-    const context = await this.sessions.requireOrganizationContext(authorization, organizationId);
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "release.create");
     const input = parseCreateRelease(body);
     return this.catalog.createRelease({ ...input, organizationId: context.activeOrganization.organizationId });
   }
