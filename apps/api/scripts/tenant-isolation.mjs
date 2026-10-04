@@ -1,4 +1,10 @@
+import { randomUUID } from "node:crypto";
+
+import pg from "pg";
+
+const { Pool } = pg;
 const baseUrl = process.env.API_BASE_URL ?? "http://127.0.0.1:3100/api/v1";
+const databaseUrl = process.env.DATABASE_URL;
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -103,4 +109,41 @@ const tenantBReleases = await request("/catalog/releases", {
 assert(tenantBReleases.response.status === 200, `tenant B catalog read failed: ${tenantBReleases.response.status}`);
 assert(Array.isArray(tenantBReleases.body?.items) && tenantBReleases.body.items.length === 0, "tenant B must not see tenant A releases");
 
-console.log("Tenant isolation and organization/system permission boundaries passed.");
+assert(databaseUrl, "DATABASE_URL is required for launch-gate integration checks");
+const pool = new Pool({ connectionString: databaseUrl });
+try {
+  await pool.query(
+    `INSERT INTO user_system_roles (user_id, role_id, assigned_at, assigned_by_user_id)
+     VALUES ($1, '00000000-0000-4000-8000-000000000035', NOW(), $1)
+     ON CONFLICT DO NOTHING`,
+    [accountA.user.id],
+  );
+} finally {
+  await pool.end();
+}
+
+const readiness = await request("/backoffice/launch-readiness/gates/PRODUCTION_READINESS", {
+  headers: { Authorization: `Bearer ${accountA.token}` },
+});
+assert(readiness.response.status === 200, `production-readiness gate read failed: ${readiness.response.status} ${JSON.stringify(readiness.body)}`);
+assert(readiness.body?.ready === false, "production-readiness gate must fail closed before real evidence exists");
+assert(readiness.body?.summary?.remaining > 0, "production-readiness gate must report unresolved requirements");
+
+const prematurePilotApproval = await request("/backoffice/launch-readiness/decisions", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${accountA.token}`,
+    "X-Correlation-Id": randomUUID(),
+  },
+  body: JSON.stringify({
+    gate: "PILOT",
+    decision: "APPROVED",
+    commitSha: "0000000000000000000000000000000000000000",
+    migrationVersion: "integration-test",
+    acceptedRisks: [],
+    rollbackTarget: "integration-test",
+  }),
+});
+assert(prematurePilotApproval.response.status === 409, `pilot approval must be rejected before evidence is complete, got ${prematurePilotApproval.response.status}`);
+
+console.log("Tenant isolation, permission boundaries, and fail-closed launch gates passed.");
