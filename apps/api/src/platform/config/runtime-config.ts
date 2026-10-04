@@ -6,6 +6,10 @@ const runtimeConfigSchema = z.object({
   DATABASE_URL: z.string().min(1).optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(24),
+  MAX_ACTIVE_SESSIONS: z.coerce.number().int().min(1).max(50).default(10),
+  AUTH_MAX_FAILED_ATTEMPTS: z.coerce.number().int().min(3).max(50).default(8),
+  AUTH_FAILURE_WINDOW_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
+  AUTH_LOCKOUT_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
   CORS_ALLOWED_ORIGINS: z.string().optional(),
 });
 

@@ -51,14 +51,32 @@ export class SessionService {
     const config = loadRuntimeConfig();
     const token = randomBytes(32).toString("base64url");
     const tokenHash = this.hashToken(token);
+    const sessionId = randomUUID();
     const now = new Date();
     const expiresAt = new Date(now.getTime() + config.SESSION_TTL_HOURS * 60 * 60 * 1000);
 
-    await this.database.query(
-      `INSERT INTO auth_sessions (id, user_id, token_hash, expires_at, revoked_at, created_at, last_seen_at)
-       VALUES ($1, $2, $3, $4, NULL, $5, $5)`,
-      [randomUUID(), userId, tokenHash, expiresAt, now],
-    );
+    await this.database.transaction(async (client) => {
+      await client.query(
+        `INSERT INTO auth_sessions (id, user_id, token_hash, expires_at, revoked_at, created_at, last_seen_at)
+         VALUES ($1, $2, $3, $4, NULL, $5, $5)`,
+        [sessionId, userId, tokenHash, expiresAt, now],
+      );
+
+      await client.query(
+        `UPDATE auth_sessions
+         SET revoked_at = COALESCE(revoked_at, $1)
+         WHERE id IN (
+           SELECT id
+           FROM auth_sessions
+           WHERE user_id = $2
+             AND revoked_at IS NULL
+             AND expires_at > $1
+           ORDER BY created_at DESC, id DESC
+           OFFSET $3
+         )`,
+        [now, userId, config.MAX_ACTIVE_SESSIONS],
+      );
+    });
 
     return { token, expiresAt: expiresAt.toISOString() };
   }

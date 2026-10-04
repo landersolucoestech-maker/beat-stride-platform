@@ -1,8 +1,9 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
-import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, HttpException, Injectable, UnauthorizedException } from "@nestjs/common";
 import type { PoolClient, QueryResultRow } from "pg";
 
+import { loadRuntimeConfig } from "../platform/config/runtime-config.js";
 import { DatabaseService } from "../platform/database/database.service.js";
 import { SessionService } from "../session/session.service.js";
 import { PasswordHasher } from "./password-hasher.js";
@@ -30,6 +31,14 @@ interface CredentialRow extends QueryResultRow {
   password_hash: string;
   password_salt: string;
 }
+
+interface ThrottleRow extends QueryResultRow {
+  failed_count: number;
+  locked_until: Date | null;
+}
+
+const DUMMY_PASSWORD_HASH = Buffer.alloc(64).toString("base64");
+const DUMMY_PASSWORD_SALT = Buffer.alloc(16).toString("base64");
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -123,6 +132,10 @@ export class AuthService {
     expiresAt: string;
     user: { id: string; email: string };
   }> {
+    const normalizedEmail = normalizeEmail(input.email);
+    const identityHash = createHash("sha256").update(normalizedEmail).digest("hex");
+    await this.assertLoginAllowed(identityHash);
+
     const result = await this.database.query<CredentialRow>(
       `SELECT u.id AS user_id, u.email, c.password_hash, c.password_salt
        FROM users u
@@ -130,22 +143,97 @@ export class AuthService {
        WHERE u.normalized_email = $1
          AND u.status = 'ACTIVE'
        LIMIT 1`,
-      [normalizeEmail(input.email)],
+      [normalizedEmail],
     );
 
     const credential = result.rows[0];
-    if (!credential || !(await this.passwordHasher.verify(input.password, credential.password_hash, credential.password_salt))) {
+    const passwordMatches = credential
+      ? await this.passwordHasher.verify(input.password, credential.password_hash, credential.password_salt)
+      : await this.passwordHasher.verify(input.password, DUMMY_PASSWORD_HASH, DUMMY_PASSWORD_SALT);
+
+    if (!credential || !passwordMatches) {
+      await this.recordLoginFailure(identityHash);
       throw new UnauthorizedException({
         code: "INVALID_CREDENTIALS",
         message: "Invalid email or password",
       });
     }
 
+    await this.database.query(`DELETE FROM auth_login_throttle WHERE identity_hash = $1`, [identityHash]);
+
     const session = await this.sessions.createForUser(credential.user_id);
     return {
       ...session,
       user: { id: credential.user_id, email: credential.email },
     };
+  }
+
+  private async assertLoginAllowed(identityHash: string): Promise<void> {
+    const result = await this.database.query<ThrottleRow>(
+      `SELECT failed_count, locked_until
+       FROM auth_login_throttle
+       WHERE identity_hash = $1
+         AND locked_until IS NOT NULL
+         AND locked_until > NOW()
+       LIMIT 1`,
+      [identityHash],
+    );
+
+    if (result.rows[0]) {
+      throw new HttpException(
+        { code: "AUTHENTICATION_TEMPORARILY_THROTTLED", message: "Authentication is temporarily throttled" },
+        429,
+      );
+    }
+  }
+
+  private async recordLoginFailure(identityHash: string): Promise<void> {
+    const config = loadRuntimeConfig();
+    const now = new Date();
+    const windowStart = new Date(now.getTime() - config.AUTH_FAILURE_WINDOW_MINUTES * 60 * 1000);
+    const lockedUntil = new Date(now.getTime() + config.AUTH_LOCKOUT_MINUTES * 60 * 1000);
+
+    await this.database.transaction(async (client) => {
+      const result = await client.query<ThrottleRow>(
+        `INSERT INTO auth_login_throttle
+          (identity_hash, failed_count, first_failed_at, locked_until, updated_at)
+         VALUES ($1, 1, $2, NULL, $2)
+         ON CONFLICT (identity_hash) DO UPDATE
+         SET failed_count = CASE
+               WHEN auth_login_throttle.first_failed_at < $3 THEN 1
+               ELSE auth_login_throttle.failed_count + 1
+             END,
+             first_failed_at = CASE
+               WHEN auth_login_throttle.first_failed_at < $3 THEN $2
+               ELSE auth_login_throttle.first_failed_at
+             END,
+             locked_until = CASE
+               WHEN (CASE
+                 WHEN auth_login_throttle.first_failed_at < $3 THEN 1
+                 ELSE auth_login_throttle.failed_count + 1
+               END) >= $4 THEN $5
+               ELSE NULL
+             END,
+             updated_at = $2
+         RETURNING failed_count, locked_until`,
+        [identityHash, now, windowStart, config.AUTH_MAX_FAILED_ATTEMPTS, lockedUntil],
+      );
+
+      const throttle = result.rows[0]!;
+      await client.query(
+        `INSERT INTO security_events
+          (id, organization_id, actor_type, actor_id, event_type, severity, correlation_id, occurred_at, metadata)
+         VALUES ($1, NULL, 'ANONYMOUS', NULL, $2, $3, $4, $5, $6::jsonb)`,
+        [
+          randomUUID(),
+          throttle.locked_until ? "AUTH_LOGIN_THROTTLED" : "AUTH_LOGIN_FAILED",
+          throttle.locked_until ? "MEDIUM" : "LOW",
+          randomUUID(),
+          now,
+          JSON.stringify({ identityHash, failedCount: throttle.failed_count }),
+        ],
+      );
+    });
   }
 
   private async provisionOrganizationRoles(client: PoolClient, organizationId: string, ownerMembershipId: string, now: Date): Promise<void> {
