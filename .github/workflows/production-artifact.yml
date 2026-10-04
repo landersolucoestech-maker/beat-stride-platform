@@ -1,0 +1,106 @@
+name: Production Artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_version:
+        description: Migration version approved for production
+        required: true
+        type: string
+      configuration_version:
+        description: Production configuration version
+        required: true
+        type: string
+      rollback_target:
+        description: Known-good rollback commit SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-artifact-main
+  cancel-in-progress: false
+
+jobs:
+  package:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate release inputs
+        env:
+          MIGRATION_VERSION: ${{ inputs.migration_version }}
+          CONFIGURATION_VERSION: ${{ inputs.configuration_version }}
+          ROLLBACK_TARGET: ${{ inputs.rollback_target }}
+        run: |
+          set -euo pipefail
+          test -n "$MIGRATION_VERSION"
+          test -n "$CONFIGURATION_VERSION"
+          echo "$ROLLBACK_TARGET" | grep -Eq '^[0-9a-fA-F]{40}$'
+          git cat-file -e "${ROLLBACK_TARGET}^{commit}"
+
+      - name: Build portal
+        run: |
+          npm install --no-audit --no-fund
+          npm run build -- --base=/
+
+      - name: Build API
+        working-directory: apps/api
+        run: |
+          npm install --no-audit --no-fund
+          npm run typecheck
+          npm run build
+
+      - name: Build worker
+        working-directory: apps/worker
+        run: |
+          npm install --no-audit --no-fund
+          npm run typecheck
+          npm run build
+
+      - name: Assemble Hostinger candidate
+        env:
+          MIGRATION_VERSION: ${{ inputs.migration_version }}
+          CONFIGURATION_VERSION: ${{ inputs.configuration_version }}
+          ROLLBACK_TARGET: ${{ inputs.rollback_target }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifact/portal artifact/api artifact/worker artifact/database
+          cp -R dist/. artifact/portal/
+          cp -R apps/api/dist artifact/api/dist
+          cp apps/api/package.json artifact/api/package.json
+          cp -R apps/worker/dist artifact/worker/dist
+          cp apps/worker/package.json artifact/worker/package.json
+          cp -R packages/database/migrations artifact/database/migrations
+          cat > artifact/manifest.json <<EOF
+          {
+            "product": "lander-distribution-platform",
+            "target": "hostinger",
+            "commitSha": "${GITHUB_SHA}",
+            "migrationVersion": "${MIGRATION_VERSION}",
+            "configurationVersion": "${CONFIGURATION_VERSION}",
+            "rollbackTarget": "${ROLLBACK_TARGET}",
+            "workflowRunId": "${GITHUB_RUN_ID}"
+          }
+          EOF
+          tar -C artifact -czf lander-distribution-${GITHUB_SHA}.tar.gz .
+          sha256sum lander-distribution-${GITHUB_SHA}.tar.gz > lander-distribution-${GITHUB_SHA}.tar.gz.sha256
+
+      - name: Upload production candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: lander-distribution-${{ github.sha }}
+          path: |
+            lander-distribution-${{ github.sha }}.tar.gz
+            lander-distribution-${{ github.sha }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30
