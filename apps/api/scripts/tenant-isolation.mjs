@@ -146,4 +146,18 @@ const prematurePilotApproval = await request("/backoffice/launch-readiness/decis
 });
 assert(prematurePilotApproval.response.status === 409, `pilot approval must be rejected before evidence is complete, got ${prematurePilotApproval.response.status}`);
 
-console.log("Tenant isolation, permission boundaries, and fail-closed launch gates passed.");
+const prematureCutover = await request("/backoffice/production-cutovers", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${accountA.token}`,
+    "X-Correlation-Id": randomUUID(),
+  },
+  body: JSON.stringify({
+    launchDecisionId: randomUUID(),
+    configurationVersion: "integration-test",
+  }),
+});
+assert(prematureCutover.response.status === 409, `production cutover must reject an unapproved launch decision, got ${prematureCutover.response.status}`);
+assert(prematureCutover.body?.code === "PRODUCTION_APPROVAL_REQUIRED", `unexpected cutover rejection: ${JSON.stringify(prematureCutover.body)}`);
+
+console.log("Tenant isolation, permission boundaries, fail-closed launch gates, and cutover controls passed.");
