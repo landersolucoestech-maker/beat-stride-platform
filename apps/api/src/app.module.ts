@@ -6,6 +6,7 @@ import { CatalogModule } from "./catalog/catalog.module.js";
 import { ContentIdModule } from "./content-id/content-id.module.js";
 import { CreatorsIntegrationModule } from "./creators-integration/creators-integration.module.js";
 import { MarketingModule } from "./marketing/marketing.module.js";
+import { OperationsModule } from "./operations/operations.module.js";
 import { DatabaseModule } from "./platform/database/database.module.js";
 import { HealthModule } from "./platform/health/health.module.js";
 import { RightsProtectionModule } from "./rights-protection/rights-protection.module.js";
@@ -29,6 +30,7 @@ import { SupportModule } from "./support/support.module.js";
     CreatorsIntegrationModule,
     RiskModule,
     SupportModule,
+    OperationsModule,
   ],
 })
 export class AppModule {}

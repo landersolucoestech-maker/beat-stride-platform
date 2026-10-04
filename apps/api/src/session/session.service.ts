@@ -19,6 +19,10 @@ interface MembershipRow extends QueryResultRow {
   display_name: string;
 }
 
+interface SystemPermissionRow extends QueryResultRow {
+  permission_key: string;
+}
+
 export interface SessionMembership {
   organizationId: string;
   role: MembershipRow["role"];
@@ -126,6 +130,29 @@ export class SessionService {
     }
 
     return { ...context, activeOrganization };
+  }
+
+  async requireSystemPermission(authorizationHeader: string | undefined, permissionKey: string): Promise<SessionContext> {
+    const context = await this.requireContext(authorizationHeader);
+    const permissionResult = await this.database.query<SystemPermissionRow>(
+      `SELECT rp.permission_key
+       FROM user_system_roles usr
+       JOIN roles r ON r.id = usr.role_id AND r.role_type = 'SYSTEM' AND r.organization_id IS NULL
+       JOIN role_permissions rp ON rp.role_id = r.id
+       WHERE usr.user_id = $1 AND rp.permission_key = $2
+       LIMIT 1`,
+      [context.user.id, permissionKey],
+    );
+
+    if (!permissionResult.rows[0]) {
+      throw new ForbiddenException({
+        code: "SYSTEM_PERMISSION_DENIED",
+        message: "The authenticated user does not have the required system permission",
+        permission: permissionKey,
+      });
+    }
+
+    return context;
   }
 
   async revoke(authorizationHeader: string | undefined): Promise<void> {
