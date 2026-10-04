@@ -158,6 +158,6 @@ const prematureCutover = await request("/backoffice/production-cutovers", {
   }),
 });
 assert(prematureCutover.response.status === 409, `production cutover must reject an unapproved launch decision, got ${prematureCutover.response.status}`);
-assert(prematureCutover.body?.code === "PRODUCTION_APPROVAL_REQUIRED", `unexpected cutover rejection: ${JSON.stringify(prematureCutover.body)}`);
+assert(prematureCutover.body?.error?.code === "PRODUCTION_APPROVAL_REQUIRED", `unexpected cutover rejection: ${JSON.stringify(prematureCutover.body)}`);
 
 console.log("Tenant isolation, permission boundaries, fail-closed launch gates, and cutover controls passed.");
