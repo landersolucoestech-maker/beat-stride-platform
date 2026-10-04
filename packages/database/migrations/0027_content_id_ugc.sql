@@ -4,7 +4,7 @@ CREATE TABLE content_id_enrollments (
   id uuid PRIMARY KEY,
   organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE RESTRICT,
   recording_id uuid NOT NULL REFERENCES recordings(id) ON DELETE RESTRICT,
-  authority_claim_id uuid NULL REFERENCES authority_claims(id) ON DELETE RESTRICT,
+  authority_grant_id uuid NULL REFERENCES authority_grants(id) ON DELETE RESTRICT,
   status text NOT NULL CHECK (status IN ('PENDING','ACTIVE','SUSPENDED','DEACTIVATION_PENDING','INACTIVE')),
   created_at timestamptz NOT NULL,
   updated_at timestamptz NOT NULL,
