@@ -4,6 +4,7 @@ import { ArtistIdentityModule } from "./artist-identity/artist-identity.module.j
 import { AuthModule } from "./auth/auth.module.js";
 import { CatalogModule } from "./catalog/catalog.module.js";
 import { ContentIdModule } from "./content-id/content-id.module.js";
+import { CreatorsIntegrationModule } from "./creators-integration/creators-integration.module.js";
 import { DatabaseModule } from "./platform/database/database.module.js";
 import { HealthModule } from "./platform/health/health.module.js";
 import { RightsProtectionModule } from "./rights-protection/rights-protection.module.js";
@@ -21,6 +22,7 @@ import { SubmissionModule } from "./submission/submission.module.js";
     RightsProtectionModule,
     SubmissionModule,
     ContentIdModule,
+    CreatorsIntegrationModule,
   ],
 })
 export class AppModule {}
