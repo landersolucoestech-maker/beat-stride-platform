@@ -31,7 +31,7 @@ export interface ClaimedOutboxEvent {
 @Injectable()
 export class OutboxService {
   private readonly logger = new Logger(OutboxService.name);
-  private readonly maxAttempts = loadWorkerConfig().OUTBOX_MAX_ATTEMPTS;
+  private readonly config = loadWorkerConfig();
 
   constructor(private readonly database: WorkerDatabaseService) {}
 
@@ -40,8 +40,14 @@ export class OutboxService {
       const result = await client.query<OutboxRow>(
         `SELECT id, event_type, event_version, aggregate_type, aggregate_id, correlation_id, actor, payload, attempts
          FROM outbox_events
-         WHERE status IN ('PENDING', 'FAILED')
-           AND available_at <= NOW()
+         WHERE (
+             status IN ('PENDING', 'FAILED')
+             AND available_at <= NOW()
+           ) OR (
+             status = 'PROCESSING'
+             AND lease_expires_at IS NOT NULL
+             AND lease_expires_at <= NOW()
+           )
          ORDER BY occurred_at ASC
          FOR UPDATE SKIP LOCKED
          LIMIT 1`,
@@ -51,11 +57,17 @@ export class OutboxService {
       if (!event) return null;
 
       const attempts = event.attempts + 1;
+      const now = new Date();
+      const leaseExpiresAt = new Date(now.getTime() + this.config.OUTBOX_LEASE_SECONDS * 1_000);
       await client.query(
         `UPDATE outbox_events
-         SET status = 'PROCESSING', attempts = $1, last_error = NULL
-         WHERE id = $2`,
-        [attempts, event.id],
+         SET status = 'PROCESSING',
+             attempts = $1,
+             processing_started_at = $2,
+             lease_expires_at = $3,
+             last_error = NULL
+         WHERE id = $4`,
+        [attempts, now, leaseExpiresAt, event.id],
       );
 
       return {
@@ -75,7 +87,11 @@ export class OutboxService {
   async markProcessed(eventId: string): Promise<void> {
     await this.database.query(
       `UPDATE outbox_events
-       SET status = 'PROCESSED', processed_at = NOW(), last_error = NULL
+       SET status = 'PROCESSED',
+           processed_at = NOW(),
+           processing_started_at = NULL,
+           lease_expires_at = NULL,
+           last_error = NULL
        WHERE id = $1`,
       [eventId],
     );
@@ -83,13 +99,15 @@ export class OutboxService {
 
   async markFailed(event: ClaimedOutboxEvent, error: unknown): Promise<void> {
     const message = error instanceof Error ? error.message : "UNKNOWN_WORKER_ERROR";
-    const deadLetter = event.attempts >= this.maxAttempts;
+    const deadLetter = event.attempts >= this.config.OUTBOX_MAX_ATTEMPTS;
     const delaySeconds = Math.min(300, 2 ** Math.min(event.attempts, 8));
 
     await this.database.query(
       `UPDATE outbox_events
        SET status = $1,
            available_at = CASE WHEN $1 = 'FAILED' THEN NOW() + ($2 * INTERVAL '1 second') ELSE available_at END,
+           processing_started_at = NULL,
+           lease_expires_at = NULL,
            last_error = $3
        WHERE id = $4`,
       [deadLetter ? "DEAD_LETTER" : "FAILED", delaySeconds, message.slice(0, 4_000), event.id],

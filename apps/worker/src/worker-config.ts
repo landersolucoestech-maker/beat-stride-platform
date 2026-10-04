@@ -5,6 +5,7 @@ const workerConfigSchema = z.object({
   DATABASE_URL: z.string().min(1),
   WORKER_POLL_INTERVAL_MS: z.coerce.number().int().min(250).max(60_000).default(1_000),
   OUTBOX_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(50).default(5),
+  OUTBOX_LEASE_SECONDS: z.coerce.number().int().min(15).max(3_600).default(120),
 });
 
 export type WorkerConfig = z.infer<typeof workerConfigSchema>;
