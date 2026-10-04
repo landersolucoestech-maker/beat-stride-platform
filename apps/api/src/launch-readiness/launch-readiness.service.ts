@@ -159,8 +159,8 @@ export class LaunchReadinessService {
 
   async listDecisions(gate?: "PILOT" | "PRODUCTION") {
     const result = gate
-      ? await this.database.query<DecisionRow>(`SELECT * FROM launch_decisions WHERE gate = $1 ORDER BY decided_at DESC`, [gate])
-      : await this.database.query<DecisionRow>(`SELECT * FROM launch_decisions ORDER BY decided_at DESC`, []);
+      ? await this.database.query<DecisionRow>(`SELECT * FROM launch_decisions WHERE gate = $1 ORDER BY decided_at DESC, id DESC`, [gate])
+      : await this.database.query<DecisionRow>(`SELECT * FROM launch_decisions ORDER BY decided_at DESC, id DESC`, []);
     return { items: result.rows.map((row) => this.toDecision(row)) };
   }
 
@@ -195,12 +195,25 @@ export class LaunchReadinessService {
         }
       }
       if (input.gate === "PRODUCTION") {
-        const pilotDecisions = await this.database.query<QueryResultRow>(
-          `SELECT 1 FROM launch_decisions WHERE gate = 'PILOT' AND decision = 'APPROVED' ORDER BY decided_at DESC LIMIT 1`,
+        if (!input.providerConfigurationVersion?.trim()) {
+          throw new ConflictException({
+            code: "PROVIDER_CONFIGURATION_VERSION_REQUIRED",
+            message: "Production approval requires the verified provider configuration version",
+          });
+        }
+        const latestPilot = await this.database.query<{ decision: "APPROVED" | "REJECTED" } & QueryResultRow>(
+          `SELECT decision
+           FROM launch_decisions
+           WHERE gate = 'PILOT'
+           ORDER BY decided_at DESC, id DESC
+           LIMIT 1`,
           [],
         );
-        if (!pilotDecisions.rows[0]) {
-          throw new ConflictException({ code: "PILOT_APPROVAL_REQUIRED", message: "Production approval requires a prior pilot approval" });
+        if (latestPilot.rows[0]?.decision !== "APPROVED") {
+          throw new ConflictException({
+            code: "PILOT_APPROVAL_REQUIRED",
+            message: "Production approval requires the latest pilot decision to be approved",
+          });
         }
       }
     }
