@@ -9,6 +9,7 @@ import { CreatorsIntegrationModule } from "./creators-integration/creators-integ
 import { LaunchReadinessModule } from "./launch-readiness/launch-readiness.module.js";
 import { MarketingModule } from "./marketing/marketing.module.js";
 import { OperationsModule } from "./operations/operations.module.js";
+import { PilotConfigurationModule } from "./pilot-configuration/pilot-configuration.module.js";
 import { DatabaseModule } from "./platform/database/database.module.js";
 import { HealthModule } from "./platform/health/health.module.js";
 import { RecoveryModule } from "./recovery/recovery.module.js";
@@ -37,6 +38,7 @@ import { SupportModule } from "./support/support.module.js";
     AutomationModule,
     RecoveryModule,
     LaunchReadinessModule,
+    PilotConfigurationModule,
   ],
 })
 export class AppModule {}
