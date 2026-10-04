@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 
 import { ArtistIdentityModule } from "./artist-identity/artist-identity.module.js";
 import { AuthModule } from "./auth/auth.module.js";
+import { AutomationModule } from "./automation/automation.module.js";
 import { CatalogModule } from "./catalog/catalog.module.js";
 import { ContentIdModule } from "./content-id/content-id.module.js";
 import { CreatorsIntegrationModule } from "./creators-integration/creators-integration.module.js";
@@ -31,6 +32,7 @@ import { SupportModule } from "./support/support.module.js";
     RiskModule,
     SupportModule,
     OperationsModule,
+    AutomationModule,
   ],
 })
 export class AppModule {}
