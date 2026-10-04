@@ -87,6 +87,7 @@ jobs:
         working-directory: apps/api
     env:
       DATABASE_URL: postgresql://distribution:distribution@localhost:5432/distribution_test
+      NODE_ENV: test
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -100,3 +101,18 @@ jobs:
         run: npm run migrate
       - name: Verify migration replay is idempotent
         run: npm run migrate
+      - name: Build API for integration checks
+        run: npm run build
+      - name: Verify tenant isolation and permission boundaries
+        run: |
+          PORT=3100 node dist/main.js > /tmp/distribution-api.log 2>&1 &
+          API_PID=$!
+          trap 'kill "$API_PID" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3100/api/v1/health/live >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:3100/api/v1/health/live >/dev/null || { cat /tmp/distribution-api.log; exit 1; }
+          API_BASE_URL=http://127.0.0.1:3100/api/v1 node scripts/tenant-isolation.mjs || { cat /tmp/distribution-api.log; exit 1; }
