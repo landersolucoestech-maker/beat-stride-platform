@@ -10,6 +10,7 @@ import { MarketingModule } from "./marketing/marketing.module.js";
 import { OperationsModule } from "./operations/operations.module.js";
 import { DatabaseModule } from "./platform/database/database.module.js";
 import { HealthModule } from "./platform/health/health.module.js";
+import { RecoveryModule } from "./recovery/recovery.module.js";
 import { RightsProtectionModule } from "./rights-protection/rights-protection.module.js";
 import { RiskModule } from "./risk/risk.module.js";
 import { SessionModule } from "./session/session.module.js";
@@ -33,6 +34,7 @@ import { SupportModule } from "./support/support.module.js";
     SupportModule,
     OperationsModule,
     AutomationModule,
+    RecoveryModule,
   ],
 })
 export class AppModule {}
