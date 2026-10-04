@@ -22,7 +22,7 @@ export interface SmartLinkView {
   id: string;
   title: string;
   artworkUrl: string | null;
-  publicUrl: string;
+  publicUrl: string | null;
   destinations: Array<{ code: string; label: string }>;
   visits: string | null;
   conversions: string | null;
