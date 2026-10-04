@@ -41,7 +41,12 @@ export class OperationsController {
     await this.sessions.requireSystemPermission(authorization, "backoffice.work.read");
     const parsed = listSchema.safeParse(query);
     if (!parsed.success) this.invalidRequest(parsed.error);
-    return this.operations.list(parsed.data);
+    return this.operations.list({
+      limit: parsed.data.limit,
+      ...(parsed.data.status ? { status: parsed.data.status } : {}),
+      ...(parsed.data.workType ? { workType: parsed.data.workType } : {}),
+      ...(parsed.data.assignedUserId ? { assignedUserId: parsed.data.assignedUserId } : {}),
+    });
   }
 
   @Get("work-items/:workItemId")
