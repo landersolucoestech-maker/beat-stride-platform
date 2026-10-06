@@ -42,7 +42,7 @@ const STEPS = [
   "Envio de faixas",
   "Capa do lançamento",
   "Preferências de distribuição",
-  "Revisão",
+  "Revisão e envio",
 ] as const;
 
 const RELEASE_TYPES = [
@@ -535,9 +535,9 @@ export function ReleaseFormModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[92vh] max-w-6xl flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-6 py-5">
-          <DialogTitle>Distribuir Música</DialogTitle>
+          <DialogTitle>Novo lançamento</DialogTitle>
           <DialogDescription>
-            Cadastre o lançamento seguindo as mesmas etapas do arquivo de referência.
+            Preencha os dados do lançamento e envie para aprovação do Administrador da Plataforma.
           </DialogDescription>
         </DialogHeader>
 
