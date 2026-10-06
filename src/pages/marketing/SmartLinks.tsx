@@ -38,6 +38,11 @@ export default function SmartLinks() {
   const createMutation = useCreateSmartLink();
   const data = query.data;
 
+  const publicUrlFor = (publicPath: string) => {
+    const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+    return new URL(`${basePath}${publicPath}`, window.location.origin).toString();
+  };
+
   const [showForm, setShowForm] = useState(false);
   const [releaseId, setReleaseId] = useState("");
   const [linkType, setLinkType] = useState<SmartLinkType>("SMART_LINK");
@@ -301,26 +306,20 @@ export default function SmartLinks() {
 
                 <CardContent className="space-y-3 p-4">
                   <div className="flex items-center gap-2 rounded-md bg-muted p-2">
-                    <code className="flex-1 truncate text-xs">
-                      {link.publicUrl ?? "URL pública ainda não configurada"}
-                    </code>
-                    {link.publicUrl && (
-                      <>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => void copy(link.publicUrl!)}
-                          className="h-7 w-7"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" asChild className="h-7 w-7">
-                          <a href={link.publicUrl} target="_blank" rel="noreferrer">
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </a>
-                        </Button>
-                      </>
-                    )}
+                    <code className="flex-1 truncate text-xs">{publicUrlFor(link.publicPath)}</code>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => void copy(publicUrlFor(link.publicPath))}
+                      className="h-7 w-7"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" asChild className="h-7 w-7">
+                      <a href={publicUrlFor(link.publicPath)} target="_blank" rel="noreferrer">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 text-center">
