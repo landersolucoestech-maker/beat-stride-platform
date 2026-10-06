@@ -8,6 +8,13 @@ Content ID and UGC protection remain distinct from catalog ownership and distrib
 ## MISSION-032 Marketing
 Native Distribution marketing owns release-centric capabilities such as smart links, pre-save, DSP pitching, promotion workflows, playlist tracking, and marketing content tied to a release. Marketing content may include audiovisual and promotional assets such as teasers, trailers, music videos, visualizers, lyric videos, short-form vertical videos, stories, behind-the-scenes material, artwork, and audio snippets. Planning, scheduling, and provider-authorized publication remain release-centric and must not become a general CRM or general-purpose social-media management suite.
 
+### Publication channels and promotional assets
+Meta (Instagram/Facebook), TikTok, and YouTube/YouTube Shorts connections are configured under Settings > Integrations and are consumed as Marketing capabilities. Planning remains possible while a channel is disconnected; automated execution is gated by connection state, provider configuration, publication eligibility, and asset readiness.
+
+Promotional campaign assets are distinct classifications from distribution masters. Marketing image, video, and audio assets may reference release context without becoming delivery masters. External object storage is accessed only behind an asset-storage provider contract. The application must not simulate successful byte upload when storage is unavailable, and credential secrets/tokens must be stored through secure secret references rather than plaintext business records.
+
+Provider publication is a critical asynchronous side effect and must use provider adapters plus the Transactional Outbox when execution is enabled.
+
 ### Creators Integration boundary
 Account connection is managed in Settings > Integrations. Lander Creators is not a standalone Marketing navigation module. When the connection is active, Creators is exposed as an optional capability inside the Start Marketing flow for the selected release.
 
