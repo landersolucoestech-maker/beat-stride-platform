@@ -180,6 +180,16 @@ export function useCreateSmartLink() {
   });
 }
 
+export function useSmartLinkAnalytics(smartLinkId: string | undefined) {
+  return useQuery({
+    queryKey: ["marketing", "smart-links", smartLinkId, "analytics"],
+    queryFn: () => marketingGateway.getSmartLinkAnalytics(smartLinkId!),
+    enabled: Boolean(smartLinkId),
+    staleTime: 10_000,
+    retry: 1,
+  });
+}
+
 export function useMarketingSmartLinks() {
   return useQuery({
     queryKey: ["marketing", "smart-links"],
