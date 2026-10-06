@@ -6,7 +6,6 @@ import {
   ChevronRight,
   DollarSign,
   FileCheck2,
-  FileSpreadsheet,
   Globe,
   HelpCircle,
   Languages,
@@ -151,7 +150,6 @@ const navigation: NavItemProps[] = [
     children: [
       { to: "/financial/analytics", icon: PieChart, label: "Análises Mensais" },
       { to: "/financial/wallet", icon: WalletIcon, label: "Carteira" },
-      { to: "/financial/royalties", icon: FileSpreadsheet, label: "Importar Royalties" },
       { to: "/financial/accounting", icon: DollarSign, label: "Contabilidade" },
       { to: "/financial/shares", icon: Users, label: "Gestão de Shares" },
     ],
