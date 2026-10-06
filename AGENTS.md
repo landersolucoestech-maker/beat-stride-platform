@@ -51,8 +51,8 @@
 - Distribution owns Release.
 - Lander Creators owns Creator Campaign.
 - Music OS 360 owns Project.
-- The Distribution product may expose a focused `Marketing > Creators` integration experience.
-- A Creators account is explicitly connected; Distribution credentials never become Creators credentials.
+- Lander Creators account connection is managed under `Settings > Integrations`, not as a standalone Marketing module.
+- After an account is explicitly connected, Creators may appear as a release-scoped capability inside `Marketing > Start Marketing`; Distribution credentials never become Creators credentials.
 - Creators checkout and campaign commercial state remain owned by Lander Creators.
 - Distribution may store connection state, external references, synchronization checkpoints, and read projections only.
 - Payment confirmation must be server-to-server and must not trust browser redirects.
