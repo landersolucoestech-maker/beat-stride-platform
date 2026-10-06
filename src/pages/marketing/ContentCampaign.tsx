@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, CalendarDays, FileVideo, Megaphone, Plus, Send } from "lucide-react";
+import { AlertCircle, ArrowLeft, CalendarDays, FileVideo, Megaphone, Plus, Send, Upload } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ import {
   useCreateCampaignContent,
   useCreatePublicationPlan,
   useMarketingCampaigns,
+  useRegisterContentAsset,
 } from "@/features/marketing/use-marketing";
 import type {
   MarketingCampaignContentView,
@@ -65,6 +66,95 @@ function publicationStatusLabel(status: string): string {
     CANCELLED: "Cancelado",
   };
   return labels[status] ?? status;
+}
+
+function AssetAttachment({
+  campaignId,
+  content,
+}: {
+  campaignId: string;
+  content: MarketingCampaignContentView;
+}) {
+  const mutation = useRegisterContentAsset(campaignId);
+  const [file, setFile] = useState<File | null>(null);
+
+  const reserve = async () => {
+    if (!file) return;
+    try {
+      const result = await mutation.mutateAsync({
+        contentId: content.id,
+        fileName: file.name,
+        contentType: file.type || "application/octet-stream",
+        byteSize: file.size,
+      });
+      setFile(null);
+
+      if (!result.upload.available) {
+        toast.warning("Asset reservado, mas o storage ainda não está configurado. Os bytes do arquivo não foram enviados.");
+        return;
+      }
+
+      toast.success("Upload promocional preparado.");
+    } catch {
+      toast.error("Não foi possível preparar o asset promocional.");
+    }
+  };
+
+  if (content.assetId) {
+    return (
+      <div className="mt-4 rounded-lg border border-border bg-muted/20 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-foreground">{content.assetFileName ?? "Asset promocional"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {content.assetContentType ?? "Tipo não informado"}
+              {content.assetByteSize
+                ? ` · ${(Number(content.assetByteSize) / 1024 / 1024).toFixed(1)} MB`
+                : ""}
+            </p>
+          </div>
+          <Badge variant="outline">
+            {content.assetStatus === "PENDING_UPLOAD" ? "Upload pendente" : content.assetStatus ?? "Asset"}
+          </Badge>
+        </div>
+        {content.assetStatus === "PENDING_UPLOAD" && (
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-border bg-background p-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p className="text-xs text-muted-foreground">
+              O arquivo está reservado no domínio de assets, mas os bytes ainda não foram enviados enquanto o storage externo não estiver configurado.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-3 rounded-lg border border-dashed border-border p-4">
+      <div>
+        <p className="text-sm font-medium text-foreground">Asset promocional</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Imagem, vídeo ou áudio desta peça. O arquivo promocional é separado dos masters destinados à distribuição.
+        </p>
+      </div>
+      <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+        <Input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm,audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/aac,audio/mp4"
+          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+        />
+        <Button variant="outline" onClick={() => void reserve()} disabled={!file || mutation.isPending}>
+          <Upload className="mr-2 h-4 w-4" />
+          {mutation.isPending ? "Preparando..." : "Preparar upload"}
+        </Button>
+      </div>
+      {file && (
+        <p className="text-xs text-muted-foreground">
+          {file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB
+        </p>
+      )}
+    </div>
+  );
 }
 
 function PublicationPlanner({
@@ -304,6 +394,7 @@ export default function ContentCampaign() {
                       </div>
                     )}
 
+                    {campaignId && <AssetAttachment campaignId={campaignId} content={content} />}
                     {campaignId && <PublicationPlanner campaignId={campaignId} content={content} />}
                   </CardContent>
                 </Card>
