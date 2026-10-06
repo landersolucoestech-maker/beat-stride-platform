@@ -123,9 +123,9 @@ export default function ManageMusic() {
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Buscar por título ou artista..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className="pl-10" disabled={dataUnavailable} />
+            <Input placeholder="Buscar por título ou artista..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className="pl-10" />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter} disabled={dataUnavailable}>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[190px]">
               <Filter className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Status" />
