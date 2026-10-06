@@ -63,6 +63,7 @@ interface SmartLinkRow extends QueryResultRow {
   id: string;
   title: string;
   slug: string;
+  link_type: "SMART_LINK" | "PRE_SAVE";
   destinations: Array<{ code: string; label: string }> | null;
 }
 
@@ -1045,6 +1046,7 @@ export class MarketingService {
          smart_link.id,
          smart_link.title,
          smart_link.slug,
+         smart_link.link_type,
          COALESCE(
            jsonb_agg(
              jsonb_build_object(
@@ -1058,7 +1060,7 @@ export class MarketingService {
        LEFT JOIN marketing_smart_link_destinations destination ON destination.smart_link_id = smart_link.id
        WHERE smart_link.organization_id = $1
          AND smart_link.status <> 'ARCHIVED'
-       GROUP BY smart_link.id, smart_link.title, smart_link.slug, smart_link.updated_at
+       GROUP BY smart_link.id, smart_link.title, smart_link.slug, smart_link.link_type, smart_link.updated_at
        ORDER BY smart_link.updated_at DESC, smart_link.id DESC`,
       [organizationId],
     );
@@ -1068,8 +1070,10 @@ export class MarketingService {
       items: result.rows.map((row) => ({
         id: row.id,
         title: row.title,
+        slug: row.slug,
+        linkType: row.link_type,
         artworkUrl: null,
-        publicUrl: null,
+        publicPath: `/l/${row.id}/${row.slug}`,
         destinations: row.destinations ?? [],
         visits: null,
         conversions: null,
