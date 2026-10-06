@@ -40,7 +40,7 @@ import {
 const STEPS = [
   "Informações do lançamento",
   "Envio de faixas",
-  "Capa do álbum",
+  "Capa do lançamento",
   "Preferências de distribuição",
   "Revisão",
 ] as const;
