@@ -182,9 +182,14 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
               Identidade, artistas e direitos principais.
             </p>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={() => onEditStep(0)}>
-            Editar lançamento
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => onEditStep(2)}>
+              Editar capa
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => onEditStep(0)}>
+              Editar lançamento
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-0 lg:grid-cols-[260px_minmax(0,1fr)]">
