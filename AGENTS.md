@@ -53,6 +53,9 @@
 - Music OS 360 owns Project.
 - Lander Creators account connection is managed under `Settings > Integrations`, not as a standalone Marketing module.
 - After an account is explicitly connected, Creators may appear as a release-scoped capability inside `Marketing > Start Marketing`; Distribution credentials never become Creators credentials.
+- Marketing publication channel connections (Meta, TikTok, YouTube) are managed under `Settings > Integrations`; they are capabilities consumed by release-scoped Marketing, not standalone modules.
+- OAuth access/refresh tokens must not be stored as plaintext business-table fields. Persist only secure credential references plus non-secret connection projections.
+- Marketing publication planning may exist before a channel is connected, but execution requires an active authorized connection, an available required asset, a configured provider adapter, and critical async execution through the Transactional Outbox.
 - Creators checkout and campaign commercial state remain owned by Lander Creators.
 - Distribution may store connection state, external references, synchronization checkpoints, and read projections only.
 - Payment confirmation must be server-to-server and must not trust browser redirects.
