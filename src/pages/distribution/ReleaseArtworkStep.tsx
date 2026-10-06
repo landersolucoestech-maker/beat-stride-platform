@@ -1,6 +1,7 @@
 import { CheckCircle2, ImageIcon, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 interface ReleaseArtworkStepProps {
@@ -59,18 +60,28 @@ export function ReleaseArtworkStep({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto max-w-5xl space-y-5">
       <div>
-        <h3 className="text-lg font-semibold text-foreground">Capa do álbum</h3>
+        <h3 className="text-lg font-semibold text-foreground">Capa do lançamento</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Envie a arte final do lançamento seguindo os requisitos de distribuição.
+          Envie a arte final que será utilizada nas plataformas de distribuição.
         </p>
       </div>
 
-      <section className="rounded-xl border border-border bg-card p-5">
-        <div className="flex flex-col gap-6 md:flex-row">
-          <div className="shrink-0">
-            <div className="flex h-44 w-44 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border bg-muted/40">
+      <section className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="grid lg:grid-cols-[360px_minmax(0,1fr)]">
+          <div className="border-b border-border bg-muted/15 p-5 lg:border-b-0 lg:border-r">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Prévia da capa</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Formato quadrado do lançamento
+                </p>
+              </div>
+              {coverFile && <Badge variant="secondary">Capa adicionada</Badge>}
+            </div>
+
+            <div className="aspect-square overflow-hidden rounded-xl border border-border bg-background shadow-sm">
               {coverPreview ? (
                 <img
                   src={coverPreview}
@@ -78,60 +89,68 @@ export function ReleaseArtworkStep({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <ImageIcon className="h-12 w-12 text-muted-foreground/30" />
+                <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                    <ImageIcon className="h-7 w-7 text-muted-foreground/50" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Nenhuma capa selecionada
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      A prévia aparecerá aqui
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
+
+            {coverFile && (
+              <div className="mt-3 min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {coverFile.name}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {(coverFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            )}
           </div>
 
-          <div className="flex-1 space-y-5">
+          <div className="space-y-5 p-5">
             <div>
-              <p className="text-sm font-semibold text-foreground">Requisitos de Upload</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                <li>
-                  Formato: <strong className="text-foreground">JPG, PNG</strong> (WebP não aceito)
-                </li>
-                <li>
-                  Tamanho mínimo: <strong className="text-foreground">3000 × 3000 pixels</strong>
-                </li>
-                <li>
-                  Tamanho máximo do arquivo: <strong className="text-foreground">35 MB</strong>
-                </li>
-                <li>
-                  Modo de cor: <strong className="text-foreground">RGB</strong> (incluindo preto e branco)
-                </li>
-                <li>
-                  Resolução: <strong className="text-foreground">72 dpi</strong>
-                </li>
-                <li>
-                  A capa <strong className="text-foreground">não pode conter</strong> logotipos, URLs,
-                  datas de lançamento ou anúncios de qualquer tipo.
-                </li>
-              </ul>
+              <p className="text-sm font-semibold text-foreground">Arquivo da capa</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Selecione a arte final antes de seguir para a distribuição.
+              </p>
             </div>
 
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="w-full rounded-lg border-2 border-dashed border-border p-6 text-center transition-colors hover:border-muted-foreground/50"
+              className="flex w-full items-center justify-between gap-4 rounded-xl border-2 border-dashed border-border bg-muted/10 p-5 text-left transition-colors hover:border-primary/50 hover:bg-primary/[0.02]"
             >
-              {coverFile ? (
-                <div className="flex items-center justify-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-success" />
-                  <span className="max-w-[360px] truncate text-sm font-medium text-foreground">
-                    {coverFile.name}
-                  </span>
-                </div>
-              ) : (
-                <>
-                  <p className="mb-3 text-sm text-muted-foreground">
-                    Clique para selecionar a capa
+              <div className="flex min-w-0 items-center gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  {coverFile ? (
+                    <CheckCircle2 className="h-5 w-5 text-success" />
+                  ) : (
+                    <Upload className="h-5 w-5 text-primary" />
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {coverFile ? coverFile.name : "Selecionar arquivo da capa"}
                   </p>
-                  <span className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Selecionar Capa
-                  </span>
-                </>
-              )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    JPG ou PNG • mínimo 3000 × 3000 px • máximo 35 MB
+                  </p>
+                </div>
+              </div>
+
+              <span className="shrink-0 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground">
+                {coverFile ? "Substituir" : "Selecionar"}
+              </span>
             </button>
 
             <input
@@ -142,23 +161,90 @@ export function ReleaseArtworkStep({
               onChange={(event) => selectCover(event.target.files?.[0] ?? null)}
             />
 
-            {coverFile && (
-              <Button type="button" variant="outline" size="sm" onClick={clearCover}>
-                <X className="mr-2 h-4 w-4" />
-                Remover capa
-              </Button>
-            )}
-
             {error && (
               <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
                 {error}
               </div>
             )}
+
+            {coverFile && (
+              <div className="flex justify-end">
+                <Button type="button" variant="ghost" size="sm" onClick={clearCover}>
+                  <X className="mr-2 h-4 w-4" />
+                  Remover capa
+                </Button>
+              </div>
+            )}
+
+            <div className="border-t border-border pt-5">
+              <div className="mb-3">
+                <p className="text-sm font-semibold text-foreground">
+                  Requisitos da arte
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Confira estes pontos antes de enviar a capa final.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border bg-muted/15 p-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Formato
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">
+                    JPG ou PNG
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    WebP não aceito
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-border bg-muted/15 p-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Dimensões
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">
+                    3000 × 3000 px
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Tamanho mínimo
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-border bg-muted/15 p-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Arquivo
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">
+                    Até 35 MB
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Modo de cor RGB
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-border bg-muted/15 p-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Resolução
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">
+                    72 dpi
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Inclusive preto e branco
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 rounded-lg border border-border bg-muted/15 p-3 text-xs text-muted-foreground">
+                A capa não pode conter logotipos, URLs, datas de lançamento ou anúncios de qualquer tipo.
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+      <div className="rounded-lg border border-border bg-muted/15 px-4 py-3 text-xs text-muted-foreground">
         Neste protótipo, formato, tamanho do arquivo e dimensões mínimas são validados localmente.
         RGB e 72 dpi permanecem como requisitos visuais nesta fase.
       </div>
