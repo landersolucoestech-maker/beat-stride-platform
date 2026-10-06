@@ -161,8 +161,8 @@ export class MarketingService {
     organizationId: string;
     releaseId: string;
     campaignType: MarketingCampaignType;
-    startsAt?: string | null;
-    endsAt?: string | null;
+    startsAt?: string | null | undefined;
+    endsAt?: string | null | undefined;
   }) {
     const release = await this.database.query<{ id: string } & QueryResultRow>(
       `SELECT id
@@ -275,11 +275,11 @@ export class MarketingService {
   async createCampaignContent(input: {
     organizationId: string;
     campaignId: string;
-    recordingId?: string | null;
-    assetId?: string | null;
+    recordingId?: string | null | undefined;
+    assetId?: string | null | undefined;
     contentType: MarketingContentType;
     title: string;
-    notes?: string | null;
+    notes?: string | null | undefined;
   }) {
     const campaign = await this.requireCampaign(input.organizationId, input.campaignId);
     if (campaign.status === "COMPLETED" || campaign.status === "CANCELLED") {
@@ -369,7 +369,7 @@ export class MarketingService {
     organizationId: string;
     contentId: string;
     channel: MarketingPublicationChannel;
-    scheduledFor?: string | null;
+    scheduledFor?: string | null | undefined;
   }) {
     const content = await this.database.query<
       { id: string; status: "DRAFT" | "READY" | "ARCHIVED"; campaign_status: string } & QueryResultRow
