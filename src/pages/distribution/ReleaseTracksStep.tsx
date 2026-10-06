@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ArtistLookupField } from "./ArtistLookupField";
 
 export interface PrototypeTrackArtist {
   id: string;
@@ -126,14 +127,6 @@ const LANGUAGES = [
   "Árabe",
 ] as const;
 
-const MOCK_ARTISTS = [
-  "Ayla Martins",
-  "Caio Nunes",
-  "Davi Luz",
-  "Luna Reis",
-  "Nilo",
-] as const;
-
 function createArtist(): PrototypeTrackArtist {
   return { id: crypto.randomUUID(), name: "", role: "Featuring" };
 }
@@ -176,13 +169,17 @@ export function createPrototypeTrack(): PrototypeTrack {
 interface ReleaseTracksStepProps {
   tracks: PrototypeTrack[];
   albumArtistNames: string[];
+  artistBase: string[];
   onTracksChange: (tracks: PrototypeTrack[]) => void;
+  onAddArtistToBase: (artistName: string) => void;
 }
 
 export function ReleaseTracksStep({
   tracks,
   albumArtistNames,
+  artistBase,
   onTracksChange,
+  onAddArtistToBase,
 }: ReleaseTracksStepProps) {
   const updateTrack = (id: string, updates: Partial<PrototypeTrack>) => {
     onTracksChange(
@@ -509,23 +506,15 @@ export function ReleaseTracksStep({
                             key={artist.id}
                             className="grid gap-2 md:grid-cols-[minmax(0,1fr)_220px_auto]"
                           >
-                            <Select
+                            <ArtistLookupField
                               value={artist.name}
-                              onValueChange={(value) =>
+                              artists={artistBase}
+                              placeholder="Selecionar artista da base"
+                              onChange={(value) =>
                                 patchArtist(artist.id, { name: value })
                               }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecionar artista" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {MOCK_ARTISTS.map((item) => (
-                                  <SelectItem key={item} value={item}>
-                                    {item}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              onAddArtistToBase={onAddArtistToBase}
+                            />
 
                             <Select
                               value={artist.role}
