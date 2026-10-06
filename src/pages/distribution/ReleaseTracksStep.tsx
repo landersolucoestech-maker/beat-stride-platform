@@ -42,6 +42,8 @@ export interface PrototypeTrack {
   title: string;
   alternativeVersion: boolean;
   versionName: string;
+  primaryGenre: string;
+  secondaryGenre: string;
   additionalArtists: PrototypeTrackArtist[];
   productionCredits: PrototypeProductionCredit[];
   composers: PrototypeComposer[];
@@ -89,6 +91,21 @@ const INSTRUMENTS = [
   "Percussão",
   "Cordas",
   "Outro",
+] as const;
+
+const GENRES = [
+  "Afrobeats",
+  "Alternativo",
+  "Eletrônica",
+  "Funk",
+  "Gospel",
+  "Hip-Hop / Rap",
+  "MPB",
+  "Pagode",
+  "Pop",
+  "Reggae",
+  "Rock",
+  "Sertanejo",
 ] as const;
 
 const AI_USAGE_OPTIONS = [
@@ -142,6 +159,8 @@ export function createPrototypeTrack(): PrototypeTrack {
     title: "",
     alternativeVersion: false,
     versionName: "",
+    primaryGenre: "",
+    secondaryGenre: "",
     additionalArtists: [],
     productionCredits: [],
     composers: [],
@@ -273,6 +292,59 @@ export function ReleaseTracksStep({
                 <p className="mt-1 text-right text-xs text-muted-foreground">
                   {track.title.length}/200
                 </p>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-3">
+                <div>
+                  <Label>Gênero *</Label>
+                  <Select
+                    value={track.primaryGenre}
+                    onValueChange={(value) => updateTrack(track.id, { primaryGenre: value })}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Selecionar gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GENRES.map((genre) => (
+                        <SelectItem key={genre} value={genre}>{genre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Gênero secundário *</Label>
+                  <Select
+                    value={track.secondaryGenre}
+                    onValueChange={(value) => updateTrack(track.id, { secondaryGenre: value })}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Selecionar gênero secundário" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GENRES.map((genre) => (
+                        <SelectItem key={genre} value={genre}>{genre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Idioma da música *</Label>
+                  <Select
+                    value={track.language}
+                    onValueChange={(value) => updateTrack(track.id, { language: value })}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Selecionar idioma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.map((item) => (
+                        <SelectItem key={item} value={item}>{item}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="rounded-lg border border-border bg-muted/20 p-4">
@@ -645,20 +717,6 @@ export function ReleaseTracksStep({
 
                 {!track.instrumental && (
                   <div className="mt-4 space-y-4">
-                    <div>
-                      <Label>Idioma da faixa *</Label>
-                      <Select
-                        value={track.language}
-                        onValueChange={(value) => updateTrack(track.id, { language: value })}
-                      >
-                        <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {LANGUAGES.map((item) => (
-                            <SelectItem key={item} value={item}>{item}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
                     <div>
                       <Label>Letra</Label>
                       <Textarea
