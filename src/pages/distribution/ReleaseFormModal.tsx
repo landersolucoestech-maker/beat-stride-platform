@@ -100,12 +100,27 @@ interface AdditionalArtist {
   role: string;
 }
 
+export interface PrototypeReleaseDraft {
+  id: string;
+  title: string;
+  artistName: string;
+  type: string;
+  releaseDate: string | null;
+  coverUrl: string | null;
+  status: "DRAFT";
+}
+
 interface ReleaseFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreateDraft: (draft: PrototypeReleaseDraft) => void;
 }
 
-export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) {
+export function ReleaseFormModal({
+  open,
+  onOpenChange,
+  onCreateDraft,
+}: ReleaseFormModalProps) {
   const [step, setStep] = useState(0);
   const [projectId, setProjectId] = useState("none");
   const [title, setTitle] = useState("");
@@ -272,6 +287,23 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
   const resetAndClose = () => {
     setStep(0);
     onOpenChange(false);
+  };
+
+  const createDraftAndClose = () => {
+    const releaseTypeLabel =
+      RELEASE_TYPES.find((item) => item.value === releaseType)?.label ?? releaseType;
+
+    onCreateDraft({
+      id: `prototype-${crypto.randomUUID()}`,
+      title: title.trim(),
+      artistName: variousArtists ? "Various Artists" : mainArtist.trim(),
+      type: releaseTypeLabel,
+      releaseDate: distribution.releaseDate || null,
+      coverUrl: coverPreview || null,
+      status: "DRAFT",
+    });
+
+    resetAndClose();
   };
 
   const renderStepOne = () => (
@@ -640,7 +672,7 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
             <Button
               type="button"
               className="gradient-primary text-primary-foreground"
-              onClick={resetAndClose}
+              onClick={createDraftAndClose}
               disabled={reviewIssues.length > 0}
             >
               Criar Lançamento
