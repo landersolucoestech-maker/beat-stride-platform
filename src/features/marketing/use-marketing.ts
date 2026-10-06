@@ -9,6 +9,7 @@ import type {
   MarketingCampaignType,
   MarketingContentType,
   MarketingPublicationChannel,
+  SmartLinkAnalyticsDays,
 } from "./marketing.types";
 
 export function useMarketingOverview() {
@@ -180,10 +181,13 @@ export function useCreateSmartLink() {
   });
 }
 
-export function useSmartLinkAnalytics(smartLinkId: string | undefined) {
+export function useSmartLinkAnalytics(
+  smartLinkId: string | undefined,
+  days: SmartLinkAnalyticsDays,
+) {
   return useQuery({
-    queryKey: ["marketing", "smart-links", smartLinkId, "analytics"],
-    queryFn: () => marketingGateway.getSmartLinkAnalytics(smartLinkId!),
+    queryKey: ["marketing", "smart-links", smartLinkId, "analytics", days],
+    queryFn: () => marketingGateway.getSmartLinkAnalytics(smartLinkId!, days),
     enabled: Boolean(smartLinkId),
     staleTime: 10_000,
     retry: 1,
