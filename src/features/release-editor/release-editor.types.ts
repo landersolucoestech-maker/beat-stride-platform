@@ -15,13 +15,6 @@ export interface ReleaseTrackDraftInput {
   audioFile: File | null;
 }
 
-export interface ReleaseSplitDraftInput {
-  id: string;
-  name: string;
-  role: "PRIMARY_ARTIST" | "FEATURED_ARTIST" | "PRODUCER" | "COMPOSER" | "OTHER";
-  percentage: number;
-}
-
 export interface CreateReleaseDraftInput {
   title: string;
   artistIdentityId: string;
@@ -31,7 +24,6 @@ export interface CreateReleaseDraftInput {
   explicit: boolean;
   coverFile: File | null;
   tracks: ReleaseTrackDraftInput[];
-  splits: ReleaseSplitDraftInput[];
 }
 
 export interface CreateReleaseDraftResult {
