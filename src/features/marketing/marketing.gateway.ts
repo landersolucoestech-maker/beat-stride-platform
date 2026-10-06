@@ -3,7 +3,12 @@ import { apiRequest, isApiConfigured } from "@/lib/api-client";
 import type {
   FanListOverview,
   MarketingAssetReservation,
+  MarketingCampaignCalendarItem,
   MarketingCampaignContentView,
+  MarketingCampaignPhase,
+  MarketingCampaignTaskCategory,
+  MarketingCampaignTaskStatus,
+  MarketingCampaignTaskView,
   MarketingCampaignType,
   MarketingCampaignView,
   MarketingContentType,
@@ -20,9 +25,27 @@ export interface MarketingGateway {
   createCampaign(input: {
     releaseId: string;
     campaignType: MarketingCampaignType;
+    name?: string;
+    objective?: string | null;
+    focusRecordingId?: string | null;
+    brief?: string | null;
+    budgetMinor?: number | null;
+    budgetCurrency?: string | null;
     startsAt?: string | null;
     endsAt?: string | null;
   }): Promise<MarketingCampaignView>;
+  getCampaignTasks(campaignId: string): Promise<{ items: MarketingCampaignTaskView[] }>;
+  createCampaignTask(campaignId: string, input: {
+    phase: MarketingCampaignPhase;
+    category: MarketingCampaignTaskCategory;
+    title: string;
+    description?: string | null;
+    assigneeUserId?: string | null;
+    dueAt?: string | null;
+    sortOrder?: number;
+  }): Promise<MarketingCampaignTaskView>;
+  updateCampaignTaskStatus(taskId: string, status: MarketingCampaignTaskStatus): Promise<MarketingCampaignTaskView>;
+  getCampaignCalendar(campaignId: string): Promise<{ items: MarketingCampaignCalendarItem[] }>;
   getCampaignContents(campaignId: string): Promise<{ items: MarketingCampaignContentView[] }>;
   createCampaignContent(campaignId: string, input: {
     recordingId?: string | null;
@@ -60,11 +83,45 @@ class HttpMarketingGateway implements MarketingGateway {
   createCampaign(input: {
     releaseId: string;
     campaignType: MarketingCampaignType;
+    name?: string;
+    objective?: string | null;
+    focusRecordingId?: string | null;
+    brief?: string | null;
+    budgetMinor?: number | null;
+    budgetCurrency?: string | null;
     startsAt?: string | null;
     endsAt?: string | null;
   }): Promise<MarketingCampaignView> {
     if (!isApiConfigured()) throw new Error("MARKETING_API_NOT_CONNECTED");
     return this.postJson("/api/v1/marketing/campaigns", input);
+  }
+
+  getCampaignTasks(campaignId: string): Promise<{ items: MarketingCampaignTaskView[] }> {
+    if (!isApiConfigured()) return Promise.resolve({ items: [] });
+    return this.getJson(`/api/v1/marketing/campaigns/${campaignId}/tasks`);
+  }
+
+  createCampaignTask(campaignId: string, input: {
+    phase: MarketingCampaignPhase;
+    category: MarketingCampaignTaskCategory;
+    title: string;
+    description?: string | null;
+    assigneeUserId?: string | null;
+    dueAt?: string | null;
+    sortOrder?: number;
+  }): Promise<MarketingCampaignTaskView> {
+    if (!isApiConfigured()) throw new Error("MARKETING_API_NOT_CONNECTED");
+    return this.postJson(`/api/v1/marketing/campaigns/${campaignId}/tasks`, input);
+  }
+
+  updateCampaignTaskStatus(taskId: string, status: MarketingCampaignTaskStatus): Promise<MarketingCampaignTaskView> {
+    if (!isApiConfigured()) throw new Error("MARKETING_API_NOT_CONNECTED");
+    return this.patchJson(`/api/v1/marketing/tasks/${taskId}/status`, { status });
+  }
+
+  getCampaignCalendar(campaignId: string): Promise<{ items: MarketingCampaignCalendarItem[] }> {
+    if (!isApiConfigured()) return Promise.resolve({ items: [] });
+    return this.getJson(`/api/v1/marketing/campaigns/${campaignId}/calendar`);
   }
 
   getCampaignContents(campaignId: string): Promise<{ items: MarketingCampaignContentView[] }> {
@@ -123,6 +180,14 @@ class HttpMarketingGateway implements MarketingGateway {
   private async postJson<T>(path: string, body: unknown): Promise<T> {
     const response = await apiRequest(path, {
       method: "POST",
+      body: JSON.stringify(body),
+    });
+    return (await response.json()) as T;
+  }
+
+  private async patchJson<T>(path: string, body: unknown): Promise<T> {
+    const response = await apiRequest(path, {
+      method: "PATCH",
       body: JSON.stringify(body),
     });
     return (await response.json()) as T;
