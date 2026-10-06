@@ -1244,6 +1244,51 @@ export class MarketingService {
           visits: row.visits,
         }));
 
+    const timelineResult = await this.database.query<{
+      date: string;
+      visits: string;
+      clicks: string;
+      click_through_rate: string;
+    } & QueryResultRow>(
+      `WITH days AS (
+         SELECT generate_series(
+           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - INTERVAL '29 days')::date,
+           (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date,
+           INTERVAL '1 day'
+         )::date AS day
+       ),
+       daily_events AS (
+         SELECT
+           (event.occurred_at AT TIME ZONE 'UTC')::date AS day,
+           COUNT(*) FILTER (WHERE event.event_type = 'PAGE_VIEW') AS visits,
+           COUNT(*) FILTER (WHERE event.event_type = 'DESTINATION_CLICK') AS clicks
+         FROM marketing_smart_link_events event
+         WHERE event.smart_link_id = $1
+           AND event.occurred_at >=
+             ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - INTERVAL '29 days')
+         GROUP BY (event.occurred_at AT TIME ZONE 'UTC')::date
+       )
+       SELECT
+         days.day::text AS date,
+         COALESCE(daily_events.visits, 0)::text AS visits,
+         COALESCE(daily_events.clicks, 0)::text AS clicks,
+         CASE
+           WHEN COALESCE(daily_events.visits, 0) = 0 THEN '0'
+           ELSE ROUND(
+             (
+               COALESCE(daily_events.clicks, 0)::numeric
+               /
+               daily_events.visits::numeric
+             ) * 100,
+             2
+           )::text
+         END AS click_through_rate
+       FROM days
+       LEFT JOIN daily_events ON daily_events.day = days.day
+       ORDER BY days.day ASC`,
+      [smartLinkId],
+    );
+
     return {
       id: link.id,
       title: link.title,
@@ -1263,6 +1308,12 @@ export class MarketingService {
         utmMediums: byDimension("UTM_MEDIUM"),
         utmCampaigns: byDimension("UTM_CAMPAIGN"),
       },
+      timeline: timelineResult.rows.map((row) => ({
+        date: row.date,
+        visits: row.visits,
+        clicks: row.clicks,
+        clickThroughRate: row.click_through_rate,
+      })),
     };
   }
 
