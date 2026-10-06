@@ -70,7 +70,7 @@ export default function ManageMusic() {
         normalizedSearch.length === 0 ||
         release.title.toLocaleLowerCase("pt-BR").includes(normalizedSearch) ||
         release.artistName.toLocaleLowerCase("pt-BR").includes(normalizedSearch);
-      const matchesStatus = statusFilter === "all" || statusFilter === "DRAFT";
+      const matchesStatus = statusFilter === "all" || statusFilter === "SUBMITTED";
 
       return matchesSearch && matchesStatus;
     });
@@ -115,13 +115,13 @@ export default function ManageMusic() {
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-foreground">Rascunhos desta sessão</h2>
+                <h2 className="text-sm font-semibold text-foreground">Envios desta sessão</h2>
                 <p className="text-xs text-muted-foreground">
-                  Lançamentos criados localmente no protótipo, sem backend.
+                  Envios locais do protótipo aguardando aprovação do Administrador da Plataforma.
                 </p>
               </div>
               <span className="text-xs text-muted-foreground">
-                {filteredPrototypeDrafts.length} {filteredPrototypeDrafts.length === 1 ? "rascunho" : "rascunhos"}
+                {filteredPrototypeDrafts.length} {filteredPrototypeDrafts.length === 1 ? "envio" : "envios"}
               </span>
             </div>
 
@@ -144,7 +144,7 @@ export default function ManageMusic() {
                       </div>
                     )}
                     <div className="absolute right-2 top-2">
-                      <StatusBadge status="draft" />
+                      <StatusBadge status="review" />
                     </div>
                   </div>
 
