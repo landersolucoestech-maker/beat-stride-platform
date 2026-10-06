@@ -116,12 +116,16 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
     distribution,
   } = props;
 
+  const releaseArtist = variousArtists
+    ? "Various Artists"
+    : mainArtist || "Artista não informado";
+
   return (
-    <div className="space-y-5">
+    <div className="mx-auto max-w-5xl space-y-5">
       <div>
         <h3 className="text-lg font-semibold text-foreground">Revisão</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Confira as informações antes de criar o lançamento no protótipo.
+          Faça a conferência final das informações antes de criar o lançamento.
         </p>
       </div>
 
@@ -130,166 +134,310 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
           <div>
             <p className="font-medium text-foreground">
-              Tudo certo! O lançamento está pronto para ser criado.
+              Lançamento pronto para ser criado
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              A ação final neste momento é apenas simulada no frontend.
+              Todos os campos obrigatórios desta etapa de protótipo foram preenchidos.
             </p>
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
+        <section className="rounded-xl border border-warning/30 bg-warning/5 p-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-warning" />
-            <p className="font-medium text-foreground">Pendências para revisar</p>
+            <div>
+              <p className="font-medium text-foreground">
+                {issues.length} {issues.length === 1 ? "pendência encontrada" : "pendências encontradas"}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Corrija os itens abaixo antes de criar o lançamento.
+              </p>
+            </div>
           </div>
-          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            {issues.map((issue) => <li key={issue}>{issue}</li>)}
-          </ul>
-        </div>
+
+          <div className="mt-4 grid gap-2 md:grid-cols-2">
+            {issues.map((issue, index) => (
+              <div
+                key={issue}
+                className="flex items-start gap-2 rounded-lg border border-warning/20 bg-background/60 px-3 py-2.5 text-sm text-muted-foreground"
+              >
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-warning/10 text-[10px] font-semibold text-warning">
+                  {index + 1}
+                </span>
+                <span>{issue}</span>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[220px_1fr]">
-        <section className="rounded-xl border border-border bg-card p-4">
-          <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-            {coverPreview ? (
-              <img
-                src={coverPreview}
-                alt={title || "Capa do lançamento"}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <Disc3 className="h-10 w-10 text-muted-foreground" />
-              </div>
-            )}
-          </div>
-          <div className="mt-4">
-            <Badge variant="secondary">
-              {RELEASE_TYPE_LABELS[releaseType] ?? releaseType}
-            </Badge>
-            <h4 className="mt-2 font-semibold text-foreground">
-              {title || "Título não informado"}
-            </h4>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {variousArtists ? "Various Artists" : mainArtist || "Artista não informado"}
-            </p>
-          </div>
-        </section>
+      <section className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="border-b border-border bg-muted/15 px-5 py-4">
+          <h4 className="font-semibold text-foreground">Lançamento</h4>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Identidade, artistas e direitos principais.
+          </p>
+        </div>
 
-        <section className="rounded-xl border border-border bg-card p-5">
-          <h4 className="font-semibold text-foreground">Resumo do lançamento</h4>
+        <div className="grid gap-0 lg:grid-cols-[260px_minmax(0,1fr)]">
+          <div className="border-b border-border p-5 lg:border-b-0 lg:border-r">
+            <div className="aspect-square overflow-hidden rounded-xl border border-border bg-muted">
+              {coverPreview ? (
+                <img
+                  src={coverPreview}
+                  alt={title || "Capa do lançamento"}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-2">
+                  <Disc3 className="h-10 w-10 text-muted-foreground/50" />
+                  <span className="text-xs text-muted-foreground">Sem capa</span>
+                </div>
+              )}
+            </div>
 
-          <div className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Artistas</p>
-              <p className="mt-1 font-medium text-foreground">
-                {albumArtistNames.length ? albumArtistNames.join(", ") : "Não informado"}
+            <div className="mt-4">
+              <Badge variant="secondary">
+                {RELEASE_TYPE_LABELS[releaseType] ?? releaseType}
+              </Badge>
+              <h4 className="mt-2 truncate text-base font-semibold text-foreground">
+                {title || "Título não informado"}
+              </h4>
+              <p className="mt-1 truncate text-sm text-muted-foreground">
+                {releaseArtist}
               </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Gravadora / Selo</p>
-              <p className="mt-1 font-medium text-foreground">{recordLabel || "Não informado"}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Distribuidora</p>
-              <p className="mt-1 font-medium text-foreground">
-                {distribution.distributor
-                  ? DISTRIBUTOR_LABELS[distribution.distributor] ?? distribution.distributor
-                  : "Somente controle interno"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Data</p>
-              <p className="mt-1 font-medium text-foreground">
-                {distribution.releaseDate || "Não definida"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Hora / Fuso</p>
-              <p className="mt-1 font-medium text-foreground">
-                {distribution.releaseTime || "Sem hora definida"} · {distribution.timezone}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Território</p>
-              <p className="mt-1 font-medium text-foreground">
-                {TERRITORY_LABELS[distribution.territory] ?? distribution.territory}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">UPC</p>
-              <p className="mt-1 font-medium text-foreground">
-                {ownUpc ? upc || "Não informado" : "Gerado automaticamente"}
+              <p className="mt-3 text-xs text-muted-foreground">
+                {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"}
               </p>
             </div>
           </div>
 
-          <div className="mt-5 border-t border-border pt-4">
-            <div className="grid gap-2 text-sm sm:grid-cols-2">
-              <div className="rounded-lg bg-muted/30 p-3">
-                <span className="text-muted-foreground">©</span>
-                <p className="mt-1 font-medium text-foreground">
-                  {copyrightReleaseYear || "—"} {copyrightHolder || recordLabel || "Titular não informado"}
+          <div className="p-5">
+            <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Artistas do lançamento
+                </p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  {albumArtistNames.length
+                    ? albumArtistNames.join(", ")
+                    : "Não informado"}
                 </p>
               </div>
-              <div className="rounded-lg bg-muted/30 p-3">
-                <span className="text-muted-foreground">℗</span>
-                <p className="mt-1 font-medium text-foreground">
-                  {copyrightRecordingYear || "—"} {copyrightHolder || recordLabel || "Titular não informado"}
+
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Gravadora / Selo
+                </p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  {recordLabel || "Não informado"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Copyright do lançamento
+                </p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  © {copyrightReleaseYear || "—"}{" "}
+                  {copyrightHolder || recordLabel || "Titular não informado"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Copyright da gravação
+                </p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  ℗ {copyrightRecordingYear || "—"}{" "}
+                  {copyrightHolder || recordLabel || "Titular não informado"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  UPC
+                </p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  {ownUpc
+                    ? upc || "Não informado"
+                    : "Gerado automaticamente"}
                 </p>
               </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
       <section className="rounded-xl border border-border bg-card p-5">
-        <h4 className="font-semibold text-foreground">Faixas</h4>
-        <div className="mt-4 space-y-3">
+        <div className="mb-5">
+          <h4 className="font-semibold text-foreground">Distribuição</h4>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Destino, território e programação escolhidos para o lançamento.
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border border-border bg-muted/15 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Distribuidora
+            </p>
+            <p className="mt-1 text-sm font-semibold text-foreground">
+              {distribution.distributor
+                ? DISTRIBUTOR_LABELS[distribution.distributor] ??
+                  distribution.distributor
+                : "Controle interno"}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/15 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Território
+            </p>
+            <p className="mt-1 text-sm font-semibold text-foreground">
+              {TERRITORY_LABELS[distribution.territory] ??
+                distribution.territory}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/15 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Data
+            </p>
+            <p className="mt-1 text-sm font-semibold text-foreground">
+              {distribution.releaseDate || "Não definida"}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/15 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Hora / Fuso
+            </p>
+            <p className="mt-1 text-sm font-semibold text-foreground">
+              {distribution.releaseTime || "Sem hora"}
+            </p>
+            <p className="mt-1 truncate text-xs text-muted-foreground">
+              {distribution.timezone}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Badge variant={distribution.preOrder ? "secondary" : "outline"}>
+            {distribution.preOrder ? "Pré-venda habilitada" : "Sem pré-venda"}
+          </Badge>
+          {distribution.preOrder && distribution.disablePreviews && (
+            <Badge variant="outline">Prévia desabilitada</Badge>
+          )}
+          <Badge variant="outline">
+            Precificação: {distribution.pricing}
+          </Badge>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-5">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h4 className="font-semibold text-foreground">Faixas</h4>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Confira metadados e arquivo de cada música.
+            </p>
+          </div>
+          <Badge variant="outline">
+            {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"}
+          </Badge>
+        </div>
+
+        <div className="space-y-3">
           {tracks.map((track, index) => {
             const artistName =
               track.trackArtistName ||
               [
                 variousArtists ? "Various Artists" : mainArtist,
-                ...track.additionalArtists.map((artist) => artist.name).filter(Boolean),
+                ...track.additionalArtists
+                  .map((artist) => artist.name)
+                  .filter(Boolean),
               ]
                 .filter(Boolean)
                 .join(", ");
 
             return (
-              <div
+              <article
                 key={track.id}
-                className="grid gap-3 rounded-lg border border-border bg-muted/20 p-4 md:grid-cols-[48px_1fr_auto]"
+                className="overflow-hidden rounded-lg border border-border"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-background text-sm font-semibold text-muted-foreground">
-                  {index + 1}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-foreground">
-                    {track.title || "Faixa sem título"}
-                  </p>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">
-                    {artistName || "Artista não informado"}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span>ISRC: {track.isrc || "Não informado"}</span>
-                    <span>•</span>
-                    <span>{track.primaryGenre || "Gênero não informado"}</span>
-                    <span>•</span>
-                    <span>{track.secondaryGenre || "Gênero secundário não informado"}</span>
-                    <span>•</span>
-                    <span>{track.language || "Idioma não informado"}</span>
-                    <span>•</span>
-                    <span>{EXPLICIT_LABELS[track.explicit] ?? track.explicit}</span>
-                    <span>•</span>
-                    <span>{track.aiUsage || "IA não informada"}</span>
+                <div className="flex items-start gap-3 bg-muted/15 px-4 py-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background text-xs font-semibold text-muted-foreground">
+                    {index + 1}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium text-foreground">
+                        {track.title || "Faixa sem título"}
+                      </p>
+                      {track.alternativeVersion && track.versionName && (
+                        <Badge variant="outline">{track.versionName}</Badge>
+                      )}
+                      {track.audioFile ? (
+                        <Badge variant="secondary">Áudio anexado</Badge>
+                      ) : (
+                        <Badge variant="outline">Sem áudio</Badge>
+                      )}
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {artistName || "Artista não informado"}
+                    </p>
                   </div>
                 </div>
-                <div className="text-right text-xs text-muted-foreground">
-                  {track.audioFile?.name ?? "Sem áudio"}
+
+                <div className="grid gap-3 px-4 py-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Gêneros
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">
+                      {track.primaryGenre || "—"} / {track.secondaryGenre || "—"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Idioma
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">
+                      {track.language || "—"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      ISRC
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">
+                      {track.isrc || "Não informado"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Conteúdo
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">
+                      {EXPLICIT_LABELS[track.explicit] ?? track.explicit}
+                    </p>
+                  </div>
+
+                  <div className="sm:col-span-2 lg:col-span-4">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Uso de IA
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">
+                      {track.aiUsage || "Não informado"}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>
@@ -297,7 +445,9 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
 
       {distribution.notes && (
         <section className="rounded-xl border border-border bg-card p-5">
-          <h4 className="font-semibold text-foreground">Notas de distribuição</h4>
+          <h4 className="font-semibold text-foreground">
+            Notas de distribuição
+          </h4>
           <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
             {distribution.notes}
           </p>
