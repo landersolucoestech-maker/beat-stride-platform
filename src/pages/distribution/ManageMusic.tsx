@@ -66,7 +66,7 @@ export default function ManageMusic() {
             <h1 className="text-2xl font-bold text-foreground">Gerenciar Músicas</h1>
             <p className="text-muted-foreground">Gerencie seus lançamentos musicais e acompanhe o status operacional.</p>
           </div>
-          <Link to="/distribution/music/new">
+          <Link to="/distribution/music/new/prepare">
             <Button className="gradient-primary text-primary-foreground">
               <Plus className="mr-2 h-4 w-4" />
               Distribuir Música
