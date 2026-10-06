@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { marketingGateway } from "./marketing.gateway";
 import type {
+  CreateSmartLinkInput,
   MarketingCampaignPhase,
   MarketingCampaignTaskCategory,
   MarketingCampaignTaskStatus,
@@ -165,6 +166,16 @@ export function useCreatePublicationPlan(campaignId: string) {
     }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["marketing", "campaigns", campaignId, "contents"] });
+    },
+  });
+}
+
+export function useCreateSmartLink() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateSmartLinkInput) => marketingGateway.createSmartLink(input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["marketing", "smart-links"] });
     },
   });
 }
