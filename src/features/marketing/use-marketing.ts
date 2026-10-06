@@ -2,6 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { marketingGateway } from "./marketing.gateway";
 import type {
+  MarketingCampaignPhase,
+  MarketingCampaignTaskCategory,
+  MarketingCampaignTaskStatus,
   MarketingCampaignType,
   MarketingContentType,
   MarketingPublicationChannel,
@@ -31,6 +34,12 @@ export function useCreateMarketingCampaign() {
     mutationFn: (input: {
       releaseId: string;
       campaignType: MarketingCampaignType;
+      name?: string;
+      objective?: string | null;
+      focusRecordingId?: string | null;
+      brief?: string | null;
+      budgetMinor?: number | null;
+      budgetCurrency?: string | null;
       startsAt?: string | null;
       endsAt?: string | null;
     }) => marketingGateway.createCampaign(input),
@@ -40,6 +49,61 @@ export function useCreateMarketingCampaign() {
         queryClient.invalidateQueries({ queryKey: ["marketing", "campaigns", campaign.releaseId] }),
       ]);
     },
+  });
+}
+
+export function useCampaignTasks(campaignId: string | undefined) {
+  return useQuery({
+    queryKey: ["marketing", "campaigns", campaignId, "tasks"],
+    queryFn: () => marketingGateway.getCampaignTasks(campaignId!),
+    enabled: Boolean(campaignId),
+    staleTime: 10_000,
+    retry: 1,
+  });
+}
+
+export function useCreateCampaignTask(campaignId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      phase: MarketingCampaignPhase;
+      category: MarketingCampaignTaskCategory;
+      title: string;
+      description?: string | null;
+      assigneeUserId?: string | null;
+      dueAt?: string | null;
+      sortOrder?: number;
+    }) => marketingGateway.createCampaignTask(campaignId, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["marketing", "campaigns", campaignId, "tasks"] }),
+        queryClient.invalidateQueries({ queryKey: ["marketing", "campaigns", campaignId, "calendar"] }),
+      ]);
+    },
+  });
+}
+
+export function useUpdateCampaignTaskStatus(campaignId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { taskId: string; status: MarketingCampaignTaskStatus }) =>
+      marketingGateway.updateCampaignTaskStatus(input.taskId, input.status),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["marketing", "campaigns", campaignId, "tasks"] }),
+        queryClient.invalidateQueries({ queryKey: ["marketing", "campaigns", campaignId, "calendar"] }),
+      ]);
+    },
+  });
+}
+
+export function useCampaignCalendar(campaignId: string | undefined) {
+  return useQuery({
+    queryKey: ["marketing", "campaigns", campaignId, "calendar"],
+    queryFn: () => marketingGateway.getCampaignCalendar(campaignId!),
+    enabled: Boolean(campaignId),
+    staleTime: 10_000,
+    retry: 1,
   });
 }
 
