@@ -868,6 +868,97 @@ export class MarketingService {
     };
   }
 
+  async createSmartLink(input: {
+    organizationId: string;
+    releaseId: string;
+    title: string;
+    slug: string;
+    linkType: "SMART_LINK" | "PRE_SAVE";
+    destinations: Array<{ code: string; url: string }>;
+    activate: boolean;
+  }) {
+    const release = await this.database.query<{ id: string } & QueryResultRow>(
+      `SELECT id
+       FROM releases
+       WHERE organization_id = $1 AND id = $2
+       LIMIT 1`,
+      [input.organizationId, input.releaseId],
+    );
+
+    if (!release.rows[0]) {
+      throw new NotFoundException({
+        code: "MARKETING_RELEASE_NOT_FOUND",
+        message: "Release not found for active organization",
+      });
+    }
+
+    const id = randomUUID();
+    const now = new Date();
+    const status = input.activate ? "ACTIVE" : "DRAFT";
+
+    try {
+      await this.database.transaction(async (client) => {
+        await client.query(
+          `INSERT INTO marketing_smart_links
+            (id, organization_id, release_id, slug, title, status, link_type, published_at, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)`,
+          [
+            id,
+            input.organizationId,
+            input.releaseId,
+            input.slug,
+            input.title.trim(),
+            status,
+            input.linkType,
+            input.activate ? now : null,
+            now,
+          ],
+        );
+
+        for (const [index, destination] of input.destinations.entries()) {
+          await client.query(
+            `INSERT INTO marketing_smart_link_destinations
+              (id, smart_link_id, destination_code, url, position, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+              randomUUID(),
+              id,
+              destination.code,
+              destination.url,
+              index + 1,
+              now,
+            ],
+          );
+        }
+      });
+    } catch (error) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String((error as { code?: unknown }).code ?? "")
+          : "";
+
+      if (code === "23505") {
+        throw new BadRequestException({
+          code: "MARKETING_SMART_LINK_SLUG_ALREADY_EXISTS",
+          message: "Smart Link slug is already in use",
+        });
+      }
+      throw error;
+    }
+
+    return {
+      id,
+      releaseId: input.releaseId,
+      title: input.title.trim(),
+      slug: input.slug,
+      linkType: input.linkType,
+      status,
+      destinations: input.destinations,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    };
+  }
+
   async getSmartLinks(organizationId: string) {
     const result = await this.database.query<SmartLinkRow>(
       `SELECT
