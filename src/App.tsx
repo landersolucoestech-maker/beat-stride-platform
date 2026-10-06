@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,7 +9,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
-import Artists from "./pages/distribution/Artists";
 import ContentIdUgc from "./pages/distribution/ContentIdUgc";
 import Fraud from "./pages/distribution/Fraud";
 import ManageMusic from "./pages/distribution/ManageMusic";
@@ -58,9 +57,6 @@ const App = () => (
 
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Index />} />
-            <Route path="/artists" element={<Artists />} />
-
-            <Route path="/distribution/artists" element={<Navigate to="/artists" replace />} />
             <Route path="/distribution/rights-protection" element={<RightsProtection />} />
             <Route path="/distribution/content-id" element={<ContentIdUgc />} />
             <Route path="/distribution/music" element={<ManageMusic />} />
