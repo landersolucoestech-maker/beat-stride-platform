@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink, Link as LinkIcon, MousePointerClick } from "lucide-react";
+import { ArrowLeft, ExternalLink, Link as LinkIcon, MousePointerClick, Route } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -7,6 +7,49 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSmartLinkAnalytics } from "@/features/marketing/use-marketing";
 import { formatDecimalPtBr } from "@/lib/format-money";
+
+function TrafficBreakdown({
+  title,
+  items,
+  emptyLabel,
+}: {
+  title: string;
+  items: Array<{ value: string; visits: string }>;
+  emptyLabel: string;
+}) {
+  const displayValue = (value: string) => {
+    if (value === "DIRECT") return "Direto / sem referrer";
+    if (value === "NOT_SET") return "Não informado";
+    return value;
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{emptyLabel}</p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((item) => (
+              <div
+                key={item.value}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
+              >
+                <span className="min-w-0 truncate text-sm text-foreground">
+                  {displayValue(item.value)}
+                </span>
+                <Badge variant="secondary">{formatDecimalPtBr(item.visits, 0)} visitas</Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function SmartLinkAnalytics() {
   const { smartLinkId } = useParams<{ smartLinkId: string }>();
@@ -113,6 +156,41 @@ export default function SmartLinkAnalytics() {
                 )}
               </CardContent>
             </Card>
+
+            <section>
+              <div className="mb-4 flex items-center gap-2">
+                <Route className="h-5 w-5 text-primary" />
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Origem do tráfego</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Distribuição das visitas registradas na landing pública.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <TrafficBreakdown
+                  title="Referrer"
+                  items={data.traffic.referrers}
+                  emptyLabel="Nenhuma origem registrada."
+                />
+                <TrafficBreakdown
+                  title="UTM Source"
+                  items={data.traffic.utmSources}
+                  emptyLabel="Nenhuma UTM source registrada."
+                />
+                <TrafficBreakdown
+                  title="UTM Medium"
+                  items={data.traffic.utmMediums}
+                  emptyLabel="Nenhuma UTM medium registrada."
+                />
+                <TrafficBreakdown
+                  title="UTM Campaign"
+                  items={data.traffic.utmCampaigns}
+                  emptyLabel="Nenhuma UTM campaign registrada."
+                />
+              </div>
+            </section>
 
             {data.linkType === "PRE_SAVE" && (
               <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
