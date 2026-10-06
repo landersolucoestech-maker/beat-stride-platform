@@ -213,17 +213,25 @@ export default function ManageMusic() {
               </div>
             ))}
           </div>
-        ) : releasesQuery.isError ? (
-          <div className="rounded-xl border border-destructive/20 bg-card p-12 text-center">
-            <h3 className="text-lg font-medium text-foreground">Não foi possível carregar o catálogo</h3>
-            <p className="mt-1 text-sm text-muted-foreground">A fonte real de dados respondeu com erro. Tente novamente quando a API estiver disponível.</p>
-            <Button variant="outline" className="mt-4" onClick={() => void releasesQuery.refetch()}>Tentar novamente</Button>
-          </div>
-        ) : dataUnavailable ? (
+        ) : releasesQuery.isError || dataUnavailable ? (
           <div className="rounded-xl border border-border bg-card p-12 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted"><Disc3 className="h-6 w-6 text-muted-foreground" /></div>
-            <h3 className="text-lg font-medium text-foreground">Catálogo real ainda não conectado neste preview</h3>
-            <p className="mx-auto mt-1 max-w-xl text-sm text-muted-foreground">A interface já usa o contrato da API real. O GitHub Pages continua servindo apenas o frontend e não inventa lançamentos para preencher a tela.</p>
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <Disc3 className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium text-foreground">
+              Nenhum lançamento disponível nesta visualização
+            </h3>
+            <p className="mx-auto mt-1 max-w-xl text-sm text-muted-foreground">
+              Inicie um novo lançamento para testar o fluxo completo de distribuição e aprovação.
+            </p>
+            <Button
+              type="button"
+              className="mt-4 gradient-primary text-primary-foreground"
+              onClick={() => setReleaseModalOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Novo lançamento
+            </Button>
           </div>
         ) : filteredReleases.length === 0 ? (
           <div className="rounded-xl border border-border bg-card p-12 text-center">
