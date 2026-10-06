@@ -54,10 +54,9 @@ const RELEASE_TYPES = [
   { value: "other", label: "Outro" },
 ] as const;
 
-const ARTIST_ROLES = [
-  "Artista Principal",
-  "Featuring",
+const SECONDARY_ARTIST_ROLES = [
   "Intérprete",
+  "Featuring",
   "Remixer",
   "DJ",
   "Coro",
@@ -278,7 +277,7 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
       {
         id: crypto.randomUUID(),
         name: "",
-        role: "Featuring",
+        role: "",
       },
     ]);
   };
@@ -379,10 +378,10 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
 
           {!variousArtists && (
             <div className="md:col-span-2">
-              <Label>Artista principal *</Label>
+              <Label>Artista Principal *</Label>
               <Select value={mainArtist} onValueChange={setMainArtist}>
                 <SelectTrigger className="mt-1.5">
-                  <SelectValue placeholder="Selecionar artista" />
+                  <SelectValue placeholder="Selecionar artista principal" />
                 </SelectTrigger>
                 <SelectContent>
                   {MOCK_ARTISTS.filter((artist) => artist !== "Various Artists").map((artist) => (
@@ -390,6 +389,10 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
                   ))}
                 </SelectContent>
               </Select>
+              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <Badge variant="secondary">Intérprete</Badge>
+                <span>O Artista Principal já entra automaticamente como intérprete.</span>
+              </div>
             </div>
           )}
 
@@ -434,27 +437,27 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
       <section className="rounded-xl border border-border bg-card p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h3 className="font-semibold text-foreground">Artistas adicionais</h3>
+            <h3 className="font-semibold text-foreground">Artistas Secundários</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Créditos adicionados aqui serão aplicados ao nível do lançamento.
+              Adicione um ou mais artistas secundários e defina a função de cada um no lançamento.
             </p>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={addArtist}>
             <Plus className="mr-2 h-4 w-4" />
-            Adicionar artista
+            Adicionar artista secundário
           </Button>
         </div>
 
         {additionalArtists.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">
-            Nenhum artista adicional informado.
+            Nenhum artista secundário informado.
           </div>
         ) : (
           <div className="space-y-3">
             {additionalArtists.map((artist) => (
               <div key={artist.id} className="grid gap-3 rounded-lg border border-border bg-muted/20 p-4 md:grid-cols-[1fr_220px_auto]">
                 <Select value={artist.name} onValueChange={(value) => updateArtist(artist.id, { name: value })}>
-                  <SelectTrigger><SelectValue placeholder="Selecionar artista" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Selecionar artista secundário" /></SelectTrigger>
                   <SelectContent>
                     {MOCK_ARTISTS.filter((item) => item !== "Various Artists").map((item) => (
                       <SelectItem key={item} value={item}>{item}</SelectItem>
@@ -462,10 +465,15 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
                   </SelectContent>
                 </Select>
 
-                <Select value={artist.role} onValueChange={(value) => updateArtist(artist.id, { role: value })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={artist.role || undefined}
+                  onValueChange={(value) => updateArtist(artist.id, { role: value })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecionar função" /></SelectTrigger>
                   <SelectContent>
-                    {ARTIST_ROLES.map((role) => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+                    {SECONDARY_ARTIST_ROLES.map((role) => (
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
