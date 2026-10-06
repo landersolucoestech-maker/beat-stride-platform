@@ -192,9 +192,37 @@ export function ReleaseFormModal({
     setAdditionalArtists((current) => current.filter((artist) => artist.id !== id));
   };
 
-  const resetAndClose = () => {
+  const closeModal = () => {
     setStep(0);
     onOpenChange(false);
+  };
+
+  const resetReleaseForm = () => {
+    setTitle("");
+    setReleaseType("single");
+    setVariousArtists(false);
+    setMainArtist("");
+    setAdditionalArtists([]);
+    setRecordLabel("");
+    setCopyrightReleaseYear("2026");
+    setCopyrightRecordingYear("2026");
+    setCopyrightHolder("");
+    setOwnUpc(false);
+    setUpc("");
+    setTracks([createPrototypeTrack()]);
+    setCoverFile(null);
+    setCoverPreview("");
+    setDistribution({
+      distributor: "",
+      territory: "worldwide",
+      releaseDate: "",
+      releaseTime: "",
+      timezone: "America/Sao_Paulo",
+      preOrder: false,
+      disablePreviews: false,
+      pricing: "standard",
+      notes: "",
+    });
   };
 
   const createDraftAndClose = () => {
@@ -211,7 +239,8 @@ export function ReleaseFormModal({
       status: "SUBMITTED",
     });
 
-    resetAndClose();
+    resetReleaseForm();
+    closeModal();
   };
 
   const renderStepOne = () => (
@@ -601,7 +630,7 @@ export function ReleaseFormModal({
           <Button
             type="button"
             variant="outline"
-            onClick={() => (step === 0 ? resetAndClose() : setStep((current) => current - 1))}
+            onClick={() => (step === 0 ? closeModal() : setStep((current) => current - 1))}
           >
             <ChevronLeft className="mr-2 h-4 w-4" />
             {step === 0 ? "Cancelar" : "Voltar"}
