@@ -38,7 +38,7 @@ import {
 } from "./ReleaseTracksStep";
 
 const STEPS = [
-  "Informações do álbum",
+  "Informações do lançamento",
   "Envio de faixas",
   "Capa do álbum",
   "Preferências de distribuição",
@@ -307,48 +307,62 @@ export function ReleaseFormModal({
   };
 
   const renderStepOne = () => (
-    <div className="space-y-6">
-      <section className="rounded-xl border border-border bg-muted/20 p-5">
-        <div className="mb-4">
-          <h3 className="font-semibold text-foreground">Vincular a um Projeto</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Opcional. No protótipo, selecionar um projeto demonstra o preenchimento automático dos dados do lançamento.
-          </p>
-        </div>
-
-        <Select value={projectId} onValueChange={applyProject}>
-          <SelectTrigger className="max-w-xl bg-background">
-            <SelectValue placeholder="Selecionar projeto" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Não vincular a projeto</SelectItem>
-            {MOCK_PROJECTS.map((project) => (
-              <SelectItem key={project.id} value={project.id}>
-                {project.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {selectedProject && (
-          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-            <Check className="h-4 w-4 text-primary" />
-            Dados preenchidos a partir de {selectedProject.label}.
+    <div className="mx-auto max-w-5xl space-y-5">
+      <section className="rounded-xl border border-border bg-muted/20 p-4">
+        <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-center">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                1
+              </span>
+              <h3 className="font-semibold text-foreground">Projeto vinculado</h3>
+            </div>
+            <p className="mt-1 pl-9 text-xs text-muted-foreground">
+              Opcional. Use um projeto para pré-preencher o lançamento.
+            </p>
           </div>
-        )}
+
+          <div>
+            <Select value={projectId} onValueChange={applyProject}>
+              <SelectTrigger className="w-full bg-background">
+                <SelectValue placeholder="Selecionar projeto" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Não vincular a projeto</SelectItem>
+                {MOCK_PROJECTS.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {selectedProject && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <Check className="h-4 w-4 text-primary" />
+                Dados preenchidos a partir de {selectedProject.label}.
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-5">
-          <h3 className="font-semibold text-foreground">Informações do lançamento</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Dados principais que identificam o álbum, single ou EP.
-          </p>
+        <div className="mb-5 flex items-start gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+            2
+          </span>
+          <div>
+            <h3 className="font-semibold text-foreground">Dados do lançamento</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Identificação geral do Single, EP ou Álbum.
+            </p>
+          </div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2">
-          <div className="md:col-span-2">
-            <Label htmlFor="release-title">Título do Álbum / Single / EP *</Label>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(220px,0.7fr)]">
+          <div>
+            <Label htmlFor="release-title">Título do lançamento *</Label>
             <Input
               id="release-title"
               className="mt-1.5"
@@ -361,145 +375,178 @@ export function ReleaseFormModal({
           <div>
             <Label>Tipo de lançamento *</Label>
             <Select value={releaseType} onValueChange={setReleaseType}>
-              <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1.5">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {RELEASE_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex items-end pb-2">
-            <label className="flex cursor-pointer items-center gap-3">
+          <div className="lg:col-span-2">
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-muted/20 p-4">
               <Checkbox
                 checked={variousArtists}
                 onCheckedChange={(checked) => setVariousArtists(checked === true)}
+                className="mt-0.5"
               />
               <span>
-                <span className="block text-sm font-medium text-foreground">Various Artists</span>
-                <span className="block text-xs text-muted-foreground">
-                  Use para coletâneas com 5 ou mais artistas principais diferentes.
+                <span className="block text-sm font-medium text-foreground">
+                  Various Artists
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Use somente quando o lançamento for uma coletânea com vários artistas principais.
                 </span>
               </span>
             </label>
           </div>
-
-          {!variousArtists && (
-            <div className="md:col-span-2">
-              <Label>Artista Principal *</Label>
-              <div className="mt-1.5">
-                <ArtistLookupField
-                  value={mainArtist}
-                  artists={artistBase}
-                  placeholder="Buscar ou selecionar artista principal"
-                  onChange={setMainArtist}
-                  onAddArtistToBase={addArtistToBase}
-                />
-              </div>
-              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <Badge variant="secondary">Intérprete</Badge>
-                <span>O Artista Principal já entra automaticamente como intérprete.</span>
-              </div>
-            </div>
-          )}
-
         </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-5 flex items-start gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+            3
+          </span>
           <div>
-            <h3 className="font-semibold text-foreground">Artistas Secundários</h3>
+            <h3 className="font-semibold text-foreground">Artistas</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Adicione um ou mais artistas secundários e defina a função de cada um no lançamento.
+              Defina primeiro o artista principal e, se necessário, adicione artistas secundários.
             </p>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={addArtist}>
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar artista secundário
-          </Button>
         </div>
 
-        {additionalArtists.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">
-            Nenhum artista secundário informado.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {additionalArtists.map((artist) => (
-              <div key={artist.id} className="grid gap-3 rounded-lg border border-border bg-muted/20 p-4 md:grid-cols-[1fr_220px_auto]">
-                <ArtistLookupField
-                  value={artist.name}
-                  artists={artistBase}
-                  placeholder="Buscar ou selecionar artista secundário"
-                  onChange={(value) => updateArtist(artist.id, { name: value })}
-                  onAddArtistToBase={addArtistToBase}
-                />
-
-                <Select
-                  value={artist.role || undefined}
-                  onValueChange={(value) => updateArtist(artist.id, { role: value })}
-                >
-                  <SelectTrigger><SelectValue placeholder="Selecionar função" /></SelectTrigger>
-                  <SelectContent>
-                    {SECONDARY_ARTIST_ROLES.map((role) => (
-                      <SelectItem key={role} value={role}>{role}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeArtist(artist.id)} className="text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+        {!variousArtists && (
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <Label>Artista Principal *</Label>
+              <Badge variant="secondary">Intérprete</Badge>
+            </div>
+            <ArtistLookupField
+              value={mainArtist}
+              artists={artistBase}
+              placeholder="Selecionar artista da base"
+              onChange={setMainArtist}
+              onAddArtistToBase={addArtistToBase}
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              O artista principal é automaticamente considerado intérprete neste lançamento.
+            </p>
           </div>
         )}
+
+        <div className={cn("mt-5 border-t border-border pt-5", variousArtists && "mt-0 border-t-0 pt-0")}>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h4 className="text-sm font-semibold text-foreground">Artistas Secundários</h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Cada artista secundário recebe uma função própria no lançamento.
+              </p>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={addArtist}>
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar artista
+            </Button>
+          </div>
+
+          {additionalArtists.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-5 text-center text-sm text-muted-foreground">
+              Nenhum artista secundário adicionado.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {additionalArtists.map((artist, index) => (
+                <div
+                  key={artist.id}
+                  className="rounded-lg border border-border bg-muted/15 p-4"
+                >
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Artista secundário {index + 1}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeArtist(artist.id)}
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+                    <div>
+                      <Label className="text-xs">Artista</Label>
+                      <div className="mt-1.5">
+                        <ArtistLookupField
+                          value={artist.name}
+                          artists={artistBase}
+                          placeholder="Selecionar artista da base"
+                          onChange={(value) => updateArtist(artist.id, { name: value })}
+                          onAddArtistToBase={addArtistToBase}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs">Função *</Label>
+                      <Select
+                        value={artist.role || undefined}
+                        onValueChange={(value) => updateArtist(artist.id, { role: value })}
+                      >
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue placeholder="Selecionar função" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SECONDARY_ARTIST_ROLES.map((role) => (
+                            <SelectItem key={role} value={role}>
+                              {role}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-5">
-          <h3 className="font-semibold text-foreground">Direitos autorais</h3>
+        <div className="mb-5 flex items-start gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+            4
+          </span>
+          <div>
+            <h3 className="font-semibold text-foreground">Direitos e identificação</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Selo, copyrights e código UPC do lançamento.
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-5">
+        <div className="grid gap-5 md:grid-cols-2">
           <div>
             <Label htmlFor="record-label">Gravadora / Selo *</Label>
-            <div className="mt-2 flex gap-2 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              Se você é um artista independente, pode usar seu nome artístico como selo.
-            </div>
             <Input
               id="record-label"
-              className="mt-2"
+              className="mt-1.5"
               value={recordLabel}
               onChange={(event) => setRecordLabel(event.target.value)}
               placeholder="Nome da gravadora ou selo"
             />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label>Ano de Copyright — Lançamento *</Label>
-              <Input
-                className="mt-1.5"
-                maxLength={4}
-                value={copyrightReleaseYear}
-                onChange={(event) => setCopyrightReleaseYear(event.target.value)}
-                placeholder="Ex: 2026"
-              />
-            </div>
-            <div>
-              <Label>Ano de Copyright — Gravação *</Label>
-              <Input
-                className="mt-1.5"
-                maxLength={4}
-                value={copyrightRecordingYear}
-                onChange={(event) => setCopyrightRecordingYear(event.target.value)}
-                placeholder="Ex: 2026"
-              />
-            </div>
+            <p className="mt-1.5 flex items-start gap-1.5 text-xs text-muted-foreground">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              Artistas independentes podem usar o próprio nome artístico como selo.
+            </p>
           </div>
 
           <div>
@@ -508,28 +555,53 @@ export function ReleaseFormModal({
               className="mt-1.5"
               value={copyrightHolder}
               onChange={(event) => setCopyrightHolder(event.target.value)}
-              placeholder="© 2026 Nome do detentor"
+              placeholder="Nome do titular dos direitos"
             />
           </div>
 
           <div>
-            <Label>Bar Code (UPC)</Label>
-            <div className="mt-2 flex gap-2 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              Se você não tiver um código UPC, o fluxo poderá gerar um automaticamente.
-            </div>
+            <Label>Ano de Copyright — Lançamento *</Label>
+            <Input
+              className="mt-1.5"
+              maxLength={4}
+              value={copyrightReleaseYear}
+              onChange={(event) => setCopyrightReleaseYear(event.target.value)}
+              placeholder="2026"
+            />
+          </div>
 
-            <label className="mt-3 flex cursor-pointer items-center gap-2">
-              <Checkbox
-                checked={ownUpc}
-                onCheckedChange={(checked) => setOwnUpc(checked === true)}
-              />
-              <span className="text-sm text-foreground">Tenho meu próprio UPC</span>
-            </label>
+          <div>
+            <Label>Ano de Copyright — Gravação *</Label>
+            <Input
+              className="mt-1.5"
+              maxLength={4}
+              value={copyrightRecordingYear}
+              onChange={(event) => setCopyrightRecordingYear(event.target.value)}
+              placeholder="2026"
+            />
+          </div>
+
+          <div className="md:col-span-2 rounded-lg border border-border bg-muted/15 p-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="max-w-xl">
+                <Label>Bar Code (UPC)</Label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Se você já possui um UPC, informe-o. Caso contrário, o fluxo poderá gerar um posteriormente.
+                </p>
+              </div>
+
+              <label className="flex cursor-pointer items-center gap-2">
+                <Checkbox
+                  checked={ownUpc}
+                  onCheckedChange={(checked) => setOwnUpc(checked === true)}
+                />
+                <span className="text-sm text-foreground">Tenho meu próprio UPC</span>
+              </label>
+            </div>
 
             {ownUpc && (
               <Input
-                className="mt-3"
+                className="mt-4 max-w-md"
                 maxLength={14}
                 value={upc}
                 onChange={(event) => setUpc(event.target.value)}
@@ -538,14 +610,14 @@ export function ReleaseFormModal({
             )}
           </div>
 
-          <div>
-            <Label>Status interno</Label>
-            <div className="mt-1.5 flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
-              <Badge variant="secondary">Incompleto</Badge>
-              <span className="text-xs text-muted-foreground">
-                Controlado pelo sistema no produto final.
-              </span>
-            </div>
+          <div className="md:col-span-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/15 px-4 py-3">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Status interno
+            </span>
+            <Badge variant="secondary">Incompleto</Badge>
+            <span className="text-xs text-muted-foreground">
+              Atualizado automaticamente conforme o preenchimento do lançamento.
+            </span>
           </div>
         </div>
       </section>
