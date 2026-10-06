@@ -229,6 +229,12 @@ export interface SmartLinkAnalyticsView {
     url: string;
     clicks: string;
   }>;
+  traffic: {
+    referrers: Array<{ value: string; visits: string }>;
+    utmSources: Array<{ value: string; visits: string }>;
+    utmMediums: Array<{ value: string; visits: string }>;
+    utmCampaigns: Array<{ value: string; visits: string }>;
+  };
 }
 
 export interface SmartLinksOverview { available: boolean; items: SmartLinkView[]; }
