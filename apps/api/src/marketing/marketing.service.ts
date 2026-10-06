@@ -1118,6 +1118,93 @@ export class MarketingService {
     };
   }
 
+  async getSmartLinkAnalytics(organizationId: string, smartLinkId: string) {
+    const linkResult = await this.database.query<{
+      id: string;
+      title: string;
+      slug: string;
+      link_type: "SMART_LINK" | "PRE_SAVE";
+      visits: string;
+      clicks: string;
+      click_through_rate: string;
+    } & QueryResultRow>(
+      `SELECT
+         smart_link.id,
+         smart_link.title,
+         smart_link.slug,
+         smart_link.link_type,
+         COUNT(event.id) FILTER (WHERE event.event_type = 'PAGE_VIEW')::text AS visits,
+         COUNT(event.id) FILTER (WHERE event.event_type = 'DESTINATION_CLICK')::text AS clicks,
+         CASE
+           WHEN COUNT(event.id) FILTER (WHERE event.event_type = 'PAGE_VIEW') = 0 THEN '0'
+           ELSE ROUND(
+             (
+               COUNT(event.id) FILTER (WHERE event.event_type = 'DESTINATION_CLICK')
+             )::numeric
+             /
+             (
+               COUNT(event.id) FILTER (WHERE event.event_type = 'PAGE_VIEW')
+             )::numeric
+             * 100,
+             2
+           )::text
+         END AS click_through_rate
+       FROM marketing_smart_links smart_link
+       LEFT JOIN marketing_smart_link_events event ON event.smart_link_id = smart_link.id
+       WHERE smart_link.organization_id = $1
+         AND smart_link.id = $2
+         AND smart_link.status <> 'ARCHIVED'
+       GROUP BY smart_link.id, smart_link.title, smart_link.slug, smart_link.link_type
+       LIMIT 1`,
+      [organizationId, smartLinkId],
+    );
+
+    const link = linkResult.rows[0];
+    if (!link) {
+      throw new NotFoundException({
+        code: "MARKETING_SMART_LINK_NOT_FOUND",
+        message: "Smart Link not found for active organization",
+      });
+    }
+
+    const destinationResult = await this.database.query<{
+      code: string;
+      url: string;
+      position: number;
+      clicks: string;
+    } & QueryResultRow>(
+      `SELECT
+         destination.destination_code AS code,
+         destination.url,
+         destination.position,
+         COUNT(event.id)::text AS clicks
+       FROM marketing_smart_link_destinations destination
+       LEFT JOIN marketing_smart_link_events event
+         ON event.smart_link_id = destination.smart_link_id
+        AND event.event_type = 'DESTINATION_CLICK'
+        AND event.destination_code = destination.destination_code
+       WHERE destination.smart_link_id = $1
+       GROUP BY destination.destination_code, destination.url, destination.position
+       ORDER BY destination.position ASC`,
+      [smartLinkId],
+    );
+
+    return {
+      id: link.id,
+      title: link.title,
+      slug: link.slug,
+      linkType: link.link_type,
+      visits: link.visits,
+      clicks: link.clicks,
+      clickThroughRate: link.click_through_rate,
+      destinations: destinationResult.rows.map((row) => ({
+        code: row.code,
+        url: row.url,
+        clicks: row.clicks,
+      })),
+    };
+  }
+
   async getSmartLinks(organizationId: string) {
     const result = await this.database.query<SmartLinkRow>(
       `WITH destination_metrics AS (
