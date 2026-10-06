@@ -69,6 +69,12 @@ const createPublicationSchema = z.object({
   scheduledFor: z.string().datetime({ offset: true }).nullable().optional(),
 });
 
+const registerContentAssetSchema = z.object({
+  fileName: z.string().trim().min(1).max(512),
+  contentType: z.string().trim().min(1).max(160),
+  byteSize: z.number().int().positive().max(5 * 1024 * 1024 * 1024),
+});
+
 function parseBody<T>(schema: z.ZodType<T>, body: unknown): T {
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -176,6 +182,24 @@ export class MarketingController {
     return this.marketing.createCampaignContent({
       ...input,
       campaignId: parseUuid(campaignId, "campaignId"),
+      organizationId: context.activeOrganization.organizationId,
+    });
+  }
+
+  @Post("contents/:contentId/asset")
+  @ApiOperation({ summary: "Reserve and attach a promotional asset upload to campaign content" })
+  @ApiResponse({ status: 201, description: "Promotional asset upload reserved" })
+  async registerContentAsset(
+    @Headers("authorization") authorization: string | undefined,
+    @Headers("x-organization-id") organizationId: string | undefined,
+    @Param("contentId") contentId: string,
+    @Body() body: unknown,
+  ) {
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.manage");
+    const input = parseBody(registerContentAssetSchema, body);
+    return this.marketing.registerContentAsset({
+      ...input,
+      contentId: parseUuid(contentId, "contentId"),
       organizationId: context.activeOrganization.organizationId,
     });
   }
