@@ -18,6 +18,7 @@ import {
   useMarketingCampaigns,
   useRegisterContentAsset,
 } from "@/features/marketing/use-marketing";
+import { useMarketingChannelIntegrations } from "@/features/marketing-channel-integrations/use-marketing-channel-integrations";
 import type {
   MarketingCampaignContentView,
   MarketingContentType,
@@ -66,6 +67,12 @@ function publicationStatusLabel(status: string): string {
     CANCELLED: "Cancelado",
   };
   return labels[status] ?? status;
+}
+
+function providerForChannel(channel: MarketingPublicationChannel): "META" | "TIKTOK" | "YOUTUBE" {
+  if (channel === "INSTAGRAM" || channel === "FACEBOOK") return "META";
+  if (channel === "TIKTOK") return "TIKTOK";
+  return "YOUTUBE";
 }
 
 function AssetAttachment({
@@ -160,9 +167,11 @@ function AssetAttachment({
 function PublicationPlanner({
   campaignId,
   content,
+  connectedProviders,
 }: {
   campaignId: string;
   content: MarketingCampaignContentView;
+  connectedProviders: Set<string>;
 }) {
   const mutation = useCreatePublicationPlan(campaignId);
   const [channel, setChannel] = useState<MarketingPublicationChannel | "">("");
@@ -215,7 +224,11 @@ function PublicationPlanner({
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Esta etapa registra o plano. A publicação automática só será executada quando o canal possuir uma integração autorizada e ativa.
+        {channel
+          ? connectedProviders.has(providerForChannel(channel))
+            ? "Canal conectado. O plano poderá seguir para execução quando o adapter de publicação estiver disponível."
+            : "Canal não conectado. A data fica registrada apenas como planejamento até a integração ser autorizada em Configurações → Integrações."
+          : "Esta etapa registra o plano. A publicação automática depende de uma integração autorizada e ativa."}
       </p>
     </div>
   );
@@ -225,6 +238,7 @@ export default function ContentCampaign() {
   const { campaignId } = useParams<{ campaignId: string }>();
   const campaignsQuery = useMarketingCampaigns();
   const contentsQuery = useCampaignContents(campaignId);
+  const channelIntegrationsQuery = useMarketingChannelIntegrations();
   const createContent = useCreateCampaignContent(campaignId ?? "");
   const [contentType, setContentType] = useState<MarketingContentType>("TEASER");
   const [title, setTitle] = useState("");
@@ -233,6 +247,16 @@ export default function ContentCampaign() {
   const campaign = useMemo(
     () => campaignsQuery.data?.items.find((item) => item.id === campaignId) ?? null,
     [campaignId, campaignsQuery.data?.items],
+  );
+
+  const connectedProviders = useMemo(
+    () =>
+      new Set(
+        (channelIntegrationsQuery.data?.providers ?? [])
+          .filter((provider) => provider.status === "CONNECTED")
+          .map((provider) => provider.code),
+      ),
+    [channelIntegrationsQuery.data?.providers],
   );
 
   const submitContent = async () => {
@@ -395,7 +419,13 @@ export default function ContentCampaign() {
                     )}
 
                     {campaignId && <AssetAttachment campaignId={campaignId} content={content} />}
-                    {campaignId && <PublicationPlanner campaignId={campaignId} content={content} />}
+                    {campaignId && (
+                      <PublicationPlanner
+                        campaignId={campaignId}
+                        content={content}
+                        connectedProviders={connectedProviders}
+                      />
+                    )}
                   </CardContent>
                 </Card>
               ))}
