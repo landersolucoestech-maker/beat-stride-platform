@@ -1207,12 +1207,6 @@ export class MarketingService {
          AND event.event_type = 'PAGE_VIEW'
          AND event.occurred_at >=
            ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
-         AND event.occurred_at >=
-           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
-         AND event.occurred_at >=
-           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
-         AND event.occurred_at >=
-           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
        GROUP BY COALESCE(NULLIF(TRIM(event.referrer), ''), 'DIRECT')
 
        UNION ALL
@@ -1223,6 +1217,8 @@ export class MarketingService {
        FROM marketing_smart_link_events event
        WHERE event.smart_link_id = $1
          AND event.event_type = 'PAGE_VIEW'
+         AND event.occurred_at >=
+           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
        GROUP BY COALESCE(NULLIF(TRIM(event.utm_source), ''), 'NOT_SET')
 
        UNION ALL
@@ -1233,6 +1229,8 @@ export class MarketingService {
        FROM marketing_smart_link_events event
        WHERE event.smart_link_id = $1
          AND event.event_type = 'PAGE_VIEW'
+         AND event.occurred_at >=
+           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
        GROUP BY COALESCE(NULLIF(TRIM(event.utm_medium), ''), 'NOT_SET')
 
        UNION ALL
@@ -1243,6 +1241,8 @@ export class MarketingService {
        FROM marketing_smart_link_events event
        WHERE event.smart_link_id = $1
          AND event.event_type = 'PAGE_VIEW'
+         AND event.occurred_at >=
+           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
        GROUP BY COALESCE(NULLIF(TRIM(event.utm_campaign), ''), 'NOT_SET')
 
        ORDER BY dimension ASC, visits::bigint DESC, value ASC`,
