@@ -279,22 +279,29 @@ export default function ContentCampaign() {
   return (
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-start gap-3">
-          <Button asChild variant="ghost" size="icon">
-            <Link to="/marketing/start" aria-label="Voltar para Iniciar Marketing">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
-              <Megaphone className="h-4 w-4" />
-              Marketing
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <Button asChild variant="ghost" size="icon">
+              <Link to="/marketing/start" aria-label="Voltar para Iniciar Marketing">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
+                <Megaphone className="h-4 w-4" />
+                Marketing
+              </div>
+              <h1 className="text-2xl font-bold text-foreground">Conteúdos & Publicações</h1>
+              <p className="text-muted-foreground">
+                {campaign ? `Planejamento promocional de ${campaign.releaseTitle}.` : "Planejamento de conteúdos do lançamento."}
+              </p>
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Conteúdos & Publicações</h1>
-            <p className="text-muted-foreground">
-              {campaign ? `Planejamento promocional de ${campaign.releaseTitle}.` : "Planejamento de conteúdos do lançamento."}
-            </p>
           </div>
+          {campaignId && (
+            <Button asChild variant="outline">
+              <Link to={`/marketing/campaigns/${campaignId}/plan`}>Plano da Campanha</Link>
+            </Button>
+          )}
         </div>
 
         <Card>
