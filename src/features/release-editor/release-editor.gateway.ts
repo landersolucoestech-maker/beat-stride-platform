@@ -40,7 +40,6 @@ class HttpReleaseEditorGateway implements ReleaseEditorGateway {
         primaryGenre: input.primaryGenre,
         explicit: input.explicit,
         tracks: input.tracks.map((track) => ({ title: track.title, explicit: track.explicit })),
-        provisionalSplits: input.splits.map((split) => ({ name: split.name, role: split.role, percentage: split.percentage })),
         pendingAssets: {
           artwork: input.coverFile
             ? {
