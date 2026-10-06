@@ -23,6 +23,10 @@ import {
 import { cn } from "@/lib/utils";
 import { ReleaseArtworkStep } from "./ReleaseArtworkStep";
 import {
+  ReleaseDistributionStep,
+  type PrototypeDistributionPreferences,
+} from "./ReleaseDistributionStep";
+import {
   createPrototypeTrack,
   ReleaseTracksStep,
   type PrototypeTrack,
@@ -149,6 +153,17 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
   const [tracks, setTracks] = useState<PrototypeTrack[]>([createPrototypeTrack()]);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState("");
+  const [distribution, setDistribution] = useState<PrototypeDistributionPreferences>({
+    distributor: "",
+    territory: "worldwide",
+    releaseDate: "",
+    releaseTime: "",
+    timezone: "America/Sao_Paulo",
+    preOrder: false,
+    disablePreviews: false,
+    pricing: "standard",
+    notes: "",
+  });
 
   const selectedProject = useMemo(
     () => MOCK_PROJECTS.find((project) => project.id === projectId),
@@ -597,7 +612,12 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
               }}
             />
           )}
-          {step === 3 && renderPlaceholderStep("Preferências de distribuição", "Esta etapa receberá distribuidora conectada, território, data/hora, fuso, pré-venda, preço e notas.")}
+          {step === 3 && (
+            <ReleaseDistributionStep
+              value={distribution}
+              onChange={setDistribution}
+            />
+          )}
           {step === 4 && renderPlaceholderStep("Revisão", "Esta etapa receberá o preview completo do lançamento e os alertas antes de criar o rascunho.")}
         </div>
 
