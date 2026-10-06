@@ -57,19 +57,6 @@ export interface PrototypeTrack {
   audioFile: File | null;
 }
 
-const VERSION_TYPES = [
-  "Remix",
-  "Ao Vivo",
-  "Acústico",
-  "Instrumental",
-  "Karaokê",
-  "Edição para Rádio",
-  "Mix Estendido",
-  "Demonstração",
-  "Cover",
-  "Outro",
-] as const;
-
 const ARTIST_ROLES = [
   "Artista Principal",
   "Featuring",
@@ -309,39 +296,20 @@ export function ReleaseTracksStep({
                 </label>
 
                 {track.alternativeVersion && (
-                  <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label>Tipo de versão *</Label>
-                      <Select
-                        value={track.versionType}
-                        onValueChange={(value) => updateTrack(track.id, { versionType: value })}
-                      >
-                        <SelectTrigger className="mt-1.5">
-                          <SelectValue placeholder="Selecionar versão" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {VERSION_TYPES.map((item) => (
-                            <SelectItem key={item} value={item}>{item}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {track.versionType === "Outro" && (
-                      <div>
-                        <Label>Descrição da versão *</Label>
-                        <Input
-                          className="mt-1.5"
-                          value={track.customVersionDescription}
-                          onChange={(event) =>
-                            updateTrack(track.id, {
-                              customVersionDescription: event.target.value,
-                            })
-                          }
-                          placeholder="Descreva a versão"
-                        />
-                      </div>
-                    )}
+                  <div className="mt-4 max-w-xl">
+                    <Label>Versão da faixa *</Label>
+                    <Input
+                      className="mt-1.5"
+                      value={track.versionName}
+                      onChange={(event) =>
+                        updateTrack(track.id, { versionName: event.target.value })
+                      }
+                      placeholder="Ex.: Remix, Ao Vivo, Acústico, Radio Edit..."
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Informe exatamente o nome da versão que deve acompanhar o título da faixa.
+                      O protótipo não força uma lista fechada.
+                    </p>
                   </div>
                 )}
               </div>
