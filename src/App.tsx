@@ -19,7 +19,6 @@ import ReleaseDetails from "./pages/distribution/ReleaseDetails";
 import RightsProtection from "./pages/distribution/RightsProtection";
 import FinancialAnalytics from "./pages/financial/Analytics";
 import Payouts from "./pages/financial/Payouts";
-import RoyaltyImport from "./pages/financial/RoyaltyImport";
 import Shares from "./pages/financial/Shares";
 import Wallet from "./pages/financial/Wallet";
 import Support from "./pages/help/Support";
@@ -83,7 +82,6 @@ const App = () => (
             <Route path="/financial/analytics" element={<FinancialAnalytics />} />
             <Route path="/financial/accounting" element={<Payouts />} />
             <Route path="/financial/shares" element={<Shares />} />
-            <Route path="/financial/royalties" element={<RoyaltyImport />} />
             <Route path="/financial/wallet" element={<Wallet />} />
 
             <Route path="/help/support" element={<Support />} />
