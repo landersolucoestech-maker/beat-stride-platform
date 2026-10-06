@@ -1,5 +1,6 @@
 import { ArrowLeft, CalendarDays, ExternalLink, Link as LinkIcon, MousePointerClick, Route } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +50,15 @@ function TrafficBreakdown({
       </CardContent>
     </Card>
   );
+}
+
+function formatTimelineDate(date: string, withYear = false): string {
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    ...(withYear ? { year: "numeric" } : {}),
+    timeZone: "UTC",
+  });
 }
 
 export default function SmartLinkAnalytics() {
@@ -121,7 +131,77 @@ export default function SmartLinkAnalytics() {
                   Evolução — últimos 30 dias
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-5">
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={data.timeline.map((day) => ({
+                        ...day,
+                        visitsValue: Number(day.visits),
+                        clicksValue: Number(day.clicks),
+                      }))}
+                      margin={{ top: 8, right: 12, left: -16, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis
+                        dataKey="date"
+                        axisLine={false}
+                        tickLine={false}
+                        minTickGap={24}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        tickFormatter={(value: string) => formatTimelineDate(value)}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                      />
+                      <Tooltip
+                        labelFormatter={(value: string) => formatTimelineDate(value, true)}
+                        formatter={(value: number, name: string) => [
+                          value.toLocaleString("pt-BR"),
+                          name === "visitsValue" ? "Visitas" : "Cliques",
+                        ]}
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="visitsValue"
+                        name="Visitas"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={{ r: 4 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="clicksValue"
+                        name="Cliques"
+                        stroke="hsl(var(--muted-foreground))"
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={{ r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                    Visitas
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground" />
+                    Cliques
+                  </span>
+                </div>
+
                 <div className="overflow-hidden rounded-lg border border-border">
                   <div className="grid grid-cols-[1fr_90px_90px_90px] gap-3 border-b border-border bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground">
                     <span>Data</span>
@@ -136,9 +216,7 @@ export default function SmartLinkAnalytics() {
                         className="grid grid-cols-[1fr_90px_90px_90px] gap-3 border-b border-border px-4 py-2 text-sm last:border-b-0"
                       >
                         <span className="text-foreground">
-                          {new Date(`${day.date}T00:00:00Z`).toLocaleDateString("pt-BR", {
-                            timeZone: "UTC",
-                          })}
+                          {formatTimelineDate(day.date, true)}
                         </span>
                         <span className="text-right text-muted-foreground">
                           {formatDecimalPtBr(day.visits, 0)}
