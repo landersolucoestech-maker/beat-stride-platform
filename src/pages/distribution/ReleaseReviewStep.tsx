@@ -10,8 +10,6 @@ interface ReleaseReviewStepProps {
   mainArtist: string;
   variousArtists: boolean;
   albumArtistNames: string[];
-  primaryGenre: string;
-  secondaryGenre: string;
   recordLabel: string;
   copyrightReleaseYear: string;
   copyrightRecordingYear: string;
@@ -58,8 +56,6 @@ export function getReleaseReviewIssues({
   title,
   mainArtist,
   variousArtists,
-  primaryGenre,
-  secondaryGenre,
   recordLabel,
   copyrightReleaseYear,
   copyrightRecordingYear,
@@ -71,8 +67,6 @@ export function getReleaseReviewIssues({
   | "title"
   | "mainArtist"
   | "variousArtists"
-  | "primaryGenre"
-  | "secondaryGenre"
   | "recordLabel"
   | "copyrightReleaseYear"
   | "copyrightRecordingYear"
@@ -84,8 +78,6 @@ export function getReleaseReviewIssues({
 
   if (!title.trim()) issues.push("Informe o título do lançamento.");
   if (!variousArtists && !mainArtist.trim()) issues.push("Selecione o artista principal.");
-  if (!primaryGenre.trim()) issues.push("Selecione o gênero principal.");
-  if (!secondaryGenre.trim()) issues.push("Selecione o gênero secundário.");
   if (!recordLabel.trim()) issues.push("Informe a gravadora ou selo.");
   if (!copyrightReleaseYear.trim()) issues.push("Informe o ano de copyright do lançamento.");
   if (!copyrightRecordingYear.trim()) issues.push("Informe o ano de copyright da gravação.");
@@ -94,6 +86,9 @@ export function getReleaseReviewIssues({
 
   tracks.forEach((track, index) => {
     if (!track.title.trim()) issues.push(`Faixa ${index + 1}: informe o título.`);
+    if (!track.primaryGenre.trim()) issues.push(`Faixa ${index + 1}: selecione o gênero.`);
+    if (!track.secondaryGenre.trim()) issues.push(`Faixa ${index + 1}: selecione o gênero secundário.`);
+    if (!track.language.trim()) issues.push(`Faixa ${index + 1}: selecione o idioma.`);
     if (!track.aiUsage.trim()) {
       issues.push(`Faixa ${index + 1}: informe a declaração de uso de IA.`);
     }
@@ -110,8 +105,6 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
     mainArtist,
     variousArtists,
     albumArtistNames,
-    primaryGenre,
-    secondaryGenre,
     recordLabel,
     copyrightReleaseYear,
     copyrightRecordingYear,
@@ -199,12 +192,6 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
               <p className="mt-1 font-medium text-foreground">{recordLabel || "Não informado"}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Gêneros</p>
-              <p className="mt-1 font-medium text-foreground">
-                {[primaryGenre, secondaryGenre].filter(Boolean).join(" / ") || "Não informado"}
-              </p>
-            </div>
-            <div>
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Distribuidora</p>
               <p className="mt-1 font-medium text-foreground">
                 {distribution.distributor
@@ -287,6 +274,12 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span>ISRC: {track.isrc || "Não informado"}</span>
+                    <span>•</span>
+                    <span>{track.primaryGenre || "Gênero não informado"}</span>
+                    <span>•</span>
+                    <span>{track.secondaryGenre || "Gênero secundário não informado"}</span>
+                    <span>•</span>
+                    <span>{track.language || "Idioma não informado"}</span>
                     <span>•</span>
                     <span>{EXPLICIT_LABELS[track.explicit] ?? track.explicit}</span>
                     <span>•</span>
