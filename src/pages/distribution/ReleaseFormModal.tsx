@@ -592,6 +592,7 @@ export function ReleaseFormModal({
               coverPreview={coverPreview}
               tracks={tracks}
               distribution={distribution}
+              onEditStep={setStep}
             />
           )}
         </div>
