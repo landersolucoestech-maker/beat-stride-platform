@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   CalendarDays,
   CheckCircle2,
@@ -13,9 +15,14 @@ import {
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreatorsIntegrationOverview } from "@/features/creators-integration/use-creators-integration";
-import { useMarketingOverview } from "@/features/marketing/use-marketing";
+import {
+  useCreateMarketingCampaign,
+  useMarketingCampaigns,
+  useMarketingOverview,
+} from "@/features/marketing/use-marketing";
 
 const promotionalContentTypes = [
   "Teaser",
@@ -33,8 +40,10 @@ const promotionalContentTypes = [
 ];
 
 export default function StartMarketing() {
+  const navigate = useNavigate();
   const marketingQuery = useMarketingOverview();
   const creatorsQuery = useCreatorsIntegrationOverview();
+  const createCampaign = useCreateMarketingCampaign();
   const data = marketingQuery.data;
   const [selectedReleaseId, setSelectedReleaseId] = useState<string | null>(null);
 
@@ -43,6 +52,32 @@ export default function StartMarketing() {
     [data?.releases, selectedReleaseId],
   );
   const creatorsConnected = creatorsQuery.data?.connection.status === "CONNECTED";
+  const campaignsQuery = useMarketingCampaigns(selectedReleaseId ?? undefined);
+  const existingContentCampaign = campaignsQuery.data?.items.find(
+    (campaign) =>
+      campaign.releaseId === selectedReleaseId &&
+      campaign.campaignType === "CONTENT_PROMOTION" &&
+      campaign.status !== "COMPLETED" &&
+      campaign.status !== "CANCELLED",
+  );
+
+  const openContentPlanner = async () => {
+    if (!selectedReleaseId) return;
+    if (existingContentCampaign) {
+      navigate(`/marketing/campaigns/${existingContentCampaign.id}/content`);
+      return;
+    }
+
+    try {
+      const campaign = await createCampaign.mutateAsync({
+        releaseId: selectedReleaseId,
+        campaignType: "CONTENT_PROMOTION",
+      });
+      navigate(`/marketing/campaigns/${campaign.id}/content`);
+    } catch {
+      toast.error("Não foi possível iniciar a campanha de conteúdo.");
+    }
+  };
 
   return (
     <MainLayout>
@@ -178,6 +213,18 @@ export default function StartMarketing() {
                         Calendário, agendamento e publicação direta serão habilitados por canal somente quando a integração autorizada do respectivo provedor estiver disponível.
                       </p>
                     </div>
+                    <Button
+                      className="mt-4 w-full"
+                      onClick={() => void openContentPlanner()}
+                      disabled={createCampaign.isPending || campaignsQuery.isLoading}
+                    >
+                      <Video className="mr-2 h-4 w-4" />
+                      {existingContentCampaign
+                        ? "Continuar planejamento"
+                        : createCampaign.isPending
+                          ? "Iniciando..."
+                          : "Planejar conteúdos"}
+                    </Button>
                   </CardContent>
                 </Card>
 
