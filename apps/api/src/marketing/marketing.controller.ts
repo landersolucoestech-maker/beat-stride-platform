@@ -364,6 +364,20 @@ export class MarketingController {
     });
   }
 
+  @Get("smart-links/:smartLinkId/analytics")
+  @ApiOperation({ summary: "Get Smart Link visit and destination click analytics" })
+  async smartLinkAnalytics(
+    @Headers("authorization") authorization: string | undefined,
+    @Headers("x-organization-id") organizationId: string | undefined,
+    @Param("smartLinkId") smartLinkId: string,
+  ) {
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.read");
+    return this.marketing.getSmartLinkAnalytics(
+      context.activeOrganization.organizationId,
+      parseUuid(smartLinkId, "smartLinkId"),
+    );
+  }
+
   @Get("smart-links")
   @ApiOperation({ summary: "List Smart Links for the active organization" })
   async smartLinks(
