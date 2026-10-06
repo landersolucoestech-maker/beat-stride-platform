@@ -206,8 +206,10 @@ export interface CreatedSmartLinkView {
 export interface SmartLinkView {
   id: string;
   title: string;
+  slug: string;
+  linkType: SmartLinkType;
   artworkUrl: string | null;
-  publicUrl: string | null;
+  publicPath: string;
   destinations: Array<{ code: string; label: string }>;
   visits: string | null;
   conversions: string | null;
