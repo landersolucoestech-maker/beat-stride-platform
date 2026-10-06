@@ -18,6 +18,7 @@ import type {
   MarketingPublicationView,
   MarketingToolsOverview,
   NativeMarketingOverview,
+  SmartLinkAnalyticsDays,
   SmartLinkAnalyticsView,
   SmartLinksOverview,
 } from "./marketing.types";
@@ -67,7 +68,7 @@ export interface MarketingGateway {
     scheduledFor?: string | null;
   }): Promise<MarketingPublicationView & { contentId: string; providerExecutionAvailable: boolean }>;
   createSmartLink(input: CreateSmartLinkInput): Promise<CreatedSmartLinkView>;
-  getSmartLinkAnalytics(smartLinkId: string): Promise<SmartLinkAnalyticsView>;
+  getSmartLinkAnalytics(smartLinkId: string, days: SmartLinkAnalyticsDays): Promise<SmartLinkAnalyticsView>;
   getSmartLinks(): Promise<SmartLinksOverview>;
   getFanList(): Promise<FanListOverview>;
   getTools(): Promise<MarketingToolsOverview>;
@@ -167,9 +168,9 @@ class HttpMarketingGateway implements MarketingGateway {
     return this.postJson("/api/v1/marketing/smart-links", input);
   }
 
-  getSmartLinkAnalytics(smartLinkId: string): Promise<SmartLinkAnalyticsView> {
+  getSmartLinkAnalytics(smartLinkId: string, days: SmartLinkAnalyticsDays): Promise<SmartLinkAnalyticsView> {
     if (!isApiConfigured()) throw new Error("MARKETING_API_NOT_CONNECTED");
-    return this.getJson(`/api/v1/marketing/smart-links/${smartLinkId}/analytics`);
+    return this.getJson(`/api/v1/marketing/smart-links/${smartLinkId}/analytics?days=${days}`);
   }
 
   getSmartLinks(): Promise<SmartLinksOverview> {
