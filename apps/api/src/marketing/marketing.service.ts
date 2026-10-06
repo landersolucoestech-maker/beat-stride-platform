@@ -1189,6 +1189,61 @@ export class MarketingService {
       [smartLinkId],
     );
 
+    const trafficResult = await this.database.query<{
+      dimension: "REFERRER" | "UTM_SOURCE" | "UTM_MEDIUM" | "UTM_CAMPAIGN";
+      value: string;
+      visits: string;
+    } & QueryResultRow>(
+      `SELECT 'REFERRER'::text AS dimension,
+              COALESCE(NULLIF(TRIM(event.referrer), ''), 'DIRECT') AS value,
+              COUNT(*)::text AS visits
+       FROM marketing_smart_link_events event
+       WHERE event.smart_link_id = $1
+         AND event.event_type = 'PAGE_VIEW'
+       GROUP BY COALESCE(NULLIF(TRIM(event.referrer), ''), 'DIRECT')
+
+       UNION ALL
+
+       SELECT 'UTM_SOURCE'::text AS dimension,
+              COALESCE(NULLIF(TRIM(event.utm_source), ''), 'NOT_SET') AS value,
+              COUNT(*)::text AS visits
+       FROM marketing_smart_link_events event
+       WHERE event.smart_link_id = $1
+         AND event.event_type = 'PAGE_VIEW'
+       GROUP BY COALESCE(NULLIF(TRIM(event.utm_source), ''), 'NOT_SET')
+
+       UNION ALL
+
+       SELECT 'UTM_MEDIUM'::text AS dimension,
+              COALESCE(NULLIF(TRIM(event.utm_medium), ''), 'NOT_SET') AS value,
+              COUNT(*)::text AS visits
+       FROM marketing_smart_link_events event
+       WHERE event.smart_link_id = $1
+         AND event.event_type = 'PAGE_VIEW'
+       GROUP BY COALESCE(NULLIF(TRIM(event.utm_medium), ''), 'NOT_SET')
+
+       UNION ALL
+
+       SELECT 'UTM_CAMPAIGN'::text AS dimension,
+              COALESCE(NULLIF(TRIM(event.utm_campaign), ''), 'NOT_SET') AS value,
+              COUNT(*)::text AS visits
+       FROM marketing_smart_link_events event
+       WHERE event.smart_link_id = $1
+         AND event.event_type = 'PAGE_VIEW'
+       GROUP BY COALESCE(NULLIF(TRIM(event.utm_campaign), ''), 'NOT_SET')
+
+       ORDER BY dimension ASC, visits::bigint DESC, value ASC`,
+      [smartLinkId],
+    );
+
+    const byDimension = (dimension: "REFERRER" | "UTM_SOURCE" | "UTM_MEDIUM" | "UTM_CAMPAIGN") =>
+      trafficResult.rows
+        .filter((row) => row.dimension === dimension)
+        .map((row) => ({
+          value: row.value,
+          visits: row.visits,
+        }));
+
     return {
       id: link.id,
       title: link.title,
@@ -1202,6 +1257,12 @@ export class MarketingService {
         url: row.url,
         clicks: row.clicks,
       })),
+      traffic: {
+        referrers: byDimension("REFERRER"),
+        utmSources: byDimension("UTM_SOURCE"),
+        utmMediums: byDimension("UTM_MEDIUM"),
+        utmCampaigns: byDimension("UTM_CAMPAIGN"),
+      },
     };
   }
 
