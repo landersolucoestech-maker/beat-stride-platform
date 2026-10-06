@@ -80,6 +80,31 @@ export interface MarketingPublicationView {
   lastErrorCode: string | null;
 }
 
+export type MarketingAssetType =
+  | "MARKETING_IMAGE"
+  | "MARKETING_VIDEO"
+  | "MARKETING_AUDIO";
+
+export interface MarketingAssetReservation {
+  asset: {
+    id: string;
+    type: MarketingAssetType;
+    status: "PENDING_UPLOAD";
+    fileName: string;
+    contentType: string;
+    byteSize: number;
+    storageKey: string;
+  };
+  upload: {
+    available: boolean;
+    reason: string | null;
+    method: "PUT" | "POST" | null;
+    url: string | null;
+    headers: Record<string, string>;
+    expiresAt: string | null;
+  };
+}
+
 export interface MarketingCampaignContentView {
   id: string;
   campaignId: string;
@@ -87,6 +112,9 @@ export interface MarketingCampaignContentView {
   recordingTitle: string | null;
   assetId: string | null;
   assetFileName: string | null;
+  assetStatus: string | null;
+  assetContentType: string | null;
+  assetByteSize: string | null;
   contentType: MarketingContentType;
   title: string;
   notes: string | null;
