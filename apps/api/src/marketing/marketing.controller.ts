@@ -5,6 +5,7 @@ import {
   Get,
   Headers,
   Param,
+  Patch,
   Post,
   Query,
 } from "@nestjs/common";
@@ -52,8 +53,38 @@ const publicationChannelSchema = z.enum([
 const createCampaignSchema = z.object({
   releaseId: z.string().uuid(),
   campaignType: campaignTypeSchema,
+  name: z.string().trim().min(1).max(240).optional(),
+  objective: z.string().trim().max(1000).nullable().optional(),
+  focusRecordingId: z.string().uuid().nullable().optional(),
+  brief: z.string().trim().max(8000).nullable().optional(),
+  budgetMinor: z.number().int().nonnegative().nullable().optional(),
+  budgetCurrency: z.string().trim().regex(/^[A-Z]{3}$/).nullable().optional(),
   startsAt: z.string().datetime({ offset: true }).nullable().optional(),
   endsAt: z.string().datetime({ offset: true }).nullable().optional(),
+});
+
+const campaignTaskSchema = z.object({
+  phase: z.enum(["PRE_RELEASE", "RELEASE_DAY", "POST_RELEASE", "ONGOING"]),
+  category: z.enum([
+    "CONTENT",
+    "DSP",
+    "SMART_LINK",
+    "SOCIAL",
+    "ADS",
+    "CREATORS",
+    "AUDIENCE",
+    "PLAYLIST",
+    "OTHER",
+  ]),
+  title: z.string().trim().min(1).max(240),
+  description: z.string().trim().max(4000).nullable().optional(),
+  assigneeUserId: z.string().uuid().nullable().optional(),
+  dueAt: z.string().datetime({ offset: true }).nullable().optional(),
+  sortOrder: z.number().int().nonnegative().default(0),
+});
+
+const taskStatusSchema = z.object({
+  status: z.enum(["TODO", "IN_PROGRESS", "BLOCKED", "DONE", "CANCELLED"]),
 });
 
 const createContentSchema = z.object({
@@ -150,6 +181,73 @@ export class MarketingController {
       ...input,
       organizationId: context.activeOrganization.organizationId,
     });
+  }
+
+  @Get("campaigns/:campaignId/tasks")
+  @ApiOperation({ summary: "List campaign plan tasks" })
+  async campaignTasks(
+    @Headers("authorization") authorization: string | undefined,
+    @Headers("x-organization-id") organizationId: string | undefined,
+    @Param("campaignId") campaignId: string,
+  ) {
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.read");
+    return {
+      items: await this.marketing.listCampaignTasks(
+        context.activeOrganization.organizationId,
+        parseUuid(campaignId, "campaignId"),
+      ),
+    };
+  }
+
+  @Post("campaigns/:campaignId/tasks")
+  @ApiOperation({ summary: "Create a campaign plan task" })
+  @ApiResponse({ status: 201, description: "Campaign task created" })
+  async createCampaignTask(
+    @Headers("authorization") authorization: string | undefined,
+    @Headers("x-organization-id") organizationId: string | undefined,
+    @Param("campaignId") campaignId: string,
+    @Body() body: unknown,
+  ) {
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.manage");
+    const input = parseBody(campaignTaskSchema, body);
+    return this.marketing.createCampaignTask({
+      ...input,
+      campaignId: parseUuid(campaignId, "campaignId"),
+      organizationId: context.activeOrganization.organizationId,
+    });
+  }
+
+  @Patch("tasks/:taskId/status")
+  @ApiOperation({ summary: "Update a campaign task status" })
+  async updateCampaignTaskStatus(
+    @Headers("authorization") authorization: string | undefined,
+    @Headers("x-organization-id") organizationId: string | undefined,
+    @Param("taskId") taskId: string,
+    @Body() body: unknown,
+  ) {
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.manage");
+    const input = parseBody(taskStatusSchema, body);
+    return this.marketing.updateCampaignTaskStatus({
+      organizationId: context.activeOrganization.organizationId,
+      taskId: parseUuid(taskId, "taskId"),
+      status: input.status,
+    });
+  }
+
+  @Get("campaigns/:campaignId/calendar")
+  @ApiOperation({ summary: "Get campaign calendar projection from tasks and planned publications" })
+  async campaignCalendar(
+    @Headers("authorization") authorization: string | undefined,
+    @Headers("x-organization-id") organizationId: string | undefined,
+    @Param("campaignId") campaignId: string,
+  ) {
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.read");
+    return {
+      items: await this.marketing.getCampaignCalendar(
+        context.activeOrganization.organizationId,
+        parseUuid(campaignId, "campaignId"),
+      ),
+    };
   }
 
   @Get("campaigns/:campaignId/contents")
