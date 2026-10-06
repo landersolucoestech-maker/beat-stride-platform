@@ -18,6 +18,84 @@ export interface NativeMarketingOverview {
   actions: MarketingActionOption[];
 }
 
+export type MarketingCampaignType =
+  | "PRE_SAVE"
+  | "DSP_PITCH"
+  | "PROMOTION"
+  | "PLAYLIST_TRACKING"
+  | "CONTENT_PROMOTION";
+
+export type MarketingCampaignStatus =
+  | "DRAFT"
+  | "READY"
+  | "ACTIVE"
+  | "PAUSED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export interface MarketingCampaignView {
+  id: string;
+  releaseId: string;
+  releaseTitle: string;
+  campaignType: MarketingCampaignType;
+  status: MarketingCampaignStatus;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MarketingContentType =
+  | "TEASER"
+  | "TRAILER"
+  | "MUSIC_VIDEO"
+  | "VISUALIZER"
+  | "LYRIC_VIDEO"
+  | "SHORT_VIDEO"
+  | "REEL"
+  | "TIKTOK"
+  | "YOUTUBE_SHORT"
+  | "STORY"
+  | "FEED_POST"
+  | "CAROUSEL"
+  | "BEHIND_THE_SCENES"
+  | "AUDIO_SNIPPET"
+  | "ANNOUNCEMENT"
+  | "OTHER";
+
+export type MarketingPublicationChannel =
+  | "INSTAGRAM"
+  | "FACEBOOK"
+  | "TIKTOK"
+  | "YOUTUBE"
+  | "YOUTUBE_SHORTS";
+
+export interface MarketingPublicationView {
+  id: string;
+  channel: MarketingPublicationChannel;
+  status: string;
+  scheduledFor: string | null;
+  publishedAt: string | null;
+  externalUrl: string | null;
+  lastErrorCode: string | null;
+}
+
+export interface MarketingCampaignContentView {
+  id: string;
+  campaignId: string;
+  recordingId: string | null;
+  recordingTitle: string | null;
+  assetId: string | null;
+  assetFileName: string | null;
+  contentType: MarketingContentType;
+  title: string;
+  notes: string | null;
+  status: "DRAFT" | "READY" | "ARCHIVED";
+  createdAt: string;
+  updatedAt: string;
+  publications: MarketingPublicationView[];
+}
+
 export interface SmartLinkView {
   id: string;
   title: string;
