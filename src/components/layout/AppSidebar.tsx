@@ -142,7 +142,6 @@ const navigation: NavItemProps[] = [
     children: [
       { to: "/marketing/start", icon: Megaphone, label: "Iniciar Marketing" },
       { to: "/marketing/smartlinks", icon: LinkIcon, label: "Smart Links" },
-      { to: "/marketing/creators", icon: Users, label: "Lander Creators" },
       { to: "/marketing/tools", icon: Wrench, label: "Ferramentas Pro" },
       { to: "/marketing/emails", icon: Mail, label: "Lista de E-mails" },
     ],
@@ -175,6 +174,7 @@ const navigation: NavItemProps[] = [
     children: [
       { to: "/settings/profile", icon: User, label: "Meu Perfil" },
       { to: "/settings/security", icon: Shield, label: "Segurança" },
+      { to: "/settings/integrations", icon: LinkIcon, label: "Integrações" },
       { to: "/settings/language", icon: Languages, label: "Idioma" },
     ],
   },
