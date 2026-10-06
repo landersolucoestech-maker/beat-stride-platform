@@ -69,6 +69,25 @@ export function useCreateCampaignContent(campaignId: string) {
   });
 }
 
+export function useRegisterContentAsset(campaignId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      contentId: string;
+      fileName: string;
+      contentType: string;
+      byteSize: number;
+    }) => marketingGateway.registerContentAsset(input.contentId, {
+      fileName: input.fileName,
+      contentType: input.contentType,
+      byteSize: input.byteSize,
+    }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["marketing", "campaigns", campaignId, "contents"] });
+    },
+  });
+}
+
 export function useCreatePublicationPlan(campaignId: string) {
   const queryClient = useQueryClient();
   return useMutation({
