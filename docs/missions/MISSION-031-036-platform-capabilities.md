@@ -6,9 +6,11 @@ Status: Foundation Implemented
 Content ID and UGC protection remain distinct from catalog ownership and distribution delivery. Recording enrollment requires authority context. Allowlisting is explicit, platform-scoped, revocable, and auditable. Provider claim events are treated as external observations and must not silently mutate authority.
 
 ## MISSION-032 Marketing
-Native Distribution marketing owns release-centric capabilities such as smart links, pre-save, DSP pitching, promotion workflows, and playlist tracking. It is not a general CRM or social-media management suite.
+Native Distribution marketing owns release-centric capabilities such as smart links, pre-save, DSP pitching, promotion workflows, playlist tracking, and marketing content tied to a release. Marketing content may include audiovisual and promotional assets such as teasers, trailers, music videos, visualizers, lyric videos, short-form vertical videos, stories, behind-the-scenes material, artwork, and audio snippets. Planning, scheduling, and provider-authorized publication remain release-centric and must not become a general CRM or general-purpose social-media management suite.
 
 ### Creators Integration boundary
+Account connection is managed in Settings > Integrations. Lander Creators is not a standalone Marketing navigation module. When the connection is active, Creators is exposed as an optional capability inside the Start Marketing flow for the selected release.
+
 Distribution owns the integration experience only. Lander Creators remains source of truth for creators, campaigns, deliverables, orders, payments, and campaign performance. Distribution stores account connection state, explicit organization mapping, external references, synchronization checkpoints, checkout references, and authorized read projections.
 
 Credentials are delegated and revocable. Distribution never stores a Lander Creators password. Browser checkout return is UX only; payment and campaign activation require authenticated server-to-server confirmation. A Creators outage must not block catalog, QC, delivery, royalties, accounting, or payouts.
