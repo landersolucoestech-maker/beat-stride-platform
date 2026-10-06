@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ReleaseArtworkStep } from "./ReleaseArtworkStep";
 import {
   createPrototypeTrack,
   ReleaseTracksStep,
@@ -146,6 +147,8 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
   const [ownUpc, setOwnUpc] = useState(false);
   const [upc, setUpc] = useState("");
   const [tracks, setTracks] = useState<PrototypeTrack[]>([createPrototypeTrack()]);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState("");
 
   const selectedProject = useMemo(
     () => MOCK_PROJECTS.find((project) => project.id === projectId),
@@ -584,7 +587,16 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
               onTracksChange={setTracks}
             />
           )}
-          {step === 2 && renderPlaceholderStep("Capa do álbum", "Esta etapa receberá as regras de JPG/PNG, 3000 × 3000 px, RGB e validações visuais do arquivo de referência.")}
+          {step === 2 && (
+            <ReleaseArtworkStep
+              coverFile={coverFile}
+              coverPreview={coverPreview}
+              onCoverChange={(file, preview) => {
+                setCoverFile(file);
+                setCoverPreview(preview);
+              }}
+            />
+          )}
           {step === 3 && renderPlaceholderStep("Preferências de distribuição", "Esta etapa receberá distribuidora conectada, território, data/hora, fuso, pré-venda, preço e notas.")}
           {step === 4 && renderPlaceholderStep("Revisão", "Esta etapa receberá o preview completo do lançamento e os alertas antes de criar o rascunho.")}
         </div>
