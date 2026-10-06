@@ -110,12 +110,12 @@ function NavItem({ to, icon: Icon, label, children }: NavItemProps) {
 
 const navigation: NavItemProps[] = [
   { to: "/", icon: LayoutDashboard, label: "Visão Geral" },
+  { to: "/artists", icon: UserRound, label: "Artistas" },
   {
     to: "/distribution",
     icon: Music,
     label: "Distribuição",
     children: [
-      { to: "/distribution/artists", icon: UserRound, label: "Artistas" },
       { to: "/distribution/music", icon: Music, label: "Gerenciar Músicas" },
       { to: "/distribution/videos", icon: Video, label: "Gerenciar Vídeos" },
       { to: "/distribution/rights-protection", icon: FileCheck2, label: "Direitos e Proteção" },
