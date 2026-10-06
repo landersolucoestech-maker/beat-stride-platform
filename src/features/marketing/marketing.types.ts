@@ -211,9 +211,9 @@ export interface SmartLinkView {
   artworkUrl: string | null;
   publicPath: string;
   destinations: Array<{ code: string; label: string }>;
-  visits: string | null;
-  conversions: string | null;
-  conversionRate: string | null;
+  visits: string;
+  clicks: string;
+  clickThroughRate: string;
 }
 
 export interface SmartLinksOverview { available: boolean; items: SmartLinkView[]; }
