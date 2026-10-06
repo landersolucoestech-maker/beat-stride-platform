@@ -1,6 +1,8 @@
 import { apiRequest, isApiConfigured } from "@/lib/api-client";
 
 import type {
+  CreateSmartLinkInput,
+  CreatedSmartLinkView,
   FanListOverview,
   MarketingAssetReservation,
   MarketingCampaignCalendarItem,
@@ -63,6 +65,7 @@ export interface MarketingGateway {
     channel: MarketingPublicationChannel;
     scheduledFor?: string | null;
   }): Promise<MarketingPublicationView & { contentId: string; providerExecutionAvailable: boolean }>;
+  createSmartLink(input: CreateSmartLinkInput): Promise<CreatedSmartLinkView>;
   getSmartLinks(): Promise<SmartLinksOverview>;
   getFanList(): Promise<FanListOverview>;
   getTools(): Promise<MarketingToolsOverview>;
@@ -155,6 +158,11 @@ class HttpMarketingGateway implements MarketingGateway {
   }): Promise<MarketingPublicationView & { contentId: string; providerExecutionAvailable: boolean }> {
     if (!isApiConfigured()) throw new Error("MARKETING_API_NOT_CONNECTED");
     return this.postJson(`/api/v1/marketing/contents/${contentId}/publications`, input);
+  }
+
+  createSmartLink(input: CreateSmartLinkInput): Promise<CreatedSmartLinkView> {
+    if (!isApiConfigured()) throw new Error("MARKETING_API_NOT_CONNECTED");
+    return this.postJson("/api/v1/marketing/smart-links", input);
   }
 
   getSmartLinks(): Promise<SmartLinksOverview> {
