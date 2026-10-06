@@ -180,6 +180,29 @@ export interface MarketingCampaignContentView {
   publications: MarketingPublicationView[];
 }
 
+export type SmartLinkType = "SMART_LINK" | "PRE_SAVE";
+
+export interface CreateSmartLinkInput {
+  releaseId: string;
+  title: string;
+  slug: string;
+  linkType: SmartLinkType;
+  destinations: Array<{ code: string; url: string }>;
+  activate: boolean;
+}
+
+export interface CreatedSmartLinkView {
+  id: string;
+  releaseId: string;
+  title: string;
+  slug: string;
+  linkType: SmartLinkType;
+  status: "DRAFT" | "ACTIVE";
+  destinations: Array<{ code: string; url: string }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SmartLinkView {
   id: string;
   title: string;
