@@ -189,26 +189,14 @@ export class MarketingService {
 
     const id = randomUUID();
     const now = new Date();
-    const result = await this.database.query<CampaignRow>(
+    await this.database.query(
       `INSERT INTO marketing_campaigns
          (id, organization_id, release_id, campaign_type, status, starts_at, ends_at, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, 'DRAFT', $5, $6, $7, $7)
-       RETURNING
-         id,
-         release_id,
-         (SELECT title FROM releases WHERE id = release_id) AS release_title,
-         campaign_type,
-         status,
-         starts_at,
-         ends_at,
-         created_at,
-         updated_at`,
+       VALUES ($1, $2, $3, $4, 'DRAFT', $5, $6, $7, $7)`,
       [id, input.organizationId, input.releaseId, input.campaignType, startsAt, endsAt, now],
     );
 
-    const campaign = result.rows[0];
-    if (!campaign) throw new Error("MARKETING_CAMPAIGN_CREATE_INVARIANT_BROKEN");
-    return this.mapCampaign(campaign);
+    return this.mapCampaign(await this.requireCampaign(input.organizationId, id));
   }
 
   async listCampaignContents(organizationId: string, campaignId: string) {
