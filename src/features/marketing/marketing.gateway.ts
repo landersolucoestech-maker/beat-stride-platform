@@ -2,6 +2,7 @@ import { apiRequest, isApiConfigured } from "@/lib/api-client";
 
 import type {
   FanListOverview,
+  MarketingAssetReservation,
   MarketingCampaignContentView,
   MarketingCampaignType,
   MarketingCampaignView,
@@ -30,6 +31,11 @@ export interface MarketingGateway {
     title: string;
     notes?: string | null;
   }): Promise<MarketingCampaignContentView>;
+  registerContentAsset(contentId: string, input: {
+    fileName: string;
+    contentType: string;
+    byteSize: number;
+  }): Promise<MarketingAssetReservation>;
   createPublicationPlan(contentId: string, input: {
     channel: MarketingPublicationChannel;
     scheduledFor?: string | null;
@@ -75,6 +81,15 @@ class HttpMarketingGateway implements MarketingGateway {
   }): Promise<MarketingCampaignContentView> {
     if (!isApiConfigured()) throw new Error("MARKETING_API_NOT_CONNECTED");
     return this.postJson(`/api/v1/marketing/campaigns/${campaignId}/contents`, input);
+  }
+
+  registerContentAsset(contentId: string, input: {
+    fileName: string;
+    contentType: string;
+    byteSize: number;
+  }): Promise<MarketingAssetReservation> {
+    if (!isApiConfigured()) throw new Error("MARKETING_API_NOT_CONNECTED");
+    return this.postJson(`/api/v1/marketing/contents/${contentId}/asset`, input);
   }
 
   createPublicationPlan(contentId: string, input: {
