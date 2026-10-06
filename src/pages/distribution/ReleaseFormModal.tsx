@@ -60,35 +60,6 @@ const SECONDARY_ARTIST_ROLES = [
   "Remixer",
 ] as const;
 
-const GENRES = [
-  "Afrobeats",
-  "Alternativo",
-  "Eletrônica",
-  "Funk",
-  "Gospel",
-  "Hip-Hop / Rap",
-  "MPB",
-  "Pagode",
-  "Pop",
-  "Reggae",
-  "Rock",
-  "Sertanejo",
-] as const;
-
-const LANGUAGES = [
-  "Português (Brasil)",
-  "Português",
-  "Inglês",
-  "Espanhol",
-  "Francês",
-  "Italiano",
-  "Alemão",
-  "Japonês",
-  "Coreano",
-  "Chinês",
-  "Árabe",
-] as const;
-
 const MOCK_ARTISTS = [
   "Ayla Martins",
   "Caio Nunes",
@@ -142,9 +113,6 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
   const [variousArtists, setVariousArtists] = useState(false);
   const [mainArtist, setMainArtist] = useState("");
   const [additionalArtists, setAdditionalArtists] = useState<AdditionalArtist[]>([]);
-  const [primaryGenre, setPrimaryGenre] = useState("");
-  const [secondaryGenre, setSecondaryGenre] = useState("");
-  const [language, setLanguage] = useState("Português (Brasil)");
   const [recordLabel, setRecordLabel] = useState("");
   const [copyrightReleaseYear, setCopyrightReleaseYear] = useState("2026");
   const [copyrightRecordingYear, setCopyrightRecordingYear] = useState("2026");
@@ -187,8 +155,6 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
         title,
         mainArtist,
         variousArtists,
-        primaryGenre,
-        secondaryGenre,
         recordLabel,
         copyrightReleaseYear,
         copyrightRecordingYear,
@@ -202,9 +168,7 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
       coverFile,
       distribution,
       mainArtist,
-      primaryGenre,
       recordLabel,
-      secondaryGenre,
       title,
       tracks,
       variousArtists,
@@ -220,9 +184,6 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
     setReleaseType(project.releaseType);
     setVariousArtists(false);
     setMainArtist(project.mainArtist);
-    setPrimaryGenre(project.primaryGenre);
-    setSecondaryGenre(project.secondaryGenre);
-    setLanguage(project.language);
     setRecordLabel(project.recordLabel);
 
     if (project.id === "project-1") {
@@ -230,8 +191,10 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
         {
           ...createPrototypeTrack(),
           title: "Noite Inteira",
+          primaryGenre: project.primaryGenre,
+          secondaryGenre: project.secondaryGenre,
           aiUsage: "Criação Humana, Sem IA",
-          language: "Português (Brasil)",
+          language: project.language,
           lyrics: "Hoje eu só quero dançar até o dia clarear...",
           isrc: "BR-LND-26-00001",
           composers: [{ id: crypto.randomUUID(), name: "Luna Reis" }],
@@ -247,8 +210,10 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
         {
           ...createPrototypeTrack(),
           title: "Horizonte",
+          primaryGenre: project.primaryGenre,
+          secondaryGenre: project.secondaryGenre,
           aiUsage: "Criação Humana, Assistida por IA",
-          language: "Português (Brasil)",
+          language: project.language,
           lyrics: "No horizonte eu vejo a estrada se abrir...",
           isrc: "BR-LND-26-00011",
           composers: [{ id: crypto.randomUUID(), name: "Davi Luz" }],
@@ -259,8 +224,10 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
         {
           ...createPrototypeTrack(),
           title: "Depois da Chuva",
+          primaryGenre: project.primaryGenre,
+          secondaryGenre: project.secondaryGenre,
           aiUsage: "Criação Humana, Sem IA",
-          language: "Português (Brasil)",
+          language: project.language,
           lyrics: "Depois da chuva a cidade volta a respirar...",
           isrc: "BR-LND-26-00012",
           composers: [{ id: crypto.randomUUID(), name: "Davi Luz" }],
@@ -394,41 +361,6 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
             </div>
           )}
 
-          <div>
-            <Label>Gênero principal *</Label>
-            <Select value={primaryGenre} onValueChange={setPrimaryGenre}>
-              <SelectTrigger className="mt-1.5">
-                <SelectValue placeholder="Selecionar gênero" />
-              </SelectTrigger>
-              <SelectContent>
-                {GENRES.map((genre) => <SelectItem key={genre} value={genre}>{genre}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Gênero secundário *</Label>
-            <Select value={secondaryGenre} onValueChange={setSecondaryGenre}>
-              <SelectTrigger className="mt-1.5">
-                <SelectValue placeholder="Selecionar gênero" />
-              </SelectTrigger>
-              <SelectContent>
-                {GENRES.map((genre) => <SelectItem key={genre} value={genre}>{genre}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="md:col-span-2">
-            <Label>Idioma *</Label>
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger className="mt-1.5">
-                <SelectValue placeholder="Selecionar idioma" />
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
       </section>
 
@@ -665,8 +597,6 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
               mainArtist={mainArtist}
               variousArtists={variousArtists}
               albumArtistNames={albumArtistNames}
-              primaryGenre={primaryGenre}
-              secondaryGenre={secondaryGenre}
               recordLabel={recordLabel}
               copyrightReleaseYear={copyrightReleaseYear}
               copyrightRecordingYear={copyrightRecordingYear}
