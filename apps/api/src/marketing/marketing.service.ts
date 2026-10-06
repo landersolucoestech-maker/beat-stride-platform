@@ -39,6 +39,19 @@ type MarketingPublicationChannel =
 
 type MarketingAssetType = "MARKETING_IMAGE" | "MARKETING_VIDEO" | "MARKETING_AUDIO";
 
+type MarketingCampaignPhase = "PRE_RELEASE" | "RELEASE_DAY" | "POST_RELEASE" | "ONGOING";
+type MarketingTaskCategory =
+  | "CONTENT"
+  | "DSP"
+  | "SMART_LINK"
+  | "SOCIAL"
+  | "ADS"
+  | "CREATORS"
+  | "AUDIENCE"
+  | "PLAYLIST"
+  | "OTHER";
+type MarketingTaskStatus = "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED";
+
 interface MarketingReleaseRow extends QueryResultRow {
   id: string;
   title: string;
@@ -58,11 +71,43 @@ interface CampaignRow extends QueryResultRow {
   release_id: string;
   release_title: string;
   campaign_type: MarketingCampaignType;
+  name: string;
+  objective: string | null;
+  focus_recording_id: string | null;
+  brief: string | null;
+  budget_minor: string | null;
+  budget_currency: string | null;
   status: "DRAFT" | "READY" | "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED";
   starts_at: Date | null;
   ends_at: Date | null;
   created_at: Date;
   updated_at: Date;
+}
+
+interface CampaignTaskRow extends QueryResultRow {
+  id: string;
+  campaign_id: string;
+  phase: MarketingCampaignPhase;
+  category: MarketingTaskCategory;
+  title: string;
+  description: string | null;
+  status: MarketingTaskStatus;
+  assignee_user_id: string | null;
+  due_at: Date | null;
+  completed_at: Date | null;
+  sort_order: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface CampaignCalendarRow extends QueryResultRow {
+  id: string;
+  source_type: "TASK" | "PUBLICATION";
+  title: string;
+  starts_at: Date;
+  status: string;
+  phase: MarketingCampaignPhase | null;
+  channel_code: MarketingPublicationChannel | null;
 }
 
 interface ContentRow extends QueryResultRow {
@@ -146,6 +191,12 @@ export class MarketingService {
          campaign.release_id,
          release.title AS release_title,
          campaign.campaign_type,
+         campaign.name,
+         campaign.objective,
+         campaign.focus_recording_id,
+         campaign.brief,
+         campaign.budget_minor::text AS budget_minor,
+         campaign.budget_currency,
          campaign.status,
          campaign.starts_at,
          campaign.ends_at,
@@ -166,21 +217,47 @@ export class MarketingService {
     organizationId: string;
     releaseId: string;
     campaignType: MarketingCampaignType;
+    name?: string | undefined;
+    objective?: string | null | undefined;
+    focusRecordingId?: string | null | undefined;
+    brief?: string | null | undefined;
+    budgetMinor?: number | null | undefined;
+    budgetCurrency?: string | null | undefined;
     startsAt?: string | null | undefined;
     endsAt?: string | null | undefined;
   }) {
-    const release = await this.database.query<{ id: string } & QueryResultRow>(
-      `SELECT id
+    const release = await this.database.query<{ id: string; title: string } & QueryResultRow>(
+      `SELECT id, title
        FROM releases
        WHERE organization_id = $1 AND id = $2
        LIMIT 1`,
       [input.organizationId, input.releaseId],
     );
-    if (!release.rows[0]) {
+    const releaseRow = release.rows[0];
+    if (!releaseRow) {
       throw new NotFoundException({
         code: "MARKETING_RELEASE_NOT_FOUND",
         message: "Release not found for active organization",
       });
+    }
+
+    if (input.focusRecordingId) {
+      const recording = await this.database.query<{ id: string } & QueryResultRow>(
+        `SELECT recording.id
+         FROM recordings recording
+         JOIN tracks track ON track.recording_id = recording.id
+         WHERE recording.organization_id = $1
+           AND recording.id = $2
+           AND track.release_id = $3
+         LIMIT 1`,
+        [input.organizationId, input.focusRecordingId, input.releaseId],
+      );
+      if (!recording.rows[0]) {
+        throw new BadRequestException({
+          code: "MARKETING_FOCUS_RECORDING_RELEASE_MISMATCH",
+          message: "Focus recording must belong to the campaign release",
+        });
+      }
     }
 
     const startsAt = input.startsAt ? new Date(input.startsAt) : null;
@@ -652,6 +729,12 @@ export class MarketingService {
          campaign.release_id,
          release.title AS release_title,
          campaign.campaign_type,
+         campaign.name,
+         campaign.objective,
+         campaign.focus_recording_id,
+         campaign.brief,
+         campaign.budget_minor::text AS budget_minor,
+         campaign.budget_currency,
          campaign.status,
          campaign.starts_at,
          campaign.ends_at,
@@ -674,12 +757,36 @@ export class MarketingService {
     return campaign;
   }
 
+  private mapCampaignTask(row: CampaignTaskRow) {
+    return {
+      id: row.id,
+      campaignId: row.campaign_id,
+      phase: row.phase,
+      category: row.category,
+      title: row.title,
+      description: row.description,
+      status: row.status,
+      assigneeUserId: row.assignee_user_id,
+      dueAt: row.due_at?.toISOString() ?? null,
+      completedAt: row.completed_at?.toISOString() ?? null,
+      sortOrder: row.sort_order,
+      createdAt: row.created_at.toISOString(),
+      updatedAt: row.updated_at.toISOString(),
+    };
+  }
+
   private mapCampaign(row: CampaignRow) {
     return {
       id: row.id,
       releaseId: row.release_id,
       releaseTitle: row.release_title,
       campaignType: row.campaign_type,
+      name: row.name,
+      objective: row.objective,
+      focusRecordingId: row.focus_recording_id,
+      brief: row.brief,
+      budgetMinor: row.budget_minor,
+      budgetCurrency: row.budget_currency,
       status: row.status,
       startsAt: row.starts_at?.toISOString() ?? null,
       endsAt: row.ends_at?.toISOString() ?? null,
