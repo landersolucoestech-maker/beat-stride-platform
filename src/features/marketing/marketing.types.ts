@@ -181,6 +181,7 @@ export interface MarketingCampaignContentView {
 }
 
 export type SmartLinkType = "SMART_LINK" | "PRE_SAVE";
+export type SmartLinkAnalyticsDays = 7 | 30 | 90;
 
 export interface CreateSmartLinkInput {
   releaseId: string;
@@ -218,6 +219,7 @@ export interface SmartLinkView {
 
 export interface SmartLinkAnalyticsView {
   id: string;
+  periodDays: SmartLinkAnalyticsDays;
   title: string;
   slug: string;
   linkType: SmartLinkType;
