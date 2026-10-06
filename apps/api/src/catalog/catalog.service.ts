@@ -41,12 +41,6 @@ export interface DraftTrackInput {
   explicit: boolean;
 }
 
-export interface ProvisionalSplitInput {
-  name: string;
-  role: "PRIMARY_ARTIST" | "FEATURED_ARTIST" | "PRODUCER" | "COMPOSER" | "OTHER";
-  percentage: number;
-}
-
 export interface PendingFileInput {
   fileName: string;
   contentType: string;
@@ -62,7 +56,6 @@ export interface CreateReleaseInput {
   primaryGenre: string;
   explicit: boolean;
   tracks: DraftTrackInput[];
-  provisionalSplits: ProvisionalSplitInput[];
   pendingAssets: {
     artwork: PendingFileInput | null;
     tracks: Array<PendingFileInput & { trackIndex: number }>;
@@ -175,11 +168,6 @@ export class CatalogService {
       });
     }
 
-    const splitMicros = input.provisionalSplits.reduce((sum, split) => sum + Math.round(split.percentage * 1_000_000), 0);
-    if (splitMicros !== 100_000_000) {
-      throw new BadRequestException({ code: "PROVISIONAL_SPLITS_INVALID", message: "Provisional splits must total exactly 100 percent" });
-    }
-
     if (input.pendingAssets.tracks.some((asset) => asset.trackIndex < 0 || asset.trackIndex >= input.tracks.length)) {
       throw new BadRequestException({ code: "TRACK_ASSET_INDEX_INVALID", message: "A pending track asset references an invalid track index" });
     }
@@ -209,7 +197,6 @@ export class CatalogService {
         title: track.title,
         explicit: track.explicit,
       })),
-      provisionalSplits: input.provisionalSplits,
       pendingAssets: {
         artworkAssetId,
         trackAssetIds: trackAssetDescriptors.map((asset) => ({ trackIndex: asset.trackIndex, assetId: asset.assetId })),
