@@ -216,6 +216,21 @@ export interface SmartLinkView {
   clickThroughRate: string;
 }
 
+export interface SmartLinkAnalyticsView {
+  id: string;
+  title: string;
+  slug: string;
+  linkType: SmartLinkType;
+  visits: string;
+  clicks: string;
+  clickThroughRate: string;
+  destinations: Array<{
+    code: string;
+    url: string;
+    clicks: string;
+  }>;
+}
+
 export interface SmartLinksOverview { available: boolean; items: SmartLinkView[]; }
 
 export interface FanContactSummary {
