@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown, Plus, Search, UserRound } from "lucide-react";
+import { Check, ChevronsUpDown, Search, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,14 @@ interface ArtistLookupFieldProps {
   onAddArtistToBase: (artistName: string) => void;
 }
 
+type PlatformKey = "spotify" | "youtube" | "appleMusic";
+
+const PLATFORM_LABELS: Record<PlatformKey, string> = {
+  spotify: "Spotify",
+  youtube: "YouTube",
+  appleMusic: "Apple Music",
+};
+
 export function ArtistLookupField({
   value,
   artists,
@@ -31,9 +40,15 @@ export function ArtistLookupField({
 }: ArtistLookupFieldProps) {
   const [baseOpen, setBaseOpen] = useState(false);
   const [baseQuery, setBaseQuery] = useState("");
+
   const [finderOpen, setFinderOpen] = useState(false);
-  const [finderQuery, setFinderQuery] = useState("");
-  const [externalSearched, setExternalSearched] = useState(false);
+  const [artistName, setArtistName] = useState("");
+  const [platformQueries, setPlatformQueries] = useState<Record<PlatformKey, string>>({
+    spotify: "",
+    youtube: "",
+    appleMusic: "",
+  });
+  const [locatedPlatforms, setLocatedPlatforms] = useState<PlatformKey[]>([]);
 
   const normalizedBaseQuery = baseQuery.trim().toLocaleLowerCase("pt-BR");
   const filteredArtists = useMemo(
@@ -44,21 +59,57 @@ export function ArtistLookupField({
     [artists, normalizedBaseQuery],
   );
 
-  const selectArtist = (artistName: string) => {
-    onChange(artistName);
+  const selectArtist = (artist: string) => {
+    onChange(artist);
     setBaseOpen(false);
     setBaseQuery("");
   };
 
-  const addArtist = (artistName: string) => {
+  const resetFinder = () => {
+    setArtistName("");
+    setPlatformQueries({
+      spotify: "",
+      youtube: "",
+      appleMusic: "",
+    });
+    setLocatedPlatforms([]);
+  };
+
+  const openFinder = () => {
+    resetFinder();
+    setFinderOpen(true);
+  };
+
+  const handleArtistNameChange = (nextName: string) => {
+    setArtistName(nextName);
+    setPlatformQueries((current) => ({
+      spotify: current.spotify || nextName,
+      youtube: current.youtube || nextName,
+      appleMusic: current.appleMusic || nextName,
+    }));
+    setLocatedPlatforms([]);
+  };
+
+  const updatePlatformQuery = (platform: PlatformKey, query: string) => {
+    setPlatformQueries((current) => ({ ...current, [platform]: query }));
+    setLocatedPlatforms((current) => current.filter((item) => item !== platform));
+  };
+
+  const locatePlatform = (platform: PlatformKey) => {
+    if (!platformQueries[platform].trim()) return;
+    setLocatedPlatforms((current) =>
+      current.includes(platform) ? current : [...current, platform],
+    );
+  };
+
+  const confirmArtist = () => {
     const cleanName = artistName.trim();
-    if (!cleanName) return;
+    if (!cleanName || locatedPlatforms.length === 0) return;
 
     onAddArtistToBase(cleanName);
     onChange(cleanName);
     setFinderOpen(false);
-    setFinderQuery("");
-    setExternalSearched(false);
+    resetFinder();
   };
 
   return (
@@ -133,7 +184,7 @@ export function ArtistLookupField({
                     Nenhum artista encontrado na base
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Use o botão “Encontrar artista” ao lado do campo.
+                    Use o botão “Buscar artista” ao lado.
                   </p>
                 </div>
               )}
@@ -141,14 +192,9 @@ export function ArtistLookupField({
           </PopoverContent>
         </Popover>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="shrink-0"
-          onClick={() => setFinderOpen(true)}
-        >
+        <Button type="button" variant="outline" className="shrink-0" onClick={openFinder}>
           <Search className="mr-2 h-4 w-4" />
-          Encontrar artista
+          Buscar artista
         </Button>
       </div>
 
@@ -156,98 +202,89 @@ export function ArtistLookupField({
         open={finderOpen}
         onOpenChange={(nextOpen) => {
           setFinderOpen(nextOpen);
-          if (!nextOpen) {
-            setFinderQuery("");
-            setExternalSearched(false);
-          }
+          if (!nextOpen) resetFinder();
         }}
       >
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Encontrar artista</DialogTitle>
+            <DialogTitle>Buscar artista</DialogTitle>
             <DialogDescription>
-              Procure um artista que ainda não está cadastrado na base Lander.
+              Informe o nome do artista e localize os perfis nas plataformas prioritárias.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  autoFocus
-                  value={finderQuery}
-                  onChange={(event) => {
-                    setFinderQuery(event.target.value);
-                    setExternalSearched(false);
-                  }}
-                  placeholder="Digite o nome do artista"
-                  className="pl-9"
-                />
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                A busca prioriza Spotify, YouTube e Apple Music.
-              </p>
+              <Label htmlFor="artist-finder-name">Nome do artista *</Label>
+              <Input
+                id="artist-finder-name"
+                className="mt-1.5"
+                value={artistName}
+                onChange={(event) => handleArtistNameChange(event.target.value)}
+                placeholder="Digite o nome do artista"
+              />
+            </div>
+
+            <div className="space-y-4">
+              {(Object.keys(PLATFORM_LABELS) as PlatformKey[]).map((platform) => {
+                const isLocated = locatedPlatforms.includes(platform);
+
+                return (
+                  <div
+                    key={platform}
+                    className="rounded-lg border border-border bg-muted/20 p-4"
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <Label htmlFor={`artist-${platform}`}>
+                        {PLATFORM_LABELS[platform]}
+                      </Label>
+                      {isLocated && (
+                        <Badge variant="secondary" className="gap-1">
+                          <Check className="h-3 w-3" />
+                          Perfil localizado
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Input
+                        id={`artist-${platform}`}
+                        value={platformQueries[platform]}
+                        onChange={(event) =>
+                          updatePlatformQuery(platform, event.target.value)
+                        }
+                        placeholder={`Digite o nome, URL ou ID do perfil no ${PLATFORM_LABELS[platform]}`}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="shrink-0"
+                        disabled={!platformQueries[platform].trim()}
+                        onClick={() => locatePlatform(platform)}
+                      >
+                        <Search className="mr-2 h-4 w-4" />
+                        Localizar
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+              Depois de confirmar o artista correto, ele entra na base Lander e poderá ser
+              selecionado diretamente nos próximos lançamentos.
             </div>
 
             <Button
               type="button"
               className="w-full"
-              disabled={finderQuery.trim().length < 2}
-              onClick={() => setExternalSearched(true)}
+              disabled={!artistName.trim() || locatedPlatforms.length === 0}
+              onClick={confirmArtist}
             >
-              <Search className="mr-2 h-4 w-4" />
-              Buscar nas plataformas
+              <Check className="mr-2 h-4 w-4" />
+              Confirmar artista
             </Button>
-
-            {externalSearched && (
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <UserRound className="h-5 w-5 text-primary" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-foreground">{finderQuery.trim()}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Perfis compatíveis encontrados para conferência.
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Badge variant="secondary">Spotify</Badge>
-                      <Badge variant="secondary">YouTube</Badge>
-                      <Badge variant="secondary">Apple Music</Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 rounded-md bg-background/80 p-3 text-xs text-muted-foreground">
-                  Ao confirmar, o artista entra na base Lander e poderá ser reutilizado
-                  nos próximos lançamentos.
-                </div>
-
-                <Button
-                  type="button"
-                  size="sm"
-                  className="mt-3 w-full"
-                  onClick={() => addArtist(finderQuery)}
-                >
-                  <Check className="mr-2 h-4 w-4" />
-                  Confirmar artista e adicionar à base
-                </Button>
-              </div>
-            )}
-
-            <div className="border-t border-border pt-4">
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full justify-start"
-                disabled={!finderQuery.trim()}
-                onClick={() => addArtist(finderQuery)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Criar novo artista sem perfil existente
-              </Button>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
