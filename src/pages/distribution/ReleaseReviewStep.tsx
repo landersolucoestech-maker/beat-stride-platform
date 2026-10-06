@@ -350,16 +350,14 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
 
         <div className="space-y-3">
           {tracks.map((track, index) => {
-            const artistName =
-              track.trackArtistName ||
-              [
-                variousArtists ? "Various Artists" : mainArtist,
-                ...track.additionalArtists
-                  .map((artist) => artist.name)
-                  .filter(Boolean),
-              ]
-                .filter(Boolean)
-                .join(", ");
+            const artistName = [
+              variousArtists ? "Various Artists" : mainArtist,
+              ...track.additionalArtists
+                .map((artist) => artist.name)
+                .filter(Boolean),
+            ]
+              .filter(Boolean)
+              .join(", ");
 
             return (
               <article
