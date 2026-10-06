@@ -106,6 +106,34 @@ const registerContentAssetSchema = z.object({
   byteSize: z.number().int().positive().max(5 * 1024 * 1024 * 1024),
 });
 
+const smartLinkDestinationSchema = z.object({
+  code: z.string().trim().min(1).max(64).regex(/^[A-Z0-9_]+$/),
+  url: z.string().url().refine((value) => value.startsWith("https://"), {
+    message: "Destination URL must use HTTPS",
+  }),
+});
+
+const createSmartLinkSchema = z.object({
+  releaseId: z.string().uuid(),
+  title: z.string().trim().min(1).max(240),
+  slug: z.string().trim().min(3).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  linkType: z.enum(["SMART_LINK", "PRE_SAVE"]),
+  destinations: z.array(smartLinkDestinationSchema).min(1).max(20),
+  activate: z.boolean().default(true),
+}).superRefine((value, context) => {
+  const codes = new Set<string>();
+  for (const [index, destination] of value.destinations.entries()) {
+    if (codes.has(destination.code)) {
+      context.addIssue({
+        code: "custom",
+        path: ["destinations", index, "code"],
+        message: "Destination codes must be unique",
+      });
+    }
+    codes.add(destination.code);
+  }
+});
+
 function parseBody<T>(schema: z.ZodType<T>, body: unknown): T {
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -316,6 +344,22 @@ export class MarketingController {
     return this.marketing.createPublicationPlan({
       ...input,
       contentId: parseUuid(contentId, "contentId"),
+      organizationId: context.activeOrganization.organizationId,
+    });
+  }
+
+  @Post("smart-links")
+  @ApiOperation({ summary: "Create a release-scoped Smart Link or pre-save landing page" })
+  @ApiResponse({ status: 201, description: "Smart Link created" })
+  async createSmartLink(
+    @Headers("authorization") authorization: string | undefined,
+    @Headers("x-organization-id") organizationId: string | undefined,
+    @Body() body: unknown,
+  ) {
+    const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.manage");
+    const input = parseBody(createSmartLinkSchema, body);
+    return this.marketing.createSmartLink({
+      ...input,
       organizationId: context.activeOrganization.organizationId,
     });
   }
