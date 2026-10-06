@@ -26,7 +26,6 @@ import {
   TrendingUp,
   Trophy,
   User,
-  UserRound,
   Users,
   Video,
   Wallet as WalletIcon,
@@ -110,7 +109,6 @@ function NavItem({ to, icon: Icon, label, children }: NavItemProps) {
 
 const navigation: NavItemProps[] = [
   { to: "/", icon: LayoutDashboard, label: "Visão Geral" },
-  { to: "/artists", icon: UserRound, label: "Artistas" },
   {
     to: "/distribution",
     icon: Music,
