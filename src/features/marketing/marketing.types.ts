@@ -38,11 +38,67 @@ export interface MarketingCampaignView {
   releaseId: string;
   releaseTitle: string;
   campaignType: MarketingCampaignType;
+  name: string;
+  objective: string | null;
+  focusRecordingId: string | null;
+  brief: string | null;
+  budgetMinor: string | null;
+  budgetCurrency: string | null;
   status: MarketingCampaignStatus;
   startsAt: string | null;
   endsAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type MarketingCampaignPhase =
+  | "PRE_RELEASE"
+  | "RELEASE_DAY"
+  | "POST_RELEASE"
+  | "ONGOING";
+
+export type MarketingCampaignTaskCategory =
+  | "CONTENT"
+  | "DSP"
+  | "SMART_LINK"
+  | "SOCIAL"
+  | "ADS"
+  | "CREATORS"
+  | "AUDIENCE"
+  | "PLAYLIST"
+  | "OTHER";
+
+export type MarketingCampaignTaskStatus =
+  | "TODO"
+  | "IN_PROGRESS"
+  | "BLOCKED"
+  | "DONE"
+  | "CANCELLED";
+
+export interface MarketingCampaignTaskView {
+  id: string;
+  campaignId: string;
+  phase: MarketingCampaignPhase;
+  category: MarketingCampaignTaskCategory;
+  title: string;
+  description: string | null;
+  status: MarketingCampaignTaskStatus;
+  assigneeUserId: string | null;
+  dueAt: string | null;
+  completedAt: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MarketingCampaignCalendarItem {
+  id: string;
+  sourceType: "TASK" | "PUBLICATION";
+  title: string;
+  startsAt: string;
+  status: string;
+  phase: MarketingCampaignPhase | null;
+  channel: MarketingPublicationChannel | null;
 }
 
 export type MarketingContentType =
