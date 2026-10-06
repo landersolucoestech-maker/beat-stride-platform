@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink, Link as LinkIcon, MousePointerClick, Route } from "lucide-react";
+import { ArrowLeft, CalendarDays, ExternalLink, Link as LinkIcon, MousePointerClick, Route } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -113,6 +113,48 @@ export default function SmartLinkAnalytics() {
                 </CardContent>
               </Card>
             </section>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5 text-primary" />
+                  Evolução — últimos 30 dias
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-hidden rounded-lg border border-border">
+                  <div className="grid grid-cols-[1fr_90px_90px_90px] gap-3 border-b border-border bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground">
+                    <span>Data</span>
+                    <span className="text-right">Visitas</span>
+                    <span className="text-right">Cliques</span>
+                    <span className="text-right">CTR</span>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {[...data.timeline].reverse().map((day) => (
+                      <div
+                        key={day.date}
+                        className="grid grid-cols-[1fr_90px_90px_90px] gap-3 border-b border-border px-4 py-2 text-sm last:border-b-0"
+                      >
+                        <span className="text-foreground">
+                          {new Date(`${day.date}T00:00:00Z`).toLocaleDateString("pt-BR", {
+                            timeZone: "UTC",
+                          })}
+                        </span>
+                        <span className="text-right text-muted-foreground">
+                          {formatDecimalPtBr(day.visits, 0)}
+                        </span>
+                        <span className="text-right text-muted-foreground">
+                          {formatDecimalPtBr(day.clicks, 0)}
+                        </span>
+                        <span className="text-right text-muted-foreground">
+                          {formatDecimalPtBr(day.clickThroughRate, 2)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
