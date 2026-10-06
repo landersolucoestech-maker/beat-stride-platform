@@ -1040,6 +1040,81 @@ export class MarketingService {
     };
   }
 
+  async trackPublicSmartLinkEvent(input: {
+    linkId: string;
+    slug: string;
+    eventType: "PAGE_VIEW" | "DESTINATION_CLICK";
+    destinationCode?: string | null | undefined;
+    anonymousSessionId?: string | null | undefined;
+    referrer?: string | null | undefined;
+    utmSource?: string | null | undefined;
+    utmMedium?: string | null | undefined;
+    utmCampaign?: string | null | undefined;
+  }) {
+    const link = await this.database.query<{ id: string } & QueryResultRow>(
+      `SELECT id
+       FROM marketing_smart_links
+       WHERE id = $1
+         AND slug = $2
+         AND status = 'ACTIVE'
+       LIMIT 1`,
+      [input.linkId, input.slug],
+    );
+
+    if (!link.rows[0]) {
+      throw new NotFoundException({
+        code: "MARKETING_SMART_LINK_NOT_FOUND",
+        message: "Public Smart Link not found",
+      });
+    }
+
+    if (input.eventType === "DESTINATION_CLICK") {
+      const destination = await this.database.query<{ destination_code: string } & QueryResultRow>(
+        `SELECT destination_code
+         FROM marketing_smart_link_destinations
+         WHERE smart_link_id = $1
+           AND destination_code = $2
+         LIMIT 1`,
+        [input.linkId, input.destinationCode],
+      );
+
+      if (!destination.rows[0]) {
+        throw new BadRequestException({
+          code: "MARKETING_SMART_LINK_DESTINATION_NOT_FOUND",
+          message: "Destination does not belong to this Smart Link",
+        });
+      }
+    }
+
+    const id = randomUUID();
+    const occurredAt = new Date();
+
+    await this.database.query(
+      `INSERT INTO marketing_smart_link_events
+        (id, smart_link_id, event_type, destination_code, anonymous_session_id,
+         referrer, utm_source, utm_medium, utm_campaign, occurred_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [
+        id,
+        input.linkId,
+        input.eventType,
+        input.eventType === "DESTINATION_CLICK" ? input.destinationCode ?? null : null,
+        input.anonymousSessionId?.trim() || null,
+        input.referrer?.trim() || null,
+        input.utmSource?.trim() || null,
+        input.utmMedium?.trim() || null,
+        input.utmCampaign?.trim() || null,
+        occurredAt,
+      ],
+    );
+
+    return {
+      id,
+      eventType: input.eventType,
+      recordedAt: occurredAt.toISOString(),
+    };
+  }
+
   async getSmartLinks(organizationId: string) {
     const result = await this.database.query<SmartLinkRow>(
       `SELECT
