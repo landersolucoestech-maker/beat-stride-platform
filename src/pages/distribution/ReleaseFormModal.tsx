@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ArtistLookupField } from "./ArtistLookupField";
 import { ReleaseArtworkStep } from "./ReleaseArtworkStep";
 import {
   ReleaseDistributionStep,
@@ -60,13 +61,12 @@ const SECONDARY_ARTIST_ROLES = [
   "Remixer",
 ] as const;
 
-const MOCK_ARTISTS = [
+const INITIAL_MOCK_ARTISTS = [
   "Ayla Martins",
   "Caio Nunes",
   "Davi Luz",
   "Luna Reis",
   "Nilo",
-  "Various Artists",
 ] as const;
 
 const MOCK_PROJECTS = [
@@ -112,6 +112,7 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
   const [releaseType, setReleaseType] = useState("single");
   const [variousArtists, setVariousArtists] = useState(false);
   const [mainArtist, setMainArtist] = useState("");
+  const [artistBase, setArtistBase] = useState<string[]>([...INITIAL_MOCK_ARTISTS]);
   const [additionalArtists, setAdditionalArtists] = useState<AdditionalArtist[]>([]);
   const [recordLabel, setRecordLabel] = useState("");
   const [copyrightReleaseYear, setCopyrightReleaseYear] = useState("2026");
@@ -236,6 +237,17 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
     }
   };
 
+  const addArtistToBase = (artistName: string) => {
+    setArtistBase((current) =>
+      current.some(
+        (artist) =>
+          artist.toLocaleLowerCase("pt-BR") === artistName.toLocaleLowerCase("pt-BR"),
+      )
+        ? current
+        : [...current, artistName],
+    );
+  };
+
   const addArtist = () => {
     setAdditionalArtists((current) => [
       ...current,
@@ -344,16 +356,15 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
           {!variousArtists && (
             <div className="md:col-span-2">
               <Label>Artista Principal *</Label>
-              <Select value={mainArtist} onValueChange={setMainArtist}>
-                <SelectTrigger className="mt-1.5">
-                  <SelectValue placeholder="Selecionar artista principal" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MOCK_ARTISTS.filter((artist) => artist !== "Various Artists").map((artist) => (
-                    <SelectItem key={artist} value={artist}>{artist}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="mt-1.5">
+                <ArtistLookupField
+                  value={mainArtist}
+                  artists={artistBase}
+                  placeholder="Buscar ou selecionar artista principal"
+                  onChange={setMainArtist}
+                  onAddArtistToBase={addArtistToBase}
+                />
+              </div>
               <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                 <Badge variant="secondary">Intérprete</Badge>
                 <span>O Artista Principal já entra automaticamente como intérprete.</span>
@@ -386,14 +397,13 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
           <div className="space-y-3">
             {additionalArtists.map((artist) => (
               <div key={artist.id} className="grid gap-3 rounded-lg border border-border bg-muted/20 p-4 md:grid-cols-[1fr_220px_auto]">
-                <Select value={artist.name} onValueChange={(value) => updateArtist(artist.id, { name: value })}>
-                  <SelectTrigger><SelectValue placeholder="Selecionar artista secundário" /></SelectTrigger>
-                  <SelectContent>
-                    {MOCK_ARTISTS.filter((item) => item !== "Various Artists").map((item) => (
-                      <SelectItem key={item} value={item}>{item}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ArtistLookupField
+                  value={artist.name}
+                  artists={artistBase}
+                  placeholder="Buscar ou selecionar artista secundário"
+                  onChange={(value) => updateArtist(artist.id, { name: value })}
+                  onAddArtistToBase={addArtistToBase}
+                />
 
                 <Select
                   value={artist.role || undefined}
