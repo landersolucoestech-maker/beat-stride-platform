@@ -29,6 +29,7 @@ import CampaignPlan from "./pages/marketing/CampaignPlan";
 import ContentCampaign from "./pages/marketing/ContentCampaign";
 import EmailList from "./pages/marketing/EmailList";
 import ProTools from "./pages/marketing/ProTools";
+import PublicSmartLink from "./pages/marketing/PublicSmartLink";
 import SmartLinks from "./pages/marketing/SmartLinks";
 import StartMarketing from "./pages/marketing/StartMarketing";
 import Integrations from "./pages/settings/Integrations";
@@ -52,6 +53,7 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/l/:linkId/:slug" element={<PublicSmartLink />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Index />} />
