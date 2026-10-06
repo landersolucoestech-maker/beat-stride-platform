@@ -1118,7 +1118,7 @@ export class MarketingService {
     };
   }
 
-  async getSmartLinkAnalytics(organizationId: string, smartLinkId: string) {
+  async getSmartLinkAnalytics(organizationId: string, smartLinkId: string, days: 7 | 30 | 90) {
     const linkResult = await this.database.query<{
       id: string;
       title: string;
@@ -1150,13 +1150,16 @@ export class MarketingService {
            )::text
          END AS click_through_rate
        FROM marketing_smart_links smart_link
-       LEFT JOIN marketing_smart_link_events event ON event.smart_link_id = smart_link.id
+       LEFT JOIN marketing_smart_link_events event
+         ON event.smart_link_id = smart_link.id
+        AND event.occurred_at >=
+          ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($3::int - 1) * INTERVAL '1 day'))
        WHERE smart_link.organization_id = $1
          AND smart_link.id = $2
          AND smart_link.status <> 'ARCHIVED'
        GROUP BY smart_link.id, smart_link.title, smart_link.slug, smart_link.link_type
        LIMIT 1`,
-      [organizationId, smartLinkId],
+      [organizationId, smartLinkId, days],
     );
 
     const link = linkResult.rows[0];
@@ -1183,10 +1186,12 @@ export class MarketingService {
          ON event.smart_link_id = destination.smart_link_id
         AND event.event_type = 'DESTINATION_CLICK'
         AND event.destination_code = destination.destination_code
+        AND event.occurred_at >=
+          ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
        WHERE destination.smart_link_id = $1
        GROUP BY destination.destination_code, destination.url, destination.position
        ORDER BY destination.position ASC`,
-      [smartLinkId],
+      [smartLinkId, days],
     );
 
     const trafficResult = await this.database.query<{
@@ -1200,6 +1205,14 @@ export class MarketingService {
        FROM marketing_smart_link_events event
        WHERE event.smart_link_id = $1
          AND event.event_type = 'PAGE_VIEW'
+         AND event.occurred_at >=
+           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
+         AND event.occurred_at >=
+           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
+         AND event.occurred_at >=
+           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
+         AND event.occurred_at >=
+           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
        GROUP BY COALESCE(NULLIF(TRIM(event.referrer), ''), 'DIRECT')
 
        UNION ALL
@@ -1233,7 +1246,7 @@ export class MarketingService {
        GROUP BY COALESCE(NULLIF(TRIM(event.utm_campaign), ''), 'NOT_SET')
 
        ORDER BY dimension ASC, visits::bigint DESC, value ASC`,
-      [smartLinkId],
+      [smartLinkId, days],
     );
 
     const byDimension = (dimension: "REFERRER" | "UTM_SOURCE" | "UTM_MEDIUM" | "UTM_CAMPAIGN") =>
@@ -1252,7 +1265,7 @@ export class MarketingService {
     } & QueryResultRow>(
       `WITH days AS (
          SELECT generate_series(
-           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - INTERVAL '29 days')::date,
+           ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))::date,
            (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date,
            INTERVAL '1 day'
          )::date AS day
@@ -1265,7 +1278,7 @@ export class MarketingService {
          FROM marketing_smart_link_events event
          WHERE event.smart_link_id = $1
            AND event.occurred_at >=
-             ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - INTERVAL '29 days')
+             ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - (($2::int - 1) * INTERVAL '1 day'))
          GROUP BY (event.occurred_at AT TIME ZONE 'UTC')::date
        )
        SELECT
@@ -1286,11 +1299,12 @@ export class MarketingService {
        FROM days
        LEFT JOIN daily_events ON daily_events.day = days.day
        ORDER BY days.day ASC`,
-      [smartLinkId],
+      [smartLinkId, days],
     );
 
     return {
       id: link.id,
+      periodDays: days,
       title: link.title,
       slug: link.slug,
       linkType: link.link_type,
