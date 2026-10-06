@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { ExternalLink, Headphones, Link as LinkIcon } from "lucide-react";
 import { useParams } from "react-router-dom";
 
@@ -17,8 +18,57 @@ interface PublicSmartLinkView {
   destinations: Array<{ code: string; url: string }>;
 }
 
+type PublicMarketingEventType = "PAGE_VIEW" | "DESTINATION_CLICK";
+
+function getAnonymousSessionId(): string {
+  const key = "lander.marketing-link-session";
+  const existing = window.sessionStorage.getItem(key);
+  if (existing) return existing;
+
+  const created = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}`;
+  window.sessionStorage.setItem(key, created);
+  return created;
+}
+
+function getReferrerOrigin(): string | null {
+  if (!document.referrer) return null;
+  try {
+    return new URL(document.referrer).origin;
+  } catch {
+    return null;
+  }
+}
+
+async function trackPublicEvent(input: {
+  linkId: string;
+  slug: string;
+  eventType: PublicMarketingEventType;
+  destinationCode?: string;
+}): Promise<void> {
+  const params = new URLSearchParams(window.location.search);
+
+  await apiRequest(
+    `/api/v1/public/marketing-links/${input.linkId}/${input.slug}/events`,
+    {
+      method: "POST",
+      keepalive: true,
+      body: JSON.stringify({
+        eventType: input.eventType,
+        destinationCode: input.destinationCode ?? null,
+        anonymousSessionId: getAnonymousSessionId(),
+        referrer: getReferrerOrigin(),
+        utmSource: params.get("utm_source"),
+        utmMedium: params.get("utm_medium"),
+        utmCampaign: params.get("utm_campaign"),
+      }),
+    },
+    { organizationScoped: false },
+  );
+}
+
 export default function PublicSmartLink() {
   const { linkId, slug } = useParams<{ linkId: string; slug: string }>();
+  const pageViewTracked = useRef(false);
 
   const query = useQuery({
     queryKey: ["public", "marketing-link", linkId, slug],
@@ -33,6 +83,19 @@ export default function PublicSmartLink() {
     enabled: Boolean(linkId && slug),
     retry: false,
   });
+
+  useEffect(() => {
+    if (!query.data || !linkId || !slug || pageViewTracked.current) return;
+    pageViewTracked.current = true;
+
+    void trackPublicEvent({
+      linkId,
+      slug,
+      eventType: "PAGE_VIEW",
+    }).catch(() => {
+      // Tracking must never block or break the public landing page.
+    });
+  }, [linkId, query.data, slug]);
 
   if (query.isLoading) {
     return (
@@ -95,7 +158,22 @@ export default function PublicSmartLink() {
               variant="outline"
               className="h-14 w-full justify-between px-5"
             >
-              <a href={destination.url} target="_blank" rel="noreferrer">
+              <a
+                href={destination.url}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => {
+                  if (!linkId || !slug) return;
+                  void trackPublicEvent({
+                    linkId,
+                    slug,
+                    eventType: "DESTINATION_CLICK",
+                    destinationCode: destination.code,
+                  }).catch(() => {
+                    // Navigation remains available even if tracking fails.
+                  });
+                }}
+              >
                 <span>{destination.code.replace(/_/g, " ")}</span>
                 <ExternalLink className="h-4 w-4" />
               </a>
