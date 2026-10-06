@@ -554,7 +554,9 @@ export function ReleaseFormModal({
             <ReleaseTracksStep
               tracks={tracks}
               albumArtistNames={albumArtistNames}
+              artistBase={artistBase}
               onTracksChange={setTracks}
+              onAddArtistToBase={addArtistToBase}
             />
           )}
           {step === 2 && (
