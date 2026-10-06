@@ -235,6 +235,12 @@ export interface SmartLinkAnalyticsView {
     utmMediums: Array<{ value: string; visits: string }>;
     utmCampaigns: Array<{ value: string; visits: string }>;
   };
+  timeline: Array<{
+    date: string;
+    visits: string;
+    clicks: string;
+    clickThroughRate: string;
+  }>;
 }
 
 export interface SmartLinksOverview { available: boolean; items: SmartLinkView[]; }
