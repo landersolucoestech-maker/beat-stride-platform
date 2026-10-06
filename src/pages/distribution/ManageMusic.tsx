@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { ReleaseFormModal } from "./ReleaseFormModal";
 import type { CatalogReleaseListItem, CatalogReleaseStatus } from "@/features/catalog/catalog.types";
 import { useCatalogReleases } from "@/features/catalog/use-catalog-releases";
 
@@ -49,6 +50,7 @@ function releaseMatches(release: CatalogReleaseListItem, searchTerm: string, sta
 export default function ManageMusic() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [releaseModalOpen, setReleaseModalOpen] = useState(false);
   const releasesQuery = useCatalogReleases();
 
   const releases = releasesQuery.data?.items ?? [];
@@ -66,12 +68,14 @@ export default function ManageMusic() {
             <h1 className="text-2xl font-bold text-foreground">Gerenciar Músicas</h1>
             <p className="text-muted-foreground">Gerencie seus lançamentos musicais e acompanhe o status operacional.</p>
           </div>
-          <Link to="/distribution/music/new/prepare">
-            <Button className="gradient-primary text-primary-foreground">
-              <Plus className="mr-2 h-4 w-4" />
-              Distribuir Música
-            </Button>
-          </Link>
+          <Button
+            type="button"
+            className="gradient-primary text-primary-foreground"
+            onClick={() => setReleaseModalOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Distribuir Música
+          </Button>
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row">
@@ -142,6 +146,8 @@ export default function ManageMusic() {
           </div>
         )}
       </div>
+
+      <ReleaseFormModal open={releaseModalOpen} onOpenChange={setReleaseModalOpen} />
     </MainLayout>
   );
 }
