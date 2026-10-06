@@ -84,6 +84,17 @@ function parseBody<T>(schema: z.ZodType<T>, body: unknown): T {
   return parsed.data;
 }
 
+function parseUuid(value: string, field: string): string {
+  const parsed = z.string().uuid().safeParse(value);
+  if (!parsed.success) {
+    throw new BadRequestException({
+      code: "INVALID_REQUEST",
+      message: `${field} must be a valid UUID`,
+    });
+  }
+  return parsed.data;
+}
+
 @ApiTags("marketing")
 @ApiBearerAuth()
 @Controller("marketing")
@@ -114,7 +125,7 @@ export class MarketingController {
     return {
       items: await this.marketing.listCampaigns(
         context.activeOrganization.organizationId,
-        releaseId,
+        releaseId ? parseUuid(releaseId, "releaseId") : undefined,
       ),
     };
   }
@@ -146,7 +157,7 @@ export class MarketingController {
     return {
       items: await this.marketing.listCampaignContents(
         context.activeOrganization.organizationId,
-        campaignId,
+        parseUuid(campaignId, "campaignId"),
       ),
     };
   }
@@ -164,7 +175,7 @@ export class MarketingController {
     const input = parseBody(createContentSchema, body);
     return this.marketing.createCampaignContent({
       ...input,
-      campaignId,
+      campaignId: parseUuid(campaignId, "campaignId"),
       organizationId: context.activeOrganization.organizationId,
     });
   }
@@ -182,7 +193,7 @@ export class MarketingController {
     const input = parseBody(createPublicationSchema, body);
     return this.marketing.createPublicationPlan({
       ...input,
-      contentId,
+      contentId: parseUuid(contentId, "contentId"),
       organizationId: context.activeOrganization.organizationId,
     });
   }
