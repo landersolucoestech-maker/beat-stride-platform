@@ -59,12 +59,9 @@ export interface PrototypeTrack {
 }
 
 const ARTIST_ROLES = [
-  "Artista Principal",
-  "Featuring",
   "Intérprete",
+  "Featuring",
   "Remixer",
-  "DJ",
-  "Coro",
 ] as const;
 
 const PRODUCTION_ROLES = [
