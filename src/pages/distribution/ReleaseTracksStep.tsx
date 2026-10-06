@@ -55,7 +55,6 @@ export interface PrototypeTrack {
   lyrics: string;
   explicit: string;
   isrc: string;
-  trackArtistName: string;
   audioFile: File | null;
 }
 
@@ -161,7 +160,6 @@ export function createPrototypeTrack(): PrototypeTrack {
     lyrics: "",
     explicit: "none",
     isrc: "",
-    trackArtistName: "",
     audioFile: null,
   };
 }
@@ -881,37 +879,21 @@ export function ReleaseTracksStep({
                     )}
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label>ISRC</Label>
-                      <Input
-                        className="mt-1.5 uppercase"
-                        value={track.isrc}
-                        onChange={(event) =>
-                          updateTrack(track.id, {
-                            isrc: event.target.value.toUpperCase(),
-                          })
-                        }
-                        placeholder="BR-ABC-26-00001"
-                      />
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Opcional no protótipo.
-                      </p>
-                    </div>
-
-                    <div>
-                      <Label>Nome do Artista na Faixa</Label>
-                      <Input
-                        className="mt-1.5"
-                        value={track.trackArtistName}
-                        onChange={(event) =>
-                          updateTrack(track.id, {
-                            trackArtistName: event.target.value,
-                          })
-                        }
-                        placeholder="Use somente se diferir do artista principal"
-                      />
-                    </div>
+                  <div className="max-w-md">
+                    <Label>ISRC</Label>
+                    <Input
+                      className="mt-1.5 uppercase"
+                      value={track.isrc}
+                      onChange={(event) =>
+                        updateTrack(track.id, {
+                          isrc: event.target.value.toUpperCase(),
+                        })
+                      }
+                      placeholder="BR-ABC-26-00001"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Opcional no protótipo.
+                    </p>
                   </div>
                 </div>
               </section>
