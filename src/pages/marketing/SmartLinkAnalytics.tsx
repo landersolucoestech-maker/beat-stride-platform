@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ArrowLeft, CalendarDays, ExternalLink, Link as LinkIcon, MousePointerClick, Route } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -6,6 +7,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { SmartLinkAnalyticsDays } from "@/features/marketing/marketing.types";
 import { useSmartLinkAnalytics } from "@/features/marketing/use-marketing";
 import { formatDecimalPtBr } from "@/lib/format-money";
 
@@ -63,27 +65,45 @@ function formatTimelineDate(date: string, withYear = false): string {
 
 export default function SmartLinkAnalytics() {
   const { smartLinkId } = useParams<{ smartLinkId: string }>();
-  const query = useSmartLinkAnalytics(smartLinkId);
+  const [days, setDays] = useState<SmartLinkAnalyticsDays>(30);
+  const query = useSmartLinkAnalytics(smartLinkId, days);
   const data = query.data;
 
   return (
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-start gap-3">
-          <Button asChild variant="ghost" size="icon">
-            <Link to="/marketing/smartlinks" aria-label="Voltar para Smart Links">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
-              <LinkIcon className="h-4 w-4" />
-              Marketing
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Button asChild variant="ghost" size="icon">
+              <Link to="/marketing/smartlinks" aria-label="Voltar para Smart Links">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
+                <LinkIcon className="h-4 w-4" />
+                Marketing
+              </div>
+              <h1 className="text-2xl font-bold text-foreground">Analytics do Smart Link</h1>
+              <p className="text-muted-foreground">
+                {data?.title ?? "Visitas e cliques por destino."}
+              </p>
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Analytics do Smart Link</h1>
-            <p className="text-muted-foreground">
-              {data?.title ?? "Visitas e cliques por destino."}
-            </p>
+          </div>
+
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+            {([7, 30, 90] as SmartLinkAnalyticsDays[]).map((period) => (
+              <Button
+                key={period}
+                type="button"
+                size="sm"
+                variant={days === period ? "default" : "ghost"}
+                onClick={() => setDays(period)}
+                disabled={query.isFetching && days === period}
+              >
+                {period} dias
+              </Button>
+            ))}
           </div>
         </div>
 
@@ -128,7 +148,7 @@ export default function SmartLinkAnalytics() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CalendarDays className="h-5 w-5 text-primary" />
-                  Evolução — últimos 30 dias
+                  Evolução — últimos {data.periodDays} dias
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
