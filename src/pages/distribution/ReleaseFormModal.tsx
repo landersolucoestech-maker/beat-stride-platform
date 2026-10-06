@@ -21,6 +21,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import {
+  createPrototypeTrack,
+  ReleaseTracksStep,
+  type PrototypeTrack,
+} from "./ReleaseTracksStep";
 
 const STEPS = [
   "Informações do álbum",
@@ -140,11 +145,22 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
   const [copyrightHolder, setCopyrightHolder] = useState("");
   const [ownUpc, setOwnUpc] = useState(false);
   const [upc, setUpc] = useState("");
+  const [tracks, setTracks] = useState<PrototypeTrack[]>([createPrototypeTrack()]);
 
   const selectedProject = useMemo(
     () => MOCK_PROJECTS.find((project) => project.id === projectId),
     [projectId],
   );
+
+  const albumArtistNames = useMemo(() => {
+    const names = new Set<string>();
+    if (variousArtists) names.add("Various Artists");
+    if (!variousArtists && mainArtist) names.add(mainArtist);
+    additionalArtists.forEach((artist) => {
+      if (artist.name) names.add(artist.name);
+    });
+    return Array.from(names);
+  }, [additionalArtists, mainArtist, variousArtists]);
 
   const applyProject = (value: string) => {
     setProjectId(value);
@@ -159,6 +175,49 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
     setSecondaryGenre(project.secondaryGenre);
     setLanguage(project.language);
     setRecordLabel(project.recordLabel);
+
+    if (project.id === "project-1") {
+      setTracks([
+        {
+          ...createPrototypeTrack(),
+          title: "Noite Inteira",
+          aiUsage: "Criação Humana, Sem IA",
+          language: "Português (Brasil)",
+          lyrics: "Hoje eu só quero dançar até o dia clarear...",
+          isrc: "BR-LND-26-00001",
+          composers: [{ id: crypto.randomUUID(), name: "Luna Reis" }],
+          productionCredits: [
+            { id: crypto.randomUUID(), name: "Caio Nunes", role: "Produtor" },
+          ],
+        },
+      ]);
+    }
+
+    if (project.id === "project-2") {
+      setTracks([
+        {
+          ...createPrototypeTrack(),
+          title: "Horizonte",
+          aiUsage: "Criação Humana, Assistida por IA",
+          language: "Português (Brasil)",
+          lyrics: "No horizonte eu vejo a estrada se abrir...",
+          isrc: "BR-LND-26-00011",
+          composers: [{ id: crypto.randomUUID(), name: "Davi Luz" }],
+          productionCredits: [
+            { id: crypto.randomUUID(), name: "Nilo", role: "Produtor" },
+          ],
+        },
+        {
+          ...createPrototypeTrack(),
+          title: "Depois da Chuva",
+          aiUsage: "Criação Humana, Sem IA",
+          language: "Português (Brasil)",
+          lyrics: "Depois da chuva a cidade volta a respirar...",
+          isrc: "BR-LND-26-00012",
+          composers: [{ id: crypto.randomUUID(), name: "Davi Luz" }],
+        },
+      ]);
+    }
   };
 
   const addArtist = () => {
@@ -518,7 +577,13 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
 
         <div className="flex-1 overflow-y-auto px-6 py-6">
           {step === 0 && renderStepOne()}
-          {step === 1 && renderPlaceholderStep("Envio de faixas", "No próximo bloco entram todos os campos de cada faixa: créditos, IA, letra, ISRC e áudio.")}
+          {step === 1 && (
+            <ReleaseTracksStep
+              tracks={tracks}
+              albumArtistNames={albumArtistNames}
+              onTracksChange={setTracks}
+            />
+          )}
           {step === 2 && renderPlaceholderStep("Capa do álbum", "Esta etapa receberá as regras de JPG/PNG, 3000 × 3000 px, RGB e validações visuais do arquivo de referência.")}
           {step === 3 && renderPlaceholderStep("Preferências de distribuição", "Esta etapa receberá distribuidora conectada, território, data/hora, fuso, pré-venda, preço e notas.")}
           {step === 4 && renderPlaceholderStep("Revisão", "Esta etapa receberá o preview completo do lançamento e os alertas antes de criar o rascunho.")}
