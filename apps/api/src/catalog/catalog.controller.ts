@@ -20,23 +20,12 @@ const createReleaseSchema = z
     primaryGenre: z.string().trim().min(1).max(120),
     explicit: z.boolean(),
     tracks: z.array(z.object({ title: z.string().trim().min(1).max(240), explicit: z.boolean() })).min(1).max(200),
-    provisionalSplits: z.array(
-      z.object({
-        name: z.string().trim().min(1).max(240),
-        role: z.enum(["PRIMARY_ARTIST", "FEATURED_ARTIST", "PRODUCER", "COMPOSER", "OTHER"]),
-        percentage: z.number().min(0).max(100),
-      }),
-    ).min(1).max(200),
     pendingAssets: z.object({
       artwork: pendingFileSchema.nullable(),
       tracks: z.array(pendingFileSchema.extend({ trackIndex: z.number().int().min(0) })).max(200),
     }),
   })
   .superRefine((value, context) => {
-    const splitMicros = value.provisionalSplits.reduce((sum, split) => sum + Math.round(split.percentage * 1_000_000), 0);
-    if (splitMicros !== 100_000_000) {
-      context.addIssue({ code: "custom", path: ["provisionalSplits"], message: "Splits must total exactly 100 percent" });
-    }
     for (const [index, asset] of value.pendingAssets.tracks.entries()) {
       if (asset.trackIndex >= value.tracks.length) {
         context.addIssue({ code: "custom", path: ["pendingAssets", "tracks", index, "trackIndex"], message: "Track asset index is outside the track list" });
