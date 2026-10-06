@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Filter, Plus, Search } from "lucide-react";
+import { Disc3, Filter, Plus, Search, ShieldCheck } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import { useCatalogReleases } from "@/features/catalog/use-catalog-releases";
 const statusFilters = [
   { value: "all", label: "Todos" },
   { value: "DRAFT", label: "Rascunho" },
-  { value: "SUBMITTED", label: "Em revisão" },
+  { value: "SUBMITTED", label: "Aguardando aprovação" },
   { value: "SCHEDULED", label: "Agendado" },
   { value: "LIVE", label: "Ativo" },
   { value: "REJECTED", label: "Rejeitado" },
@@ -144,7 +144,9 @@ export default function ManageMusic() {
                       </div>
                     )}
                     <div className="absolute right-2 top-2">
-                      <StatusBadge status="review" />
+                      <span className="inline-flex items-center rounded-full bg-warning/90 px-2.5 py-1 text-[11px] font-medium text-warning-foreground shadow-sm">
+                        Aguardando aprovação
+                      </span>
                     </div>
                   </div>
 
@@ -162,6 +164,13 @@ export default function ManageMusic() {
                       <span className="truncate text-xs text-muted-foreground">
                         {formatReleaseDate(release.releaseDate)}
                       </span>
+                    </div>
+
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/20 bg-warning/5 px-2.5 py-2">
+                      <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
+                      <p className="text-[11px] leading-4 text-muted-foreground">
+                        Aguardando aprovação do Administrador da Plataforma.
+                      </p>
                     </div>
                   </div>
                 </div>
