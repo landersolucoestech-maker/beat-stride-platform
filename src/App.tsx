@@ -30,6 +30,7 @@ import ContentCampaign from "./pages/marketing/ContentCampaign";
 import EmailList from "./pages/marketing/EmailList";
 import ProTools from "./pages/marketing/ProTools";
 import PublicSmartLink from "./pages/marketing/PublicSmartLink";
+import SmartLinkAnalytics from "./pages/marketing/SmartLinkAnalytics";
 import SmartLinks from "./pages/marketing/SmartLinks";
 import StartMarketing from "./pages/marketing/StartMarketing";
 import Integrations from "./pages/settings/Integrations";
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/marketing/campaigns/:campaignId/plan" element={<CampaignPlan />} />
             <Route path="/marketing/campaigns/:campaignId/content" element={<ContentCampaign />} />
             <Route path="/marketing/smartlinks" element={<SmartLinks />} />
+            <Route path="/marketing/smartlinks/:smartLinkId/analytics" element={<SmartLinkAnalytics />} />
             <Route path="/marketing/tools" element={<ProTools />} />
             <Route path="/marketing/emails" element={<EmailList />} />
 
