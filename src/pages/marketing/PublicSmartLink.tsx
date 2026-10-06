@@ -96,7 +96,7 @@ export default function PublicSmartLink() {
               className="h-14 w-full justify-between px-5"
             >
               <a href={destination.url} target="_blank" rel="noreferrer">
-                <span>{destination.code.replaceAll("_", " ")}</span>
+                <span>{destination.code.replace(/_/g, " ")}</span>
                 <ExternalLink className="h-4 w-4" />
               </a>
             </Button>
