@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BarChart3, Copy, ExternalLink, Link as LinkIcon, Plus, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -351,9 +352,11 @@ export default function SmartLinks() {
                     ))}
                   </div>
 
-                  <Button variant="outline" size="sm" className="w-full" disabled>
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    Ver analytics
+                  <Button asChild variant="outline" size="sm" className="w-full">
+                    <Link to={`/marketing/smartlinks/${link.id}/analytics`}>
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      Ver analytics
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
