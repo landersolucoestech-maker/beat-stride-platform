@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { ReleaseFormModal } from "./ReleaseFormModal";
+import {
+  ReleaseFormModal,
+  type PrototypeReleaseDraft,
+} from "./ReleaseFormModal";
 import type { CatalogReleaseListItem, CatalogReleaseStatus } from "@/features/catalog/catalog.types";
 import { useCatalogReleases } from "@/features/catalog/use-catalog-releases";
 
@@ -51,6 +54,7 @@ export default function ManageMusic() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [releaseModalOpen, setReleaseModalOpen] = useState(false);
+  const [prototypeDrafts, setPrototypeDrafts] = useState<PrototypeReleaseDraft[]>([]);
   const releasesQuery = useCatalogReleases();
 
   const releases = releasesQuery.data?.items ?? [];
@@ -58,6 +62,19 @@ export default function ManageMusic() {
     () => releases.filter((release) => releaseMatches(release, searchTerm, statusFilter)),
     [releases, searchTerm, statusFilter],
   );
+  const filteredPrototypeDrafts = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLocaleLowerCase("pt-BR");
+
+    return prototypeDrafts.filter((release) => {
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        release.title.toLocaleLowerCase("pt-BR").includes(normalizedSearch) ||
+        release.artistName.toLocaleLowerCase("pt-BR").includes(normalizedSearch);
+      const matchesStatus = statusFilter === "all" || statusFilter === "DRAFT";
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [prototypeDrafts, searchTerm, statusFilter]);
   const dataUnavailable = releasesQuery.data?.available === false;
 
   return (
@@ -93,6 +110,65 @@ export default function ManageMusic() {
             </SelectContent>
           </Select>
         </div>
+
+        {filteredPrototypeDrafts.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Rascunhos desta sessão</h2>
+                <p className="text-xs text-muted-foreground">
+                  Lançamentos criados localmente no protótipo, sem backend.
+                </p>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {filteredPrototypeDrafts.length} {filteredPrototypeDrafts.length === 1 ? "rascunho" : "rascunhos"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {filteredPrototypeDrafts.map((release) => (
+                <div
+                  key={release.id}
+                  className="group overflow-hidden rounded-xl border border-primary/30 bg-card"
+                >
+                  <div className="relative aspect-square bg-muted">
+                    {release.coverUrl ? (
+                      <img
+                        src={release.coverUrl}
+                        alt={release.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Disc3 className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute right-2 top-2">
+                      <StatusBadge status="draft" />
+                    </div>
+                  </div>
+
+                  <div className="p-3">
+                    <h3 className="truncate text-sm font-medium text-foreground">
+                      {release.title}
+                    </h3>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {release.artistName}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        {release.type}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {formatReleaseDate(release.releaseDate)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {releasesQuery.isLoading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -147,7 +223,11 @@ export default function ManageMusic() {
         )}
       </div>
 
-      <ReleaseFormModal open={releaseModalOpen} onOpenChange={setReleaseModalOpen} />
+      <ReleaseFormModal
+        open={releaseModalOpen}
+        onOpenChange={setReleaseModalOpen}
+        onCreateDraft={(draft) => setPrototypeDrafts((current) => [draft, ...current])}
+      />
     </MainLayout>
   );
 }
