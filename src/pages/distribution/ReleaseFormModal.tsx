@@ -27,6 +27,10 @@ import {
   type PrototypeDistributionPreferences,
 } from "./ReleaseDistributionStep";
 import {
+  getReleaseReviewIssues,
+  ReleaseReviewStep,
+} from "./ReleaseReviewStep";
+import {
   createPrototypeTrack,
   ReleaseTracksStep,
   type PrototypeTrack,
@@ -179,6 +183,36 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
     });
     return Array.from(names);
   }, [additionalArtists, mainArtist, variousArtists]);
+
+  const reviewIssues = useMemo(
+    () =>
+      getReleaseReviewIssues({
+        title,
+        mainArtist,
+        variousArtists,
+        primaryGenre,
+        secondaryGenre,
+        recordLabel,
+        copyrightReleaseYear,
+        copyrightRecordingYear,
+        coverFile,
+        tracks,
+        distribution,
+      }),
+    [
+      copyrightRecordingYear,
+      copyrightReleaseYear,
+      coverFile,
+      distribution,
+      mainArtist,
+      primaryGenre,
+      recordLabel,
+      secondaryGenre,
+      title,
+      tracks,
+      variousArtists,
+    ],
+  );
 
   const applyProject = (value: string) => {
     setProjectId(value);
@@ -618,7 +652,27 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
               onChange={setDistribution}
             />
           )}
-          {step === 4 && renderPlaceholderStep("Revisão", "Esta etapa receberá o preview completo do lançamento e os alertas antes de criar o rascunho.")}
+          {step === 4 && (
+            <ReleaseReviewStep
+              title={title}
+              releaseType={releaseType}
+              mainArtist={mainArtist}
+              variousArtists={variousArtists}
+              albumArtistNames={albumArtistNames}
+              primaryGenre={primaryGenre}
+              secondaryGenre={secondaryGenre}
+              recordLabel={recordLabel}
+              copyrightReleaseYear={copyrightReleaseYear}
+              copyrightRecordingYear={copyrightRecordingYear}
+              copyrightHolder={copyrightHolder}
+              ownUpc={ownUpc}
+              upc={upc}
+              coverFile={coverFile}
+              coverPreview={coverPreview}
+              tracks={tracks}
+              distribution={distribution}
+            />
+          )}
         </div>
 
         <div className="flex items-center justify-between border-t border-border bg-background px-6 py-4">
@@ -637,7 +691,12 @@ export function ReleaseFormModal({ open, onOpenChange }: ReleaseFormModalProps) 
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button type="button" className="gradient-primary text-primary-foreground" onClick={resetAndClose}>
+            <Button
+              type="button"
+              className="gradient-primary text-primary-foreground"
+              onClick={resetAndClose}
+              disabled={reviewIssues.length > 0}
+            >
               Criar Lançamento
             </Button>
           )}
