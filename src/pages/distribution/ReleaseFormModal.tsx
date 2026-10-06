@@ -69,31 +69,6 @@ const INITIAL_MOCK_ARTISTS = [
   "Nilo",
 ] as const;
 
-const MOCK_PROJECTS = [
-  {
-    id: "project-1",
-    label: "Projeto — Noite Inteira",
-    title: "Noite Inteira",
-    releaseType: "single",
-    mainArtist: "Luna Reis",
-    primaryGenre: "Pop",
-    secondaryGenre: "Eletrônica",
-    language: "Português (Brasil)",
-    recordLabel: "Luna Reis",
-  },
-  {
-    id: "project-2",
-    label: "Projeto — Horizonte",
-    title: "Horizonte",
-    releaseType: "ep",
-    mainArtist: "Davi Luz",
-    primaryGenre: "MPB",
-    secondaryGenre: "Alternativo",
-    language: "Português (Brasil)",
-    recordLabel: "Lander Records",
-  },
-] as const;
-
 interface AdditionalArtist {
   id: string;
   name: string;
@@ -122,7 +97,6 @@ export function ReleaseFormModal({
   onCreateDraft,
 }: ReleaseFormModalProps) {
   const [step, setStep] = useState(0);
-  const [projectId, setProjectId] = useState("none");
   const [title, setTitle] = useState("");
   const [releaseType, setReleaseType] = useState("single");
   const [variousArtists, setVariousArtists] = useState(false);
@@ -149,11 +123,6 @@ export function ReleaseFormModal({
     pricing: "standard",
     notes: "",
   });
-
-  const selectedProject = useMemo(
-    () => MOCK_PROJECTS.find((project) => project.id === projectId),
-    [projectId],
-  );
 
   const albumArtistNames = useMemo(() => {
     const names = new Set<string>();
@@ -190,67 +159,6 @@ export function ReleaseFormModal({
       variousArtists,
     ],
   );
-
-  const applyProject = (value: string) => {
-    setProjectId(value);
-    const project = MOCK_PROJECTS.find((item) => item.id === value);
-    if (!project) return;
-
-    setTitle(project.title);
-    setReleaseType(project.releaseType);
-    setVariousArtists(false);
-    setMainArtist(project.mainArtist);
-    setRecordLabel(project.recordLabel);
-
-    if (project.id === "project-1") {
-      setTracks([
-        {
-          ...createPrototypeTrack(),
-          title: "Noite Inteira",
-          primaryGenre: project.primaryGenre,
-          secondaryGenre: project.secondaryGenre,
-          aiUsage: "Criação Humana, Sem IA",
-          language: project.language,
-          lyrics: "Hoje eu só quero dançar até o dia clarear...",
-          isrc: "BR-LND-26-00001",
-          composers: [{ id: crypto.randomUUID(), name: "Luna Reis" }],
-          productionCredits: [
-            { id: crypto.randomUUID(), name: "Caio Nunes", role: "Produtor" },
-          ],
-        },
-      ]);
-    }
-
-    if (project.id === "project-2") {
-      setTracks([
-        {
-          ...createPrototypeTrack(),
-          title: "Horizonte",
-          primaryGenre: project.primaryGenre,
-          secondaryGenre: project.secondaryGenre,
-          aiUsage: "Criação Humana, Assistida por IA",
-          language: project.language,
-          lyrics: "No horizonte eu vejo a estrada se abrir...",
-          isrc: "BR-LND-26-00011",
-          composers: [{ id: crypto.randomUUID(), name: "Davi Luz" }],
-          productionCredits: [
-            { id: crypto.randomUUID(), name: "Nilo", role: "Produtor" },
-          ],
-        },
-        {
-          ...createPrototypeTrack(),
-          title: "Depois da Chuva",
-          primaryGenre: project.primaryGenre,
-          secondaryGenre: project.secondaryGenre,
-          aiUsage: "Criação Humana, Sem IA",
-          language: project.language,
-          lyrics: "Depois da chuva a cidade volta a respirar...",
-          isrc: "BR-LND-26-00012",
-          composers: [{ id: crypto.randomUUID(), name: "Davi Luz" }],
-        },
-      ]);
-    }
-  };
 
   const addArtistToBase = (artistName: string) => {
     setArtistBase((current) =>
@@ -308,49 +216,10 @@ export function ReleaseFormModal({
 
   const renderStepOne = () => (
     <div className="mx-auto max-w-5xl space-y-5">
-      <section className="rounded-xl border border-border bg-muted/20 p-4">
-        <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-center">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                1
-              </span>
-              <h3 className="font-semibold text-foreground">Projeto vinculado</h3>
-            </div>
-            <p className="mt-1 pl-9 text-xs text-muted-foreground">
-              Opcional. Use um projeto para pré-preencher o lançamento.
-            </p>
-          </div>
-
-          <div>
-            <Select value={projectId} onValueChange={applyProject}>
-              <SelectTrigger className="w-full bg-background">
-                <SelectValue placeholder="Selecionar projeto" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Não vincular a projeto</SelectItem>
-                {MOCK_PROJECTS.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {selectedProject && (
-              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <Check className="h-4 w-4 text-primary" />
-                Dados preenchidos a partir de {selectedProject.label}.
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
       <section className="rounded-xl border border-border bg-card p-5">
         <div className="mb-5 flex items-start gap-3">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            2
+            1
           </span>
           <div>
             <h3 className="font-semibold text-foreground">Dados do lançamento</h3>
@@ -411,7 +280,7 @@ export function ReleaseFormModal({
       <section className="rounded-xl border border-border bg-card p-5">
         <div className="mb-5 flex items-start gap-3">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            3
+            2
           </span>
           <div>
             <h3 className="font-semibold text-foreground">Artistas</h3>
@@ -523,7 +392,7 @@ export function ReleaseFormModal({
       <section className="rounded-xl border border-border bg-card p-5">
         <div className="mb-5 flex items-start gap-3">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            4
+            3
           </span>
           <div>
             <h3 className="font-semibold text-foreground">Direitos e identificação</h3>
