@@ -58,8 +58,6 @@ const SECONDARY_ARTIST_ROLES = [
   "Intérprete",
   "Featuring",
   "Remixer",
-  "DJ",
-  "Coro",
 ] as const;
 
 const GENRES = [
