@@ -25,6 +25,12 @@ jobs:
           node-version: 22
       - name: Install frontend dependencies
         run: npm install --no-audit --no-fund
+      - name: Typecheck frontend
+        run: npm run typecheck:frontend
+      - name: Typecheck shared modules
+        run: npm run typecheck:modules
+      - name: Run domain tests
+        run: npm run test:domain
       - name: Build frontend
         run: npm run build -- --base=/beat-stride-platform/
 
