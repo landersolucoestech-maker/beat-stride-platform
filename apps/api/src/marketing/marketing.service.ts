@@ -269,16 +269,262 @@ export class MarketingService {
       });
     }
 
+    const defaultCampaignLabels: Record<MarketingCampaignType, string> = {
+      PRE_SAVE: "Pré-save",
+      DSP_PITCH: "DSP Pitch",
+      PROMOTION: "Promoção",
+      PLAYLIST_TRACKING: "Playlists",
+      CONTENT_PROMOTION: "Conteúdos",
+    };
+    const name = input.name?.trim() || `${releaseRow.title} — ${defaultCampaignLabels[input.campaignType]}`;
+
+    const hasBudgetAmount = input.budgetMinor !== undefined && input.budgetMinor !== null;
+    const hasBudgetCurrency = input.budgetCurrency !== undefined && input.budgetCurrency !== null;
+    if (hasBudgetAmount !== hasBudgetCurrency) {
+      throw new BadRequestException({
+        code: "MARKETING_CAMPAIGN_BUDGET_INCOMPLETE",
+        message: "Budget amount and currency must be provided together",
+      });
+    }
+
     const id = randomUUID();
     const now = new Date();
     await this.database.query(
       `INSERT INTO marketing_campaigns
-         (id, organization_id, release_id, campaign_type, status, starts_at, ends_at, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, 'DRAFT', $5, $6, $7, $7)`,
-      [id, input.organizationId, input.releaseId, input.campaignType, startsAt, endsAt, now],
+         (id, organization_id, release_id, campaign_type, name, objective, focus_recording_id, brief,
+          budget_minor, budget_currency, status, starts_at, ends_at, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'DRAFT', $11, $12, $13, $13)`,
+      [
+        id,
+        input.organizationId,
+        input.releaseId,
+        input.campaignType,
+        name,
+        input.objective?.trim() || null,
+        input.focusRecordingId ?? null,
+        input.brief?.trim() || null,
+        input.budgetMinor ?? null,
+        input.budgetCurrency ?? null,
+        startsAt,
+        endsAt,
+        now,
+      ],
     );
 
     return this.mapCampaign(await this.requireCampaign(input.organizationId, id));
+  }
+
+  async listCampaignTasks(organizationId: string, campaignId: string) {
+    await this.requireCampaign(organizationId, campaignId);
+    const result = await this.database.query<CampaignTaskRow>(
+      `SELECT
+         id, campaign_id, phase, category, title, description, status, assignee_user_id,
+         due_at, completed_at, sort_order, created_at, updated_at
+       FROM marketing_campaign_tasks
+       WHERE organization_id = $1 AND campaign_id = $2
+       ORDER BY
+         CASE phase
+           WHEN 'PRE_RELEASE' THEN 1
+           WHEN 'RELEASE_DAY' THEN 2
+           WHEN 'POST_RELEASE' THEN 3
+           ELSE 4
+         END,
+         due_at NULLS LAST,
+         sort_order ASC,
+         created_at ASC`,
+      [organizationId, campaignId],
+    );
+    return result.rows.map((row) => this.mapCampaignTask(row));
+  }
+
+  async createCampaignTask(input: {
+    organizationId: string;
+    campaignId: string;
+    phase: MarketingCampaignPhase;
+    category: MarketingTaskCategory;
+    title: string;
+    description?: string | null | undefined;
+    assigneeUserId?: string | null | undefined;
+    dueAt?: string | null | undefined;
+    sortOrder: number;
+  }) {
+    const campaign = await this.requireCampaign(input.organizationId, input.campaignId);
+    if (campaign.status === "COMPLETED" || campaign.status === "CANCELLED") {
+      throw new BadRequestException({
+        code: "MARKETING_CAMPAIGN_NOT_EDITABLE",
+        message: "Completed or cancelled campaigns cannot receive new tasks",
+      });
+    }
+
+    if (input.assigneeUserId) {
+      const membership = await this.database.query<{ user_id: string } & QueryResultRow>(
+        `SELECT membership.user_id
+         FROM organization_memberships membership
+         WHERE membership.organization_id = $1
+           AND membership.user_id = $2
+           AND membership.status = 'ACTIVE'
+         LIMIT 1`,
+        [input.organizationId, input.assigneeUserId],
+      );
+      if (!membership.rows[0]) {
+        throw new BadRequestException({
+          code: "MARKETING_TASK_ASSIGNEE_NOT_MEMBER",
+          message: "Task assignee must be an active organization member",
+        });
+      }
+    }
+
+    const id = randomUUID();
+    const now = new Date();
+    const dueAt = input.dueAt ? new Date(input.dueAt) : null;
+    await this.database.query(
+      `INSERT INTO marketing_campaign_tasks
+         (id, organization_id, campaign_id, phase, category, title, description, status,
+          assignee_user_id, due_at, completed_at, sort_order, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'TODO', $8, $9, NULL, $10, $11, $11)`,
+      [
+        id,
+        input.organizationId,
+        input.campaignId,
+        input.phase,
+        input.category,
+        input.title.trim(),
+        input.description?.trim() || null,
+        input.assigneeUserId ?? null,
+        dueAt,
+        input.sortOrder,
+        now,
+      ],
+    );
+
+    const result = await this.database.query<CampaignTaskRow>(
+      `SELECT id, campaign_id, phase, category, title, description, status, assignee_user_id,
+              due_at, completed_at, sort_order, created_at, updated_at
+       FROM marketing_campaign_tasks
+       WHERE organization_id = $1 AND id = $2
+       LIMIT 1`,
+      [input.organizationId, id],
+    );
+    const task = result.rows[0];
+    if (!task) throw new Error("MARKETING_TASK_CREATE_INVARIANT_BROKEN");
+    return this.mapCampaignTask(task);
+  }
+
+  async updateCampaignTaskStatus(input: {
+    organizationId: string;
+    taskId: string;
+    status: MarketingTaskStatus;
+  }) {
+    const result = await this.database.query<CampaignTaskRow & { campaign_status: string }>(
+      `SELECT task.id, task.campaign_id, task.phase, task.category, task.title, task.description,
+              task.status, task.assignee_user_id, task.due_at, task.completed_at, task.sort_order,
+              task.created_at, task.updated_at, campaign.status AS campaign_status
+       FROM marketing_campaign_tasks task
+       JOIN marketing_campaigns campaign ON campaign.id = task.campaign_id
+       WHERE task.organization_id = $1 AND task.id = $2 AND campaign.organization_id = $1
+       LIMIT 1`,
+      [input.organizationId, input.taskId],
+    );
+    const task = result.rows[0];
+    if (!task) {
+      throw new NotFoundException({
+        code: "MARKETING_TASK_NOT_FOUND",
+        message: "Campaign task not found for active organization",
+      });
+    }
+    if (["COMPLETED", "CANCELLED"].includes(task.campaign_status)) {
+      throw new BadRequestException({
+        code: "MARKETING_CAMPAIGN_NOT_EDITABLE",
+        message: "Tasks in a closed campaign cannot change state",
+      });
+    }
+
+    const allowedTransitions: Record<MarketingTaskStatus, MarketingTaskStatus[]> = {
+      TODO: ["IN_PROGRESS", "BLOCKED", "DONE", "CANCELLED"],
+      IN_PROGRESS: ["BLOCKED", "DONE", "CANCELLED"],
+      BLOCKED: ["IN_PROGRESS", "DONE", "CANCELLED"],
+      DONE: [],
+      CANCELLED: [],
+    };
+    if (input.status !== task.status && !allowedTransitions[task.status].includes(input.status)) {
+      throw new BadRequestException({
+        code: "MARKETING_TASK_STATE_TRANSITION_INVALID",
+        message: "Requested campaign task state transition is invalid",
+      });
+    }
+
+    if (input.status !== task.status) {
+      const now = new Date();
+      await this.database.query(
+        `UPDATE marketing_campaign_tasks
+         SET status = $3,
+             completed_at = CASE WHEN $3 = 'DONE' THEN $4 ELSE NULL END,
+             updated_at = $4
+         WHERE organization_id = $1 AND id = $2`,
+        [input.organizationId, input.taskId, input.status, now],
+      );
+    }
+
+    const refreshed = await this.database.query<CampaignTaskRow>(
+      `SELECT id, campaign_id, phase, category, title, description, status, assignee_user_id,
+              due_at, completed_at, sort_order, created_at, updated_at
+       FROM marketing_campaign_tasks
+       WHERE organization_id = $1 AND id = $2
+       LIMIT 1`,
+      [input.organizationId, input.taskId],
+    );
+    const row = refreshed.rows[0];
+    if (!row) throw new Error("MARKETING_TASK_UPDATE_INVARIANT_BROKEN");
+    return this.mapCampaignTask(row);
+  }
+
+  async getCampaignCalendar(organizationId: string, campaignId: string) {
+    await this.requireCampaign(organizationId, campaignId);
+    const result = await this.database.query<CampaignCalendarRow>(
+      `SELECT
+         task.id,
+         'TASK'::text AS source_type,
+         task.title,
+         task.due_at AS starts_at,
+         task.status,
+         task.phase,
+         NULL::text AS channel_code
+       FROM marketing_campaign_tasks task
+       WHERE task.organization_id = $1
+         AND task.campaign_id = $2
+         AND task.due_at IS NOT NULL
+         AND task.status <> 'CANCELLED'
+
+       UNION ALL
+
+       SELECT
+         publication.id,
+         'PUBLICATION'::text AS source_type,
+         content.title,
+         publication.scheduled_for AS starts_at,
+         publication.status,
+         NULL::text AS phase,
+         publication.channel_code
+       FROM marketing_content_publications publication
+       JOIN marketing_campaign_contents content ON content.id = publication.content_id
+       WHERE publication.organization_id = $1
+         AND content.campaign_id = $2
+         AND publication.scheduled_for IS NOT NULL
+         AND publication.status <> 'CANCELLED'
+
+       ORDER BY starts_at ASC, source_type ASC, id ASC`,
+      [organizationId, campaignId],
+    );
+
+    return result.rows.map((row) => ({
+      id: row.id,
+      sourceType: row.source_type,
+      title: row.title,
+      startsAt: row.starts_at.toISOString(),
+      status: row.status,
+      phase: row.phase,
+      channel: row.channel_code,
+    }));
   }
 
   async listCampaignContents(organizationId: string, campaignId: string) {
