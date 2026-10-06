@@ -160,6 +160,18 @@ function parseUuid(value: string, field: string): string {
   return parsed.data;
 }
 
+function parseSmartLinkAnalyticsDays(value: string | undefined): 7 | 30 | 90 {
+  if (value === undefined) return 30;
+  const parsed = z.enum(["7", "30", "90"]).safeParse(value);
+  if (!parsed.success) {
+    throw new BadRequestException({
+      code: "INVALID_REQUEST",
+      message: "days must be one of 7, 30 or 90",
+    });
+  }
+  return Number(parsed.data) as 7 | 30 | 90;
+}
+
 @ApiTags("marketing")
 @ApiBearerAuth()
 @Controller("marketing")
@@ -370,11 +382,13 @@ export class MarketingController {
     @Headers("authorization") authorization: string | undefined,
     @Headers("x-organization-id") organizationId: string | undefined,
     @Param("smartLinkId") smartLinkId: string,
+    @Query("days") days: string | undefined,
   ) {
     const context = await this.sessions.requireOrganizationPermission(authorization, organizationId, "marketing.read");
     return this.marketing.getSmartLinkAnalytics(
       context.activeOrganization.organizationId,
       parseUuid(smartLinkId, "smartLinkId"),
+      parseSmartLinkAnalyticsDays(days),
     );
   }
 
