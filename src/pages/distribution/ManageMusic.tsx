@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Filter, Plus, Search, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Disc3, Filter, Plus, Search, ShieldCheck, X } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,7 @@ export default function ManageMusic() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [releaseModalOpen, setReleaseModalOpen] = useState(false);
   const [prototypeDrafts, setPrototypeDrafts] = useState<PrototypeReleaseDraft[]>([]);
+  const [submissionNotice, setSubmissionNotice] = useState(false);
   const releasesQuery = useCatalogReleases();
 
   const releases = releasesQuery.data?.items ?? [];
@@ -94,6 +95,30 @@ export default function ManageMusic() {
             Distribuir Música
           </Button>
         </div>
+
+        {submissionNotice && (
+          <div className="flex items-start gap-3 rounded-xl border border-success/30 bg-success/5 px-4 py-3">
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">
+                Lançamento enviado para aprovação
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                O envio foi concluído e está aguardando análise. Somente o Administrador da Plataforma pode aprovar e liberar a distribuição.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => setSubmissionNotice(false)}
+              aria-label="Fechar confirmação"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="relative flex-1">
@@ -235,7 +260,10 @@ export default function ManageMusic() {
       <ReleaseFormModal
         open={releaseModalOpen}
         onOpenChange={setReleaseModalOpen}
-        onCreateDraft={(draft) => setPrototypeDrafts((current) => [draft, ...current])}
+        onCreateDraft={(draft) => {
+          setPrototypeDrafts((current) => [draft, ...current]);
+          setSubmissionNotice(true);
+        }}
       />
     </MainLayout>
   );
