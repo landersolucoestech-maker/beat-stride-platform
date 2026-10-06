@@ -21,6 +21,7 @@ describe("Delivery", () => {
     const live = createDelivery("delivery-1", "destination-a");
     live.applyProviderState({ next: "VALIDATING", providerStatus: "VALIDATING", now });
     live.applyProviderState({ next: "SENT", providerStatus: "SENT", now });
+    live.applyProviderState({ next: "PROCESSING", providerStatus: "PROCESSING", now });
     live.applyProviderState({ next: "LIVE", providerStatus: "LIVE", now });
 
     const pending = createDelivery("delivery-2", "destination-b");
