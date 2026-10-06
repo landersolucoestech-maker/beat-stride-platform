@@ -1,4 +1,12 @@
-export type AssetType = "ARTWORK" | "AUDIO_MASTER" | "VIDEO_MASTER" | "DOCUMENT" | "OTHER";
+export type AssetType =
+  | "ARTWORK"
+  | "AUDIO_MASTER"
+  | "VIDEO_MASTER"
+  | "DOCUMENT"
+  | "OTHER"
+  | "MARKETING_IMAGE"
+  | "MARKETING_VIDEO"
+  | "MARKETING_AUDIO";
 export type AssetStatus = "PENDING_UPLOAD" | "AVAILABLE" | "QUARANTINED" | "REJECTED" | "DELETED";
 
 export interface AssetProps {
