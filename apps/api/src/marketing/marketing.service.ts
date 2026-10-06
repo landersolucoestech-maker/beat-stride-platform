@@ -959,6 +959,86 @@ export class MarketingService {
     };
   }
 
+  async getPublicSmartLink(linkId: string, slug: string) {
+    const result = await this.database.query<{
+      id: string;
+      title: string;
+      slug: string;
+      link_type: "SMART_LINK" | "PRE_SAVE";
+      release_title: string;
+      artist_name: string | null;
+      release_date: string | null;
+      destinations: Array<{ code: string; url: string }> | null;
+    } & QueryResultRow>(
+      `SELECT
+         smart_link.id,
+         smart_link.title,
+         smart_link.slug,
+         smart_link.link_type,
+         release.title AS release_title,
+         primary_artist.canonical_name AS artist_name,
+         metadata.release_date::text AS release_date,
+         COALESCE(
+           jsonb_agg(
+             jsonb_build_object(
+               'code', destination.destination_code,
+               'url', destination.url
+             )
+             ORDER BY destination.position ASC
+           ) FILTER (WHERE destination.id IS NOT NULL),
+           '[]'::jsonb
+         ) AS destinations
+       FROM marketing_smart_links smart_link
+       JOIN releases release ON release.id = smart_link.release_id
+       LEFT JOIN release_metadata_versions metadata
+         ON metadata.release_id = release.id
+        AND metadata.release_version = release.current_version
+       LEFT JOIN LATERAL (
+         SELECT artist.canonical_name
+         FROM release_artist_credits credit
+         JOIN artist_identities artist ON artist.id = credit.artist_identity_id
+         WHERE credit.release_id = release.id
+           AND credit.credit_role = 'PRIMARY'
+         ORDER BY credit.display_order ASC
+         LIMIT 1
+       ) primary_artist ON TRUE
+       LEFT JOIN marketing_smart_link_destinations destination
+         ON destination.smart_link_id = smart_link.id
+       WHERE smart_link.id = $1
+         AND smart_link.slug = $2
+         AND smart_link.status = 'ACTIVE'
+       GROUP BY
+         smart_link.id,
+         smart_link.title,
+         smart_link.slug,
+         smart_link.link_type,
+         release.title,
+         primary_artist.canonical_name,
+         metadata.release_date
+       LIMIT 1`,
+      [linkId, slug],
+    );
+
+    const row = result.rows[0];
+    if (!row) {
+      throw new NotFoundException({
+        code: "MARKETING_SMART_LINK_NOT_FOUND",
+        message: "Public Smart Link not found",
+      });
+    }
+
+    return {
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      linkType: row.link_type,
+      releaseTitle: row.release_title,
+      artistName: row.artist_name ?? "",
+      releaseDate: row.release_date,
+      destinations: row.destinations ?? [],
+    };
+  }
+
   async getSmartLinks(organizationId: string) {
     const result = await this.database.query<SmartLinkRow>(
       `SELECT
