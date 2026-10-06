@@ -5,7 +5,7 @@ Status: Accepted
 ## Decision
 Distribution, Lander Creators, and Music OS 360 are independent products with separate accounts, organizations, commercial models, domain ownership, persistence, and roadmaps. Integration uses formal contracts and explicit authorization.
 
-Distribution may provide a focused Lander Creators experience under Marketing. It may support account connection, package discovery, release-context sharing, checkout initiation, campaign status, relevant approvals, deliverables, and results. It does not embed the complete Lander Creators product.
+Distribution manages Lander Creators account connection under Settings > Integrations. Once the account is connected, Distribution may provide a focused Lander Creators capability inside the release-scoped Start Marketing flow. That capability may support package discovery, release-context sharing, checkout initiation, campaign status, relevant approvals, deliverables, and results. Lander Creators is not exposed as a standalone Marketing module and Distribution does not embed the complete Lander Creators product.
 
 Lander Creators remains source of truth for campaign, creator, deliverable, order, payment, and campaign performance. Distribution remains source of truth for releases and catalog.
 
