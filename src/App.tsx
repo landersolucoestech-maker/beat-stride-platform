@@ -25,6 +25,7 @@ import Shares from "./pages/financial/Shares";
 import Wallet from "./pages/financial/Wallet";
 import Support from "./pages/help/Support";
 import Tickets from "./pages/help/Tickets";
+import CampaignPlan from "./pages/marketing/CampaignPlan";
 import ContentCampaign from "./pages/marketing/ContentCampaign";
 import EmailList from "./pages/marketing/EmailList";
 import ProTools from "./pages/marketing/ProTools";
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/statistics/trackers" element={<Trackers />} />
 
             <Route path="/marketing/start" element={<StartMarketing />} />
+            <Route path="/marketing/campaigns/:campaignId/plan" element={<CampaignPlan />} />
             <Route path="/marketing/campaigns/:campaignId/content" element={<ContentCampaign />} />
             <Route path="/marketing/smartlinks" element={<SmartLinks />} />
             <Route path="/marketing/tools" element={<ProTools />} />
