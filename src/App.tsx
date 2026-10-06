@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Toaster } from "@/components/ui/toaster";
@@ -58,8 +58,9 @@ const App = () => (
 
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Index />} />
+            <Route path="/artists" element={<Artists />} />
 
-            <Route path="/distribution/artists" element={<Artists />} />
+            <Route path="/distribution/artists" element={<Navigate to="/artists" replace />} />
             <Route path="/distribution/rights-protection" element={<RightsProtection />} />
             <Route path="/distribution/content-id" element={<ContentIdUgc />} />
             <Route path="/distribution/music" element={<ManageMusic />} />
