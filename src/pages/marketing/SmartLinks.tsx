@@ -325,21 +325,21 @@ export default function SmartLinks() {
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
                       <div className="text-lg font-bold">
-                        {link.visits ? formatDecimalPtBr(link.visits, 0) : "—"}
+                        {formatDecimalPtBr(link.visits, 0)}
                       </div>
                       <div className="text-xs text-muted-foreground">Visitas</div>
                     </div>
                     <div>
                       <div className="text-lg font-bold">
-                        {link.conversions ? formatDecimalPtBr(link.conversions, 0) : "—"}
+                        {formatDecimalPtBr(link.clicks, 0)}
                       </div>
-                      <div className="text-xs text-muted-foreground">Conversões</div>
+                      <div className="text-xs text-muted-foreground">Cliques</div>
                     </div>
                     <div>
                       <div className="text-lg font-bold">
-                        {link.conversionRate ? `${formatDecimalPtBr(link.conversionRate, 2)}%` : "—"}
+                        {`${formatDecimalPtBr(link.clickThroughRate, 2)}%`}
                       </div>
-                      <div className="text-xs text-muted-foreground">Taxa</div>
+                      <div className="text-xs text-muted-foreground">CTR</div>
                     </div>
                   </div>
 
