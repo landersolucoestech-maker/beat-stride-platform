@@ -25,11 +25,11 @@ import Shares from "./pages/financial/Shares";
 import Wallet from "./pages/financial/Wallet";
 import Support from "./pages/help/Support";
 import Tickets from "./pages/help/Tickets";
-import CreatorsIntegration from "./pages/marketing/CreatorsIntegration";
 import EmailList from "./pages/marketing/EmailList";
 import ProTools from "./pages/marketing/ProTools";
 import SmartLinks from "./pages/marketing/SmartLinks";
 import StartMarketing from "./pages/marketing/StartMarketing";
+import Integrations from "./pages/settings/Integrations";
 import Language from "./pages/settings/Language";
 import Profile from "./pages/settings/Profile";
 import Security from "./pages/settings/Security";
@@ -72,7 +72,6 @@ const App = () => (
 
             <Route path="/marketing/start" element={<StartMarketing />} />
             <Route path="/marketing/smartlinks" element={<SmartLinks />} />
-            <Route path="/marketing/creators" element={<CreatorsIntegration />} />
             <Route path="/marketing/tools" element={<ProTools />} />
             <Route path="/marketing/emails" element={<EmailList />} />
 
@@ -87,6 +86,7 @@ const App = () => (
 
             <Route path="/settings/profile" element={<Profile />} />
             <Route path="/settings/security" element={<Security />} />
+            <Route path="/settings/integrations" element={<Integrations />} />
             <Route path="/settings/language" element={<Language />} />
           </Route>
 
