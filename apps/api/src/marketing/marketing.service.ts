@@ -37,6 +37,8 @@ type MarketingPublicationChannel =
   | "YOUTUBE"
   | "YOUTUBE_SHORTS";
 
+type MarketingAssetType = "MARKETING_IMAGE" | "MARKETING_VIDEO" | "MARKETING_AUDIO";
+
 interface MarketingReleaseRow extends QueryResultRow {
   id: string;
   title: string;
@@ -70,6 +72,9 @@ interface ContentRow extends QueryResultRow {
   recording_title: string | null;
   asset_id: string | null;
   asset_file_name: string | null;
+  asset_status: string | null;
+  asset_content_type: string | null;
+  asset_byte_size: string | null;
   content_type: MarketingContentType;
   title: string;
   notes: string | null;
@@ -210,6 +215,9 @@ export class MarketingService {
          recording.title AS recording_title,
          content.asset_id,
          asset.file_name AS asset_file_name,
+         asset.status AS asset_status,
+         asset.content_type AS asset_content_type,
+         asset.byte_size::text AS asset_byte_size,
          content.content_type,
          content.title,
          content.notes,
@@ -245,6 +253,9 @@ export class MarketingService {
          recording.title,
          content.asset_id,
          asset.file_name,
+         asset.status,
+         asset.content_type,
+         asset.byte_size,
          content.content_type,
          content.title,
          content.notes,
@@ -262,6 +273,9 @@ export class MarketingService {
       recordingTitle: row.recording_title,
       assetId: row.asset_id,
       assetFileName: row.asset_file_name,
+      assetStatus: row.asset_status,
+      assetContentType: row.asset_content_type,
+      assetByteSize: row.asset_byte_size,
       contentType: row.content_type,
       title: row.title,
       notes: row.notes,
@@ -362,6 +376,106 @@ export class MarketingService {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
       publications: [],
+    };
+  }
+
+  async registerContentAsset(input: {
+    organizationId: string;
+    contentId: string;
+    fileName: string;
+    contentType: string;
+    byteSize: number;
+  }) {
+    const content = await this.database.query<
+      {
+        id: string;
+        asset_id: string | null;
+        status: "DRAFT" | "READY" | "ARCHIVED";
+        campaign_status: string;
+      } & QueryResultRow
+    >(
+      `SELECT
+         content.id,
+         content.asset_id,
+         content.status,
+         campaign.status AS campaign_status
+       FROM marketing_campaign_contents content
+       JOIN marketing_campaigns campaign ON campaign.id = content.campaign_id
+       WHERE content.organization_id = $1
+         AND content.id = $2
+         AND campaign.organization_id = $1
+       LIMIT 1`,
+      [input.organizationId, input.contentId],
+    );
+
+    const row = content.rows[0];
+    if (!row) {
+      throw new NotFoundException({
+        code: "MARKETING_CONTENT_NOT_FOUND",
+        message: "Campaign content not found for active organization",
+      });
+    }
+    if (row.status === "ARCHIVED" || ["COMPLETED", "CANCELLED"].includes(row.campaign_status)) {
+      throw new BadRequestException({
+        code: "MARKETING_CONTENT_NOT_EDITABLE",
+        message: "Promotional asset cannot be attached to archived content or a closed campaign",
+      });
+    }
+    if (row.asset_id) {
+      throw new BadRequestException({
+        code: "MARKETING_CONTENT_ASSET_ALREADY_ATTACHED",
+        message: "Campaign content already has a primary promotional asset",
+      });
+    }
+
+    const assetType = this.resolveMarketingAssetType(input.contentType, input.byteSize);
+    const assetId = randomUUID();
+    const now = new Date();
+    const storageKey = `marketing/${input.organizationId}/${input.contentId}/${assetId}`;
+
+    await this.database.transaction(async (client) => {
+      await client.query(
+        `INSERT INTO assets
+          (id, organization_id, asset_type, status, storage_key, file_name, content_type, byte_size, checksum_sha256, created_at, updated_at)
+         VALUES ($1, $2, $3, 'PENDING_UPLOAD', $4, $5, $6, $7, NULL, $8, $8)`,
+        [
+          assetId,
+          input.organizationId,
+          assetType,
+          storageKey,
+          input.fileName.trim(),
+          input.contentType.trim().toLowerCase(),
+          input.byteSize,
+          now,
+        ],
+      );
+
+      await client.query(
+        `UPDATE marketing_campaign_contents
+         SET asset_id = $3, updated_at = $4
+         WHERE organization_id = $1 AND id = $2`,
+        [input.organizationId, input.contentId, assetId, now],
+      );
+    });
+
+    return {
+      asset: {
+        id: assetId,
+        type: assetType,
+        status: "PENDING_UPLOAD" as const,
+        fileName: input.fileName.trim(),
+        contentType: input.contentType.trim().toLowerCase(),
+        byteSize: input.byteSize,
+        storageKey,
+      },
+      upload: {
+        available: false,
+        reason: "ASSET_STORAGE_NOT_CONFIGURED",
+        method: null,
+        url: null,
+        headers: {},
+        expiresAt: null,
+      },
     };
   }
 
@@ -480,6 +594,55 @@ export class MarketingService {
 
   getTools() {
     return { available: false, items: [] };
+  }
+
+  private resolveMarketingAssetType(contentType: string, byteSize: number): MarketingAssetType {
+    const normalized = contentType.trim().toLowerCase();
+    const imageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+    const videoTypes = new Set(["video/mp4", "video/quicktime", "video/webm"]);
+    const audioTypes = new Set([
+      "audio/mpeg",
+      "audio/wav",
+      "audio/x-wav",
+      "audio/flac",
+      "audio/aac",
+      "audio/mp4",
+    ]);
+
+    if (imageTypes.has(normalized)) {
+      if (byteSize > 50 * 1024 * 1024) {
+        throw new BadRequestException({
+          code: "MARKETING_ASSET_TOO_LARGE",
+          message: "Marketing images may not exceed 50 MiB",
+        });
+      }
+      return "MARKETING_IMAGE";
+    }
+
+    if (videoTypes.has(normalized)) {
+      if (byteSize > 5 * 1024 * 1024 * 1024) {
+        throw new BadRequestException({
+          code: "MARKETING_ASSET_TOO_LARGE",
+          message: "Marketing videos may not exceed 5 GiB",
+        });
+      }
+      return "MARKETING_VIDEO";
+    }
+
+    if (audioTypes.has(normalized)) {
+      if (byteSize > 500 * 1024 * 1024) {
+        throw new BadRequestException({
+          code: "MARKETING_ASSET_TOO_LARGE",
+          message: "Marketing audio may not exceed 500 MiB",
+        });
+      }
+      return "MARKETING_AUDIO";
+    }
+
+    throw new BadRequestException({
+      code: "MARKETING_ASSET_CONTENT_TYPE_UNSUPPORTED",
+      message: "Promotional asset content type is not supported",
+    });
   }
 
   private async requireCampaign(organizationId: string, campaignId: string): Promise<CampaignRow> {
