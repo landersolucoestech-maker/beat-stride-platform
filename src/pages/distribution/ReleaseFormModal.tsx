@@ -82,7 +82,7 @@ export interface PrototypeReleaseDraft {
   type: string;
   releaseDate: string | null;
   coverUrl: string | null;
-  status: "DRAFT";
+  status: "SUBMITTED";
 }
 
 interface ReleaseFormModalProps {
@@ -208,7 +208,7 @@ export function ReleaseFormModal({
       type: releaseTypeLabel,
       releaseDate: distribution.releaseDate || null,
       coverUrl: coverPreview || null,
-      status: "DRAFT",
+      status: "SUBMITTED",
     });
 
     resetAndClose();
@@ -619,7 +619,7 @@ export function ReleaseFormModal({
               onClick={createDraftAndClose}
               disabled={reviewIssues.length > 0}
             >
-              Criar Lançamento
+              Enviar para aprovação
             </Button>
           )}
         </div>
