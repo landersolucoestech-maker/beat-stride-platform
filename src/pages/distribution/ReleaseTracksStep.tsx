@@ -41,8 +41,7 @@ export interface PrototypeTrack {
   id: string;
   title: string;
   alternativeVersion: boolean;
-  versionType: string;
-  customVersionDescription: string;
+  versionName: string;
   additionalArtists: PrototypeTrackArtist[];
   productionCredits: PrototypeProductionCredit[];
   composers: PrototypeComposer[];
@@ -142,8 +141,7 @@ export function createPrototypeTrack(): PrototypeTrack {
     id: crypto.randomUUID(),
     title: "",
     alternativeVersion: false,
-    versionType: "",
-    customVersionDescription: "",
+    versionName: "",
     additionalArtists: [],
     productionCredits: [],
     composers: [],
