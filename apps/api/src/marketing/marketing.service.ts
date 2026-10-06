@@ -65,6 +65,9 @@ interface SmartLinkRow extends QueryResultRow {
   slug: string;
   link_type: "SMART_LINK" | "PRE_SAVE";
   destinations: Array<{ code: string; label: string }> | null;
+  visits: string;
+  clicks: string;
+  click_through_rate: string;
 }
 
 interface CampaignRow extends QueryResultRow {
@@ -1117,25 +1120,47 @@ export class MarketingService {
 
   async getSmartLinks(organizationId: string) {
     const result = await this.database.query<SmartLinkRow>(
-      `SELECT
-         smart_link.id,
-         smart_link.title,
-         smart_link.slug,
-         smart_link.link_type,
-         COALESCE(
+      `WITH destination_metrics AS (
+         SELECT
+           destination.smart_link_id,
            jsonb_agg(
              jsonb_build_object(
                'code', destination.destination_code,
                'label', destination.destination_code
-             ) ORDER BY destination.position ASC
-           ) FILTER (WHERE destination.id IS NOT NULL),
-           '[]'::jsonb
-         ) AS destinations
+             )
+             ORDER BY destination.position ASC
+           ) AS destinations
+         FROM marketing_smart_link_destinations destination
+         GROUP BY destination.smart_link_id
+       ),
+       event_metrics AS (
+         SELECT
+           event.smart_link_id,
+           COUNT(*) FILTER (WHERE event.event_type = 'PAGE_VIEW') AS visits,
+           COUNT(*) FILTER (WHERE event.event_type = 'DESTINATION_CLICK') AS clicks
+         FROM marketing_smart_link_events event
+         GROUP BY event.smart_link_id
+       )
+       SELECT
+         smart_link.id,
+         smart_link.title,
+         smart_link.slug,
+         smart_link.link_type,
+         COALESCE(destination_metrics.destinations, '[]'::jsonb) AS destinations,
+         COALESCE(event_metrics.visits, 0)::text AS visits,
+         COALESCE(event_metrics.clicks, 0)::text AS clicks,
+         CASE
+           WHEN COALESCE(event_metrics.visits, 0) = 0 THEN '0'
+           ELSE ROUND(
+             (COALESCE(event_metrics.clicks, 0)::numeric / event_metrics.visits::numeric) * 100,
+             2
+           )::text
+         END AS click_through_rate
        FROM marketing_smart_links smart_link
-       LEFT JOIN marketing_smart_link_destinations destination ON destination.smart_link_id = smart_link.id
+       LEFT JOIN destination_metrics ON destination_metrics.smart_link_id = smart_link.id
+       LEFT JOIN event_metrics ON event_metrics.smart_link_id = smart_link.id
        WHERE smart_link.organization_id = $1
          AND smart_link.status <> 'ARCHIVED'
-       GROUP BY smart_link.id, smart_link.title, smart_link.slug, smart_link.link_type, smart_link.updated_at
        ORDER BY smart_link.updated_at DESC, smart_link.id DESC`,
       [organizationId],
     );
@@ -1150,9 +1175,9 @@ export class MarketingService {
         artworkUrl: null,
         publicPath: `/l/${row.id}/${row.slug}`,
         destinations: row.destinations ?? [],
-        visits: null,
-        conversions: null,
-        conversionRate: null,
+        visits: row.visits,
+        clicks: row.clicks,
+        clickThroughRate: row.click_through_rate,
       })),
     };
   }
