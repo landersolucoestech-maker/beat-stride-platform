@@ -137,10 +137,10 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
           <div>
             <p className="font-medium text-foreground">
-              Lançamento pronto para ser criado
+              Lançamento pronto para ser enviado à aprovação
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Todos os campos obrigatórios desta etapa de protótipo foram preenchidos.
+              Após o envio, o lançamento ficará aguardando aprovação. Somente o Administrador da Plataforma poderá liberar a distribuição, independentemente de o envio ter sido feito por gravadora, editora, produtora ou artista.
             </p>
           </div>
         </div>
