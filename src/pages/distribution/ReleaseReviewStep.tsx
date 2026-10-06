@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, Disc3 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { PrototypeDistributionPreferences } from "./ReleaseDistributionStep";
 import type { PrototypeTrack } from "./ReleaseTracksStep";
 
@@ -20,6 +21,7 @@ interface ReleaseReviewStepProps {
   coverPreview: string;
   tracks: PrototypeTrack[];
   distribution: PrototypeDistributionPreferences;
+  onEditStep: (step: number) => void;
 }
 
 const RELEASE_TYPE_LABELS: Record<string, string> = {
@@ -114,6 +116,7 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
     coverPreview,
     tracks,
     distribution,
+    onEditStep,
   } = props;
 
   const releaseArtist = variousArtists
@@ -172,11 +175,16 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
       )}
 
       <section className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="border-b border-border bg-muted/15 px-5 py-4">
-          <h4 className="font-semibold text-foreground">Lançamento</h4>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Identidade, artistas e direitos principais.
-          </p>
+        <div className="flex items-start justify-between gap-4 border-b border-border bg-muted/15 px-5 py-4">
+          <div>
+            <h4 className="font-semibold text-foreground">Lançamento</h4>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Identidade, artistas e direitos principais.
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => onEditStep(0)}>
+            Editar lançamento
+          </Button>
         </div>
 
         <div className="grid gap-0 lg:grid-cols-[260px_minmax(0,1fr)]">
@@ -270,11 +278,16 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
       </section>
 
       <section className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-5">
-          <h4 className="font-semibold text-foreground">Distribuição</h4>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Destino, território e programação escolhidos para o lançamento.
-          </p>
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h4 className="font-semibold text-foreground">Distribuição</h4>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Destino, território e programação escolhidos para o lançamento.
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => onEditStep(3)}>
+            Editar distribuição
+          </Button>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -336,16 +349,21 @@ export function ReleaseReviewStep(props: ReleaseReviewStepProps) {
       </section>
 
       <section className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-4 flex items-end justify-between gap-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h4 className="font-semibold text-foreground">Faixas</h4>
             <p className="mt-1 text-xs text-muted-foreground">
               Confira metadados e arquivo de cada música.
             </p>
           </div>
-          <Badge variant="outline">
-            {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">
+              {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"}
+            </Badge>
+            <Button type="button" variant="outline" size="sm" onClick={() => onEditStep(1)}>
+              Editar faixas
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-3">
